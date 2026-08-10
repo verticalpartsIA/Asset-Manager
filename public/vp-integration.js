@@ -57,6 +57,22 @@
 
   function db() { return client.schema(SCHEMA); }
 
+  // Lê TODAS as linhas de uma tabela em páginas de 1000 (issue #6). O PostgREST
+  // limita cada select a ~1000 linhas por padrão; sem paginar, coleções grandes
+  // seriam truncadas silenciosamente — e com a gravação por registro (#4) os
+  // registros além de 1000 poderiam ser tratados como "removidos".
+  async function selectAllRows(table, columns) {
+    var PAGE = 1000, from = 0, out = [];
+    while (true) {
+      var r = await db().from(table).select(columns).range(from, from + PAGE - 1);
+      var rows = (r && r.data) || [];
+      out = out.concat(rows);
+      if (rows.length < PAGE) break;
+      from += PAGE;
+    }
+    return out;
+  }
+
   // ---- Merge 3-vias por registro (issue #2: evita lost-update) ----
   // Descobre o campo de identidade da coleção; null = coleção não-mesclável
   // (listas de strings, mapas) → grava por sobrescrita (comportamento antigo).
@@ -178,7 +194,7 @@
     // Fallback p/ app_state se a tipada estiver vazia (transição/erro).
     for (var i = 0; i < PROMOTED_KEYS.length; i++) {
       var col = PROMOTED_KEYS[i], cfg = PROMOTED[col], arr = null;
-      try { var t = await db().from(cfg.table).select('details'); arr = (t.data || []).map(function (x) { return x.details; }).filter(Boolean); }
+      try { var t = await selectAllRows(cfg.table, 'details'); arr = t.map(function (x) { return x.details; }).filter(Boolean); }
       catch (e) { arr = null; }
       if (arr && arr.length) {
         try { localStorage.setItem(SYNCED[col], JSON.stringify(arr)); } catch (e) {}
@@ -218,8 +234,8 @@
     if (!maps.role) { try { var j = await db().from('job_roles').select('id,name'); maps.role = {}; (j.data||[]).forEach(function(r){ maps.role[r.name]=r.id; }); } catch(e){ maps.role={}; } }
   }
   async function loadFkMaps() {
-    try { var a = await db().from('assets').select('id,uid'); maps.assetUid = {}; (a.data||[]).forEach(function(r){ maps.assetUid[r.uid]=r.id; }); } catch(e){ maps.assetUid={}; }
-    try { var e = await db().from('employees').select('id,app_id'); maps.empApp = {}; (e.data||[]).forEach(function(r){ if(r.app_id!=null) maps.empApp[String(r.app_id)]=r.id; }); } catch(e){ maps.empApp={}; }
+    try { var a = await selectAllRows('assets', 'id,uid'); maps.assetUid = {}; a.forEach(function(r){ maps.assetUid[r.uid]=r.id; }); } catch(e){ maps.assetUid={}; }
+    try { var e = await selectAllRows('employees', 'id,app_id'); maps.empApp = {}; e.forEach(function(r){ if(r.app_id!=null) maps.empApp[String(r.app_id)]=r.id; }); } catch(e){ maps.empApp={}; }
   }
   function employeeToDb(e) {
     return {
