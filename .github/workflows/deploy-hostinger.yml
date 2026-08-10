@@ -1,0 +1,103 @@
+name: Deploy Hostinger — Asset Manager
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Este app NÃO tem etapa de build (é HTML estático + app.js servidos por
+# server.js/Express). Então, ao contrário do vpsistema (que sobe só dist/),
+# aqui subimos o código-fonte e instalamos as dependências no próprio servidor.
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # Valida que as dependências instalam limpo (funciona como CI mesmo
+      # antes de o deploy estar configurado).
+      - name: Install dependencies (validação)
+        run: npm ci
+
+      # ── Deploy real via SSH (autenticação por senha) ────────────────────
+      # Requer estes secrets no repositório (Settings → Secrets and variables
+      # → Actions), obtidos em hPanel → Avançado → Acesso SSH para o site
+      # assetmanager.vpsistema.com:
+      #   HOSTINGER_SSH_HOST      ex: 76.13.95.90
+      #   HOSTINGER_SSH_PORT      ex: 65002
+      #   HOSTINGER_SSH_USER      ex: u969661049
+      #   HOSTINGER_SSH_PASSWORD  senha de acesso SSH dessa conta
+      #   HOSTINGER_REMOTE_PATH   caminho da app no servidor, ex:
+      #     /home/u969661049/domains/assetmanager.vpsistema.com/public_html
+      #
+      # Se algum secret não estiver definido, o deploy é PULADO (não quebra o
+      # build) — assim o workflow continua útil como CI até você configurar.
+      - name: Check deploy secrets are configured
+        id: check_secrets
+        run: |
+          if [ -n "${{ secrets.HOSTINGER_SSH_HOST }}" ] && [ -n "${{ secrets.HOSTINGER_SSH_PASSWORD }}" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Secrets HOSTINGER_SSH_HOST/HOSTINGER_SSH_PASSWORD não configurados — pulando deploy. Veja instruções no topo deste arquivo."
+          fi
+
+      # Sobe o código-fonte do app (não há build). Tentativa 1 não falha o job
+      # sozinha; hosts com fail2ban/rate-limit de SSH às vezes derrubam a 1ª
+      # conexão — a tentativa 2 abaixo repete.
+      - name: Deploy via SCP (senha) — tentativa 1
+        id: scp_attempt1
+        if: steps.check_secrets.outputs.configured == 'true'
+        continue-on-error: true
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          source: "public/**,server.js,package.json,package-lock.json"
+          target: ${{ secrets.HOSTINGER_REMOTE_PATH }}
+          overwrite: true
+
+      - name: Aguardar antes de repetir
+        if: steps.check_secrets.outputs.configured == 'true' && steps.scp_attempt1.outcome == 'failure'
+        run: sleep 20
+
+      - name: Deploy via SCP (senha) — tentativa 2
+        if: steps.check_secrets.outputs.configured == 'true' && steps.scp_attempt1.outcome == 'failure'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          source: "public/**,server.js,package.json,package-lock.json"
+          target: ${{ secrets.HOSTINGER_REMOTE_PATH }}
+          overwrite: true
+
+      # Instala dependências de produção no servidor e reinicia a app Node
+      # (Passenger observa tmp/restart.txt).
+      - name: Instalar deps e reiniciar Node.js app (Passenger)
+        if: steps.check_secrets.outputs.configured == 'true'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          script: |
+            cd ${{ secrets.HOSTINGER_REMOTE_PATH }}
+            npm ci --omit=dev || npm install --omit=dev
+            mkdir -p tmp
+            touch tmp/restart.txt
