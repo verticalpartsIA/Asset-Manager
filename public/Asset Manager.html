@@ -13,6 +13,9 @@
 <script src="./Asset Manager_files/chart.js.baixados"></script>
 <script src="./Asset Manager_files/jspdf.umd.min.js.baixados"></script>
 <script src="./Asset Manager_files/jspdf.plugin.autotable.min.js.baixados"></script>
+<!-- SSO (token do vpsistema) + persistência no Supabase (schema asset_manager) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/vp-integration.js"></script>
 <style>
 :root {
 --black-deep: #FAFAF8;
@@ -5658,6 +5661,31 @@ const cor = corPara(e.count);
 return '<div class="heatmap-cell" style="background:' + cor.bg + '; border-color:' + cor.border + ';"><div class="hc-depto" style="color:' + cor.text + ';">' + e.depto + '</div><div class="hc-count" style="color:' + cor.text + ';">' + e.count + '</div><div class="hc-label">chamado(s) em aberto</div></div>';
 }).join('') + '<div class="heatmap-legend" style="grid-column: 1 / -1;"><span><span class="heatmap-legend-swatch" style="background:#10b981;"></span>Baixo volume</span><span><span class="heatmap-legend-swatch" style="background:#f59e0b;"></span>Volume moderado</span><span><span class="heatmap-legend-swatch" style="background:#dc2626;"></span>Volume crítico</span></div>';
 }
+</script>
+
+<!-- ===== SSO + PERSISTÊNCIA SUPABASE (bootstrap) ===== -->
+<!-- Roda DEPOIS do initApp() do app (registrado antes, em outro load listener).
+     Se veio ?sso_token= do vpsistema: autentica, carrega os dados do Supabase
+     para o cache local e entra no app com a sessão SSO. Sem token, o app segue
+     funcionando em localStorage (dev/fallback). -->
+<script>
+window.addEventListener('load', function () {
+  if (!window.VP) return;
+  VP.wrapDataLayer();
+  var hasToken = /[?#&]sso_token=/.test(location.href);
+  if (!hasToken) return;
+  (async function () {
+    try {
+      var ok = await VP.bootSSO();
+      if (!ok) return;                 // token inválido → permanece no login local
+      await VP.loadAll();              // popula o cache local a partir do Supabase
+      VP.wrapDataLayer();              // idempotente
+      if (typeof mostrarApp === 'function' && VP.session) {
+        mostrarApp(VP.session);        // entra no app com a sessão do SSO
+      }
+    } catch (e) { console.warn('[VP] bootstrap SSO falhou', e); }
+  })();
+});
 </script>
 
 <!-- ===== AVISO DE ATUALIZAÇÃO (VP Design System — Parte 2) ===== -->
