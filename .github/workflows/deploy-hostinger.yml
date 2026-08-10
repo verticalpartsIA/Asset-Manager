@@ -30,6 +30,15 @@ jobs:
       - name: Install dependencies (validação)
         run: npm ci
 
+      # Gera o version.json a partir do MECANISMO DE DEPLOY REAL (este próprio
+      # workflow) — é o que o aviso de atualização do frontend consulta para
+      # detectar deploy novo. commit = SHA deste push; buildTime = agora (UTC).
+      - name: Gerar version.json
+        run: |
+          printf '{"commit":"%s","buildTime":"%s"}\n' \
+            "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > public/version.json
+          cat public/version.json
+
       # ── Deploy real via SSH (autenticação por senha) ────────────────────
       # Requer estes secrets no repositório (Settings → Secrets and variables
       # → Actions), obtidos em hPanel → Avançado → Acesso SSH para o site
