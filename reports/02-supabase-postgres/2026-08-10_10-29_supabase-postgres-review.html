@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Revisão Supabase/PostgreSQL — Asset Manager (schema asset_manager)</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --ink:#111827; --muted:#6b7280; --line:#e5e7eb;
+    --brand:#F5C400; --brand-ink:#111827;
+    --crit:#dc2626; --high:#ea580c; --med:#d97706; --low:#0ea5e9; --info:#64748b; --ok:#16a34a;
+    --chip:#f3f4f6;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0d0d0d; --card:#171717; --ink:#f3f4f6; --muted:#9ca3af; --line:#2b2b2b; --chip:#1f1f1f; }
+  }
+  :root[data-theme="dark"]{ --bg:#0d0d0d; --card:#171717; --ink:#f3f4f6; --muted:#9ca3af; --line:#2b2b2b; --chip:#1f1f1f; }
+  :root[data-theme="light"]{ --bg:#f6f7f9; --card:#ffffff; --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --chip:#f3f4f6; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.55}
+  .wrap{max-width:1040px;margin:0 auto;padding:32px 20px 80px}
+  header.top{border-left:6px solid var(--brand);padding:14px 20px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:24px}
+  header.top .ktag{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  h1{font-size:24px;margin:6px 0 4px}
+  h2{font-size:19px;margin:34px 0 12px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+  h3{font-size:15px;margin:0 0 6px}
+  .muted{color:var(--muted)}
+  .meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;color:var(--muted);margin-top:8px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat .n{font-size:26px;font-weight:800;line-height:1}
+  .stat .l{font-size:12px;color:var(--muted);margin-top:6px}
+  .chip{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:var(--chip);color:var(--ink)}
+  .sev{color:#fff;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+  .s-crit{background:var(--crit)} .s-high{background:var(--high)} .s-med{background:var(--med)} .s-low{background:var(--low)} .s-info{background:var(--info)} .s-ok{background:var(--ok)}
+  table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{background:var(--chip);font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+  tr:last-child td{border-bottom:none}
+  .scroll{overflow-x:auto}
+  .finding{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0}
+  .finding.crit{border-left-color:var(--crit)} .finding.high{border-left-color:var(--high)} .finding.med{border-left-color:var(--med)} .finding.low{border-left-color:var(--low)} .finding.info{border-left-color:var(--info)}
+  .finding .hd{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:8px}
+  .finding .id{font-weight:800;font-size:13px;color:var(--muted)}
+  .kv{display:grid;grid-template-columns:130px 1fr;gap:4px 14px;font-size:13.5px;margin-top:8px}
+  .kv dt{color:var(--muted);font-weight:600}
+  .kv dd{margin:0}
+  code,pre{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+  code{background:var(--chip);padding:1px 6px;border-radius:6px;font-size:12.5px}
+  pre{background:var(--chip);padding:12px 14px;border-radius:10px;overflow-x:auto;font-size:12.5px;border:1px solid var(--line)}
+  .ok-list li{margin:5px 0}
+  footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+  .pill-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <span class="ktag">02 · Supabase / PostgreSQL Best Practices</span>
+    <h1>Revisão da camada Supabase — Asset Manager</h1>
+    <div class="muted">Schema auditado: <code>asset_manager</code> · Projeto Core <code>vpsistema</code> (<code>ubdkoqxfwcraftesgmbw</code>) · PostgreSQL 17</div>
+    <div class="meta">
+      <span><strong>Data:</strong> 2026-08-10 10:29 (BRT)</span>
+      <span><strong>Tipo:</strong> Auditoria read-only (nenhuma alteração aplicada)</span>
+      <span><strong>Escopo:</strong> objetos do schema <code>asset_manager</code> + queries do cliente (<code>public/vp-integration.js</code>)</span>
+    </div>
+  </header>
+
+  <section>
+    <h2>Sumário executivo</h2>
+    <p>O schema <code>asset_manager</code> está <strong>bem isolado e seguro na fundação</strong>: RLS habilitada em 100% das tabelas, FKs com <code>ON DELETE</code> coerentes, <em>check constraints</em> nos enums, índices de FK abrangentes e <strong>zero achados no advisor de segurança</strong> do Supabase. O <code>public</code> do Core (44 tabelas de outros apps) permanece intacto.</p>
+    <p>Os pontos de atenção concentram-se em <strong>duas frentes</strong>: (1) a política de RLS é <strong>permissiva demais</strong> — hoje qualquer colaborador autenticado tem CRUD total (inclusive DELETE) sobre todos os dados; e (2) a <strong>ponte de persistência em JSONB</strong> (<code>app_state</code>), adotada como estágio híbrido, traz risco de <strong>perda de dados em concorrência</strong> e <strong>amplificação de escrita</strong>, além de <strong>divergência</strong> do espelho tipado <code>assets</code>. Nenhum desses é bloqueante para o uso inicial, mas devem ser endereçados antes da adoção ampla.</p>
+
+    <div class="grid">
+      <div class="stat"><div class="n">21</div><div class="l">tabelas no schema</div></div>
+      <div class="stat"><div class="n">100%</div><div class="l">com RLS habilitada</div></div>
+      <div class="stat"><div class="n" style="color:var(--ok)">0</div><div class="l">achados de segurança (advisor)</div></div>
+      <div class="stat"><div class="n" style="color:var(--high)">10</div><div class="l">achados nesta revisão</div></div>
+      <div class="stat"><div class="n">1 A · 3 M · 3 B</div><div class="l">+ 3 informativos</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Metodologia &amp; fontes de evidência</h2>
+    <ul>
+      <li>Introspecção read-only via <code>information_schema</code>/<code>pg_catalog</code> (tabelas, colunas, PK/FK, checks, índices, <code>pg_policies</code>).</li>
+      <li>Advisors oficiais do Supabase — <strong>segurança</strong> e <strong>performance</strong> — filtrados para o schema <code>asset_manager</code>.</li>
+      <li>Leitura do cliente de dados <code>public/vp-integration.js</code> (SSO token-only + persistência híbrida).</li>
+      <li>Sem execução de DDL/DML, sem alteração de policies e sem escrita em dados de produção (registros de teste anteriores já removidos).</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Achados priorizados (Impacto × Risco × Esforço)</h2>
+    <div class="scroll">
+    <table>
+      <thead><tr><th>#</th><th>Achado</th><th>Categoria</th><th>Severidade</th><th>Esforço</th><th>Migração?</th></tr></thead>
+      <tbody>
+        <tr><td>F1</td><td>RLS permissiva demais (CRUD total p/ qualquer autenticado)</td><td>Segurança / RLS</td><td><span class="sev s-high">Alta</span></td><td>Médio</td><td>Sim</td></tr>
+        <tr><td>F2</td><td>Concorrência do JSONB — <em>lost update</em></td><td>Integridade</td><td><span class="sev s-med">Média-Alta</span></td><td>Médio-Alto</td><td>Sim</td></tr>
+        <tr><td>F3</td><td>Espelho tipado com <em>drift</em> + tabelas tipadas ociosas</td><td>Integridade / Design</td><td><span class="sev s-med">Média</span></td><td>Médio</td><td>Parcial</td></tr>
+        <tr><td>F4</td><td>Amplificação de escrita (reescreve coleção inteira)</td><td>Performance / Escala</td><td><span class="sev s-med">Média</span></td><td>Médio-Alto</td><td>Sim</td></tr>
+        <tr><td>F5</td><td>Migrations não versionadas no repositório</td><td>Migração / Reprodutibilidade</td><td><span class="sev s-med">Média</span></td><td>Baixo</td><td>Não</td></tr>
+        <tr><td>F6</td><td><code>loadAll</code> sem paginação</td><td>Performance</td><td><span class="sev s-low">Baixa</span></td><td>Médio</td><td>Não</td></tr>
+        <tr><td>F7</td><td>FK <code>app_state.updated_by</code> sem índice</td><td>Performance</td><td><span class="sev s-low">Baixa</span></td><td>Baixo</td><td>Sim (DDL trivial)</td></tr>
+        <tr><td>F8</td><td><code>assets.type_id</code> nunca populado</td><td>Design</td><td><span class="sev s-low">Baixa</span></td><td>Baixo</td><td>Não</td></tr>
+        <tr><td>F9</td><td>Índice possivelmente redundante em <code>allocations</code></td><td>Performance</td><td><span class="sev s-info">Info</span></td><td>Baixo</td><td>Opcional</td></tr>
+        <tr><td>F10</td><td>29 índices "não usados" + stats não coletadas</td><td>Performance</td><td><span class="sev s-info">Info</span></td><td>—</td><td>Não</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Detalhamento</h2>
+
+    <div class="finding high">
+      <div class="hd"><span class="id">F1</span><span class="sev s-high">Alta</span><strong>RLS permissiva demais — qualquer autenticado tem CRUD/DELETE total</strong></div>
+      <p>As 21 tabelas têm exatamente <strong>uma</strong> policy idêntica: <code>am_authenticated_all</code> — <code>FOR ALL TO authenticated USING (true) WITH CHECK (true)</code>.</p>
+      <pre>tablename        | cmd | roles           | qual | with_check
+assets           | ALL | {authenticated} | true | true
+allocations      | ALL | {authenticated} | true | true
+tickets          | ALL | {authenticated} | true | true   (… idêntico nas 21)</pre>
+      <dl class="kv">
+        <dt>Objeto</dt><dd>Todas as tabelas de <code>asset_manager</code> (policy <code>am_authenticated_all</code>)</dd>
+        <dt>Evidência</dt><dd><code>pg_policies</code> — <code>using=true</code>, <code>with_check=true</code>, <code>cmd=ALL</code></dd>
+        <dt>Impacto</dt><dd>Qualquer colaborador autenticado (inclusive papel <em>user</em>) pode ler, editar e <strong>apagar</strong> todos os ativos, alocações, chamados, histórico e logs — chamando a API/PostgREST diretamente. O modelo de papéis (admin/técnico/user) existe <strong>só no JavaScript do cliente</strong>, que não é fronteira de segurança.</dd>
+        <dt>Risco</dt><dd>Exposição/adulteração/exclusão de dados internos por qualquer usuário logado. Alto para um sistema de patrimônio.</dd>
+        <dt>Esforço</dt><dd>Médio</dd>
+        <dt>Correção</dt><dd>Policies por papel e por comando: <code>SELECT</code> liberado a <code>authenticated</code>; <code>INSERT/UPDATE/DELETE</code> restritos a admin/técnico. Recomendado usar uma função <em>STABLE</em> <code>security definer</code> com <code>search_path</code> fixo que consulte <code>public.profiles.level</code> do <code>auth.uid()</code> (ex.: <code>am_is_staff()</code>), evitando reavaliação cara por linha (envolver em <code>(select …)</code>).</dd>
+        <dt>Migração</dt><dd><strong>Sim</strong> (novas policies; substitui a permissiva).</dd>
+      </dl>
+    </div>
+
+    <div class="finding med">
+      <div class="hd"><span class="id">F2</span><span class="sev s-med">Média-Alta</span><strong>Concorrência do JSONB — perda de atualização (lost update)</strong></div>
+      <dl class="kv">
+        <dt>Objeto</dt><dd><code>asset_manager.app_state</code> + <code>VP.save()</code> em <code>vp-integration.js</code></dd>
+        <dt>Evidência</dt><dd>Cada coleção é <strong>uma linha</strong> (<code>collection</code> PK) contendo o array inteiro; cada <code>saveData</code> faz <code>upsert</code> do array completo (<em>last-write-wins</em>).</dd>
+        <dt>Impacto</dt><dd>Dois usuários (ou duas abas) editando itens diferentes da mesma coleção: o último a salvar <strong>sobrescreve</strong> as mudanças do outro, sem aviso. Não há validação/constraint por registro dentro do JSONB.</dd>
+        <dt>Risco</dt><dd>Perda silenciosa de dados em uso multiusuário — cenário esperado num sistema de TI compartilhado.</dd>
+        <dt>Esforço</dt><dd>Médio-Alto</dd>
+        <dt>Correção</dt><dd>Promover as entidades centrais para <strong>tabelas tipadas com escrita por registro</strong> (já planejado para employees/allocations/tickets). Interino: guarda otimista por <code>updated_at</code> (rejeitar upsert se a versão mudou) ou gravação item-a-item.</dd>
+        <dt>Migração</dt><dd><strong>Sim</strong> (promoção relacional).</dd>
+      </dl>
+    </div>
+
+    <div class="finding med">
+      <div class="hd"><span class="id">F3</span><span class="sev s-med">Média</span><strong>Espelho tipado com <em>drift</em> + tabelas tipadas ociosas</strong></div>
+      <dl class="kv">
+        <dt>Objeto</dt><dd><code>asset_manager.assets</code> (espelho) e <code>employees</code>/<code>allocations</code>/<code>tickets</code>/… (tipadas, ainda vazias)</dd>
+        <dt>Evidência</dt><dd><code>VP.save</code> popula <code>app_state</code> + espelho de <code>assets</code> (best-effort, não-fatal). <strong>DELETE</strong> no app não propaga ao espelho; demais tabelas tipadas não são escritas.</dd>
+        <dt>Impacto</dt><dd>Consultas/relatórios (Painel Executivo/SQL) sobre <code>asset_manager.assets</code> podem divergir do estado real: itens apagados no app permanecem no espelho; uma falha de espelho passa silenciosa. Relatórios por employees/allocations/tickets ainda não existem por coluna.</dd>
+        <dt>Risco</dt><dd>Relatórios/decisões sobre dados inconsistentes.</dd>
+        <dt>Esforço</dt><dd>Médio</dd>
+        <dt>Correção</dt><dd>Concluir a promoção relacional e <strong>propagar DELETE</strong>; enquanto isso, documentar que <code>app_state</code> é a fonte de verdade e o espelho é derivado (e reconciliar periodicamente).</dd>
+        <dt>Migração</dt><dd>Parcial (código + possível reconciliação de dados).</dd>
+      </dl>
+    </div>
+
+    <div class="finding med">
+      <div class="hd"><span class="id">F4</span><span class="sev s-med">Média</span><strong>Amplificação de escrita — reescreve a coleção inteira a cada save</strong></div>
+      <dl class="kv">
+        <dt>Objeto</dt><dd><code>VP.save</code> / <code>app_state</code> (e espelho de <code>assets</code>)</dd>
+        <dt>Evidência</dt><dd>Salvar 1 ativo reescreve <strong>todo</strong> o array de <code>assets</code> (JSONB) e faz <code>upsert</code> do array inteiro no espelho — custo O(n) por gravação.</dd>
+        <dt>Impacto</dt><dd>Custo de escrita e tamanho de payload crescem com o volume; aumenta a janela de conflito de F2.</dd>
+        <dt>Risco</dt><dd>Degradação conforme a base cresce (centenas → milhares de itens).</dd>
+        <dt>Esforço</dt><dd>Médio-Alto (mesma correção de F2)</dd>
+        <dt>Correção</dt><dd>Escrita por registro em tabelas tipadas; abandonar o rewrite de array por coleção nas entidades quentes.</dd>
+        <dt>Migração</dt><dd><strong>Sim</strong>.</dd>
+      </dl>
+    </div>
+
+    <div class="finding med">
+      <div class="hd"><span class="id">F5</span><span class="sev s-med">Média</span><strong>Migrations não versionadas no repositório</strong></div>
+      <dl class="kv">
+        <dt>Objeto</dt><dd>Repo <code>Asset-Manager</code> — não há <code>supabase/migrations/</code></dd>
+        <dt>Evidência</dt><dd><code>ls supabase</code> → inexistente. O schema foi criado por migrations aplicadas ao projeto, mas os arquivos não estão no repositório.</dd>
+        <dt>Impacto</dt><dd>O schema do Core não é reprodutível a partir do repo; recriar/staging é manual e sujeito a divergência; histórico vive só no painel.</dd>
+        <dt>Risco</dt><dd>Recuperação/replicação difícil; auditoria incompleta.</dd>
+        <dt>Esforço</dt><dd>Baixo</dd>
+        <dt>Correção</dt><dd>Exportar as migrations (<code>supabase db pull</code> / <code>supabase migration list</code>) para <code>supabase/migrations/</code> no repo e versionar daqui pra frente.</dd>
+        <dt>Migração</dt><dd>Não (apenas versionamento).</dd>
+      </dl>
+    </div>
+
+    <div class="finding low">
+      <div class="hd"><span class="id">F6</span><span class="sev s-low">Baixa</span><strong><code>loadAll</code> sem paginação</strong></div>
+      <dl class="kv">
+        <dt>Objeto</dt><dd><code>VP.loadAll</code> (<code>vp-integration.js</code>)</dd>
+        <dt>Evidência</dt><dd><code>SELECT *</code> de assets/employees/allocations + todo <code>app_state</code> a cada login.</dd>
+        <dt>Impacto</dt><dd>Payload de login cresce linearmente com o volume; sem limite/ordenação.</dd>
+        <dt>Esforço</dt><dd>Médio</dd>
+        <dt>Correção</dt><dd>Carregar sob demanda por módulo; paginar (<code>range()</code>) as coleções grandes.</dd>
+        <dt>Migração</dt><dd>Não.</dd>
+      </dl>
+    </div>
+
+    <div class="finding low">
+      <div class="hd"><span class="id">F7</span><span class="sev s-low">Baixa</span><strong>FK <code>app_state.updated_by</code> sem índice de cobertura</strong></div>
+      <dl class="kv">
+        <dt>Objeto</dt><dd><code>asset_manager.app_state.updated_by</code> → <code>public.profiles(id)</code></dd>
+        <dt>Evidência</dt><dd>Advisor de performance: <em>unindexed_foreign_keys</em> (único da nossa parte).</dd>
+        <dt>Impacto</dt><dd>Joins/filtros por <code>updated_by</code> e o <code>ON DELETE SET NULL</code> ficam menos eficientes (marginal — a tabela tem ~20 linhas, uma por coleção).</dd>
+        <dt>Esforço</dt><dd>Baixo</dd>
+        <dt>Correção</dt><dd><code>create index on asset_manager.app_state (updated_by);</code></dd>
+        <dt>Migração</dt><dd>Sim (DDL trivial).</dd>
+      </dl>
+    </div>
+
+    <div class="finding low">
+      <div class="hd"><span class="id">F8</span><span class="sev s-low">Baixa</span><strong><code>assets.type_id</code> nunca é populado</strong></div>
+      <dl class="kv">
+        <dt>Objeto</dt><dd><code>asset_manager.assets.type_id</code> / <code>asset_types</code> (seed ocioso)</dd>
+        <dt>Evidência</dt><dd><code>assetToDb()</code> omite <code>type_id</code>; <code>asset_types</code> semeado (10 tipos) mas sem vínculo.</dd>
+        <dt>Impacto</dt><dd>Relatórios por tipo via tabela tipada indisponíveis; FK/seed sem uso.</dd>
+        <dt>Esforço</dt><dd>Baixo</dd>
+        <dt>Correção</dt><dd>Resolver <code>type_id</code> por código/label no espelho ao gravar.</dd>
+        <dt>Migração</dt><dd>Não (código).</dd>
+      </dl>
+    </div>
+
+    <div class="finding info">
+      <div class="hd"><span class="id">F9</span><span class="sev s-info">Info</span><strong>Índice possivelmente redundante em <code>allocations</code></strong></div>
+      <dl class="kv">
+        <dt>Objeto</dt><dd><code>allocations_asset_id_idx</code> (full) vs <code>allocations_asset_id_idx1</code> (parcial <code>WHERE is_current</code>)</dd>
+        <dt>Evidência</dt><dd><code>pg_indexes</code> — dois índices em <code>asset_id</code>.</dd>
+        <dt>Impacto</dt><dd>Leve custo extra de escrita/armazenamento; o parcial é subconjunto do full para <em>lookups</em> puros por <code>asset_id</code>.</dd>
+        <dt>Correção</dt><dd>Reavaliar após tráfego real: manter o parcial (consultas de "alocação atual") e um <code>(asset_id)</code>, ou consolidar. Não urgente.</dd>
+        <dt>Migração</dt><dd>Opcional.</dd>
+      </dl>
+    </div>
+
+    <div class="finding info">
+      <div class="hd"><span class="id">F10</span><span class="sev s-info">Info</span><strong>29 índices "não usados" + estatísticas não coletadas</strong></div>
+      <dl class="kv">
+        <dt>Objeto</dt><dd>Advisor <em>unused_index</em> (29 índices de <code>asset_manager</code>); <code>reltuples = -1</code> (nunca houve <code>ANALYZE</code>).</dd>
+        <dt>Impacto</dt><dd><strong>Nenhum real</strong> — o schema é novo e sem tráfego; os índices cobrem FKs e filtros comuns (<code>status</code>, <code>ticket_id</code>, etc.).</dd>
+        <dt>Correção</dt><dd><strong>NÃO remover.</strong> Reavaliar após uso real; rodar <code>ANALYZE</code> quando houver dados para o planejador ter estatísticas.</dd>
+        <dt>Migração</dt><dd>Não.</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section>
+    <h2>Pontos fortes (o que já está correto)</h2>
+    <ul class="ok-list">
+      <li><span class="chip">Isolamento</span> Schema dedicado <code>asset_manager</code> — <strong>zero poluição</strong> no <code>public</code> do Core (44 tabelas de outros apps intactas).</li>
+      <li><span class="chip">RLS</span> Habilitada em <strong>21/21</strong> tabelas; <code>anon</code> sem <em>grant</em> (bloqueado) — acesso só a <code>authenticated</code>/<code>service_role</code>.</li>
+      <li><span class="chip">Advisor</span> <strong>0 achados de segurança</strong> atribuídos ao <code>asset_manager</code> (os lints do projeto são de outros schemas).</li>
+      <li><span class="chip">Integridade</span> FKs com <code>ON DELETE</code> coerentes (<code>CASCADE</code> em filhos; <code>SET NULL</code> nas referências a <code>public.profiles</code>) e reuso da identidade central (nunca duplicou <code>profiles</code>).</li>
+      <li><span class="chip">Constraints</span> <em>CHECK</em> nos enums: <code>assets.status</code>, <code>tickets.priority/status</code>, <code>stock_items.category</code>, <code>checklists.semester</code>, <code>checklist_signatures.role_context</code>.</li>
+      <li><span class="chip">Índices</span> Cobertura ampla de FKs e colunas de filtro; PK em todas as tabelas.</li>
+      <li><span class="chip">Função</span> <code>set_updated_at()</code> com <code>security invoker</code> + <code>search_path = ''</code> — evita o lint <em>function_search_path_mutable</em>.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Plano recomendado (ordem sugerida)</h2>
+    <ol>
+      <li><strong>F1 — RLS por papel</strong> (segurança primeiro): separar leitura × escrita e restringir escrita a admin/técnico via <code>profiles.level</code>.</li>
+      <li><strong>F2 + F4 + F3 — Promoção relacional</strong> de <code>employees</code>, <code>allocations</code>, <code>tickets</code> (escrita por registro; encerra lost-update, amplificação e drift).</li>
+      <li><strong>F5 — Versionar migrations</strong> no repo (baixo esforço, alto ganho de reprodutibilidade/auditoria).</li>
+      <li><strong>F7 / F8</strong> — índice em <code>app_state.updated_by</code> e popular <code>assets.type_id</code> (rápidos).</li>
+      <li><strong>F6 / F9 / F10</strong> — reavaliar após tráfego real (paginação, índice redundante, <code>ANALYZE</code>).</li>
+    </ol>
+    <p class="muted">Observação: este relatório é apenas diagnóstico. Nenhuma policy, objeto ou dado foi alterado. As correções acima exigem migrations/ajustes de código a serem aprovados e aplicados em etapa separada.</p>
+  </section>
+
+  <footer>
+    Relatório gerado pela skill <strong>02 — Supabase/PostgreSQL Best Practices</strong> · Auditoria read-only · Projeto <code>ubdkoqxfwcraftesgmbw</code> · 2026-08-10.
+  </footer>
+
+</div>
+</body>
+</html>

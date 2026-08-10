@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão Arquitetural — Asset Manager</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --ink:#1c2330; --muted:#5b6472; --line:#e3e7ee;
+    --accent:#2f6bff; --crit:#c0392b; --high:#e67e22; --med:#d4a017; --low:#2e8b57;
+    --chip:#eef2ff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f141b; --card:#161d27; --ink:#e7ecf3; --muted:#9aa6b6; --line:#26303d;
+      --accent:#5b8bff; --chip:#1b2740;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{border-left:5px solid var(--accent);padding:6px 0 6px 18px;margin-bottom:8px}
+  h1{font-size:28px;margin:0 0 6px}
+  .sub{color:var(--muted);font-size:14px}
+  h2{font-size:21px;margin:38px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  h3{font-size:17px;margin:22px 0 6px}
+  p{margin:8px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+  .metric{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .metric .n{font-size:26px;font-weight:700}
+  .metric .l{color:var(--muted);font-size:13px}
+  .chip{display:inline-block;background:var(--chip);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-right:6px}
+  .tag{display:inline-block;border-radius:6px;padding:2px 9px;font-size:12px;font-weight:700;color:#fff}
+  .t-crit{background:var(--crit)} .t-high{background:var(--high)} .t-med{background:var(--med)} .t-low{background:var(--low)}
+  .legend{border-left:4px solid var(--accent);background:var(--chip);padding:10px 14px;border-radius:8px;font-size:14px}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+  code{background:var(--chip);padding:1px 6px;border-radius:5px;font-size:13px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .finding{border:1px solid var(--line);border-radius:12px;margin:16px 0;overflow:hidden;background:var(--card)}
+  .finding .fh{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .finding .fh .id{font-weight:700}
+  .finding .fb{padding:6px 18px 16px}
+  .kv{display:grid;grid-template-columns:130px 1fr;gap:4px 14px;margin:10px 0;font-size:14px}
+  .kv dt{color:var(--muted);font-weight:600}
+  .kv dd{margin:0}
+  .fact{border-left:3px solid var(--low);padding-left:10px}
+  .infer{border-left:3px solid var(--med);padding-left:10px}
+  .reco{border-left:3px solid var(--accent);padding-left:10px}
+  .foot{color:var(--muted);font-size:13px;margin-top:40px;border-top:1px solid var(--line);padding-top:14px}
+  .scroll{overflow-x:auto}
+  ul{margin:8px 0 8px 2px;padding-left:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>Revisão Arquitetural — Asset Manager</h1>
+  <div class="sub">VerticalParts · <code>verticalpartsIA/Asset-Manager</code> · Gerado em 10/08/2026 10:21 (local) · Análise somente-leitura, nenhum código alterado</div>
+</header>
+
+<div class="card">
+  <p><strong>Escopo.</strong> App de gestão de ativos, 100% front-end estático servido em hospedagem compartilhada (HTML/JS), integrado ao Supabase diretamente pelo navegador. Foco da auditoria: código de produção em <code>public/</code>. Vendored libs (<code>Asset Manager_files/</code>) e o <code>server.js</code> não-utilizado foram desconsiderados como responsabilidade arquitetural.</p>
+  <p class="legend"><strong>Como ler.</strong> Cada achado separa <span class="chip">Fato observado</span> (medido no repo) de <span class="chip">Inferência</span> (leitura arquitetural) e <span class="chip">Recomendação</span>. Prioridade = Impacto × Risco × Esforço.</p>
+</div>
+
+<h2>1. Métricas observadas (fatos)</h2>
+<div class="grid">
+  <div class="metric"><div class="n">5.691</div><div class="l">linhas em <code>index.html</code></div></div>
+  <div class="metric"><div class="n">2.256</div><div class="l">linhas em <code>app.js</code> (órfão)</div></div>
+  <div class="metric"><div class="n">215</div><div class="l">funções inline no HTML</div></div>
+  <div class="metric"><div class="n">190</div><div class="l">handlers inline (<code>onclick</code>…)</div></div>
+  <div class="metric"><div class="n">4</div><div class="l">blocos <code>&lt;script&gt;</code> inline</div></div>
+  <div class="metric"><div class="n">0</div><div class="l">referências a <code>app.js</code></div></div>
+</div>
+<p class="sub">Coletadas via <code>git grep</code> / contagem de linhas em 10/08/2026. Ferramentas de grafo de dependência (madge/dependency-cruiser) não se aplicam: não há módulos ES/import — todo o JS é global inline.</p>
+
+<h2>2. Sumário executivo</h2>
+<div class="card">
+<p>A aplicação funciona e está no ar, mas concentra <strong>toda a lógica (UI + regras de negócio + acesso a dados) em um único arquivo de ~5.700 linhas</strong> (<code>public/index.html</code>), com estado global e 190 handlers embutidos no HTML. Existe ainda um <strong>segundo arquivo, <code>app.js</code> (2.256 linhas), que é código morto</strong>: não é carregado por nenhuma página e duplica as funções que já vivem inline no HTML — fonte concreta de <em>drift</em> (correções aplicadas no arquivo errado). Não há camada de acesso a dados: chamadas ao Supabase estão espalhadas. A segurança depende inteiramente de RLS no banco (a chave exposta é a <code>anon</code>, o que é esperado). Nada disso impede o app de rodar, mas torna a manutenção arriscada e a navegação — para humanos e para agentes de IA — muito custosa.</p>
+</div>
+
+<h3>Prioridade dos achados</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>ID</th><th>Achado</th><th>Severidade</th><th>Impacto</th><th>Risco de mudar</th><th>Esforço</th></tr></thead>
+  <tbody>
+    <tr><td>A1</td><td><code>app.js</code> órfão e duplicado</td><td><span class="tag t-crit">Crítico</span></td><td>Alto</td><td>Baixo</td><td>Baixo</td></tr>
+    <tr><td>A2</td><td>God-file: <code>index.html</code> acumula UI + domínio + dados</td><td><span class="tag t-high">Alto</span></td><td>Alto</td><td>Alto</td><td>Alto</td></tr>
+    <tr><td>A3</td><td>Acesso a dados (Supabase) espalhado, sem camada</td><td><span class="tag t-high">Alto</span></td><td>Alto</td><td>Médio</td><td>Médio</td></tr>
+    <tr><td>A4</td><td>190 handlers inline acoplados ao markup</td><td><span class="tag t-med">Médio</span></td><td>Médio</td><td>Médio</td><td>Médio</td></tr>
+    <tr><td>A5</td><td>Zero testabilidade (nenhum limite de módulo)</td><td><span class="tag t-med">Médio</span></td><td>Médio</td><td>Baixo</td><td>Médio</td></tr>
+    <tr><td>A6</td><td>Config/credenciais hardcoded; segurança 100% via RLS</td><td><span class="tag t-low">Atenção</span></td><td>Médio</td><td>Baixo</td><td>Baixo</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>3. Achados detalhados</h2>
+
+<!-- A1 -->
+<div class="finding">
+  <div class="fh"><span class="id">A1</span> <span class="tag t-crit">Crítico</span> <span>Código morto e duplicado: <code>app.js</code></span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato observado.</strong> <code>public/app.js</code> tem 2.256 linhas (144 KB) e <strong>não é referenciado por nenhum arquivo</strong> (<code>git grep "app.js"</code> em <code>public/</code> não retorna nada; <code>index.html</code> carrega apenas libs, <code>supabase-js</code> e <code>vp-integration.js</code>). Das 12 funções amostradas em <code>app.js</code> (<code>initApp</code>, <code>handleLogin</code>, <code>logout</code>, <code>showPage</code>, <code>toggleTheme</code>, <code>gerarNumeroSequencial</code>…), <strong>as 12 estão duplicadas inline no <code>index.html</code></strong>.</p>
+    <p class="infer"><strong>Inferência.</strong> <code>app.js</code> é uma cópia antiga/paralela da lógica que hoje vive inline no HTML. Como não é carregado, qualquer edição nele não tem efeito; e um dev (ou agente de IA) tende a abri-lo por ser o arquivo "de código" — corrigindo o lugar errado. É o clássico risco de <em>drift</em> entre duas fontes da verdade.</p>
+    <dl class="kv">
+      <dt>Por que importa</dt><dd>Dobra a superfície de manutenção e induz correções que "não pegam".</dd>
+      <dt>Impacto</dt><dd>Alto (correção silenciosamente perdida).</dd>
+      <dt>Risco de mudar</dt><dd>Baixo — remover código não-carregado não afeta o runtime.</dd>
+      <dt>Esforço</dt><dd>Baixo.</dd>
+    </dl>
+    <p class="reco"><strong>Recomendação.</strong> Decidir <em>uma</em> fonte da verdade. Caminho rápido e seguro: <strong>remover <code>public/app.js</code></strong> (git preserva o histórico). Caminho melhor a médio prazo (ver A2): tornar <code>app.js</code> a fonte real, extrair o inline do HTML para ele e carregá-lo com <code>&lt;script defer&gt;</code> — mas isso é a refatoração A2, não este passo.</p>
+    <p><em>Depende de:</em> nada. É o primeiro passo do roadmap.</p>
+  </div>
+</div>
+
+<!-- A2 -->
+<div class="finding">
+  <div class="fh"><span class="id">A2</span> <span class="tag t-high">Alto</span> <span>God-file: <code>index.html</code> concentra todas as responsabilidades</span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato observado.</strong> <code>public/index.html</code> = 5.691 linhas / 413 KB, com 4 blocos <code>&lt;script&gt;</code> inline (linhas 808, 2056, 5671, 5697), 215 definições de função e 6 chamadas diretas ao Supabase (<code>.from/.rpc/.auth</code>) no mesmo arquivo.</p>
+    <p class="infer"><strong>Inferência.</strong> Módulo raso e sobrecarregado (shallow/god module): markup, estado, regras de negócio e persistência coabitam sem fronteira. Para alterar qualquer coisa é preciso carregar e entender ~5.700 linhas — péssima navegabilidade para humanos e para agentes de IA (custo de contexto altíssimo, alto risco de regressão colateral).</p>
+    <dl class="kv">
+      <dt>Por que importa</dt><dd>Toda mudança é global e arriscada; onboarding e uso de IA ficam caros.</dd>
+      <dt>Impacto</dt><dd>Alto.</dd>
+      <dt>Risco de mudar</dt><dd>Alto (é o coração do app em produção).</dd>
+      <dt>Esforço</dt><dd>Alto — refatoração incremental obrigatória.</dd>
+    </dl>
+    <p class="reco"><strong>Recomendação (design-alvo).</strong> Extrair o JS inline para módulos por responsabilidade, mantendo o app estático (sem build): <code>public/js/domain/*</code> (regras), <code>public/js/data/*</code> (acesso a dados — ver A3), <code>public/js/ui/*</code> (render + eventos), carregados com <code>&lt;script type="module"&gt;</code>. Fazer <strong>por página/feature</strong>, uma de cada vez, validando no ar a cada passo.</p>
+    <p><em>Depende de:</em> A1 (eliminar a duplicação antes de mover código evita mover a versão errada).</p>
+  </div>
+</div>
+
+<!-- A3 -->
+<div class="finding">
+  <div class="fh"><span class="id">A3</span> <span class="tag t-high">Alto</span> <span>Acesso a dados espalhado (sem Ports &amp; Adapters)</span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato observado.</strong> Chamadas Supabase aparecem em 3 lugares: <code>index.html</code> (6), <code>vp-integration.js</code> (6) e <code>app.js</code> (2, morto). O cliente é criado em <code>vp-integration.js</code>; as queries de negócio estão soltas no HTML.</p>
+    <p class="infer"><strong>Inferência.</strong> Não há uma camada de dados única. Regras de persistência (nomes de tabela, formato de query, tratamento de erro) vazam para a UI. Trocar schema, adicionar cache ou tratar erro de forma consistente exige caçar chamadas em vários pontos.</p>
+    <dl class="kv">
+      <dt>Por que importa</dt><dd>Mudança de schema/cross-cutting vira caça ao tesouro; erros tratados de forma inconsistente.</dd>
+      <dt>Impacto</dt><dd>Alto.</dd>
+      <dt>Risco de mudar</dt><dd>Médio.</dd>
+      <dt>Esforço</dt><dd>Médio.</dd>
+    </dl>
+    <p class="reco"><strong>Recomendação.</strong> Criar um módulo <em>Deep Module</em> de dados (ex.: <code>public/js/data/repo.js</code>) como fachada sobre o Supabase — funções de intenção do domínio (<code>listarAtivos()</code>, <code>registrarMovimentacao()</code>) que escondem tabela/query/erro. A UI passa a depender só dessa fachada (direção de dependência correta: UI → dados, nunca o contrário).</p>
+    <p><em>Depende de:</em> caminha junto com A2.</p>
+  </div>
+</div>
+
+<!-- A4 -->
+<div class="finding">
+  <div class="fh"><span class="id">A4</span> <span class="tag t-med">Médio</span> <span>190 handlers inline acoplados ao markup</span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato observado.</strong> 190 atributos <code>onclick=/onchange=/oninput=/onsubmit=</code> no <code>index.html</code>.</p>
+    <p class="infer"><strong>Inferência.</strong> Comportamento amarrado ao HTML: exige funções globais, dificulta teste isolado e mistura estrutura com lógica. Também colide com boas práticas de CSP.</p>
+    <dl class="kv">
+      <dt>Impacto</dt><dd>Médio.</dd><dt>Risco</dt><dd>Médio.</dd><dt>Esforço</dt><dd>Médio.</dd>
+    </dl>
+    <p class="reco"><strong>Recomendação.</strong> Migrar para <code>addEventListener</code>/delegação de eventos por feature, à medida que cada bloco é extraído em A2. Não é um passo isolado — é consequência natural da modularização.</p>
+    <p><em>Depende de:</em> A2.</p>
+  </div>
+</div>
+
+<!-- A5 -->
+<div class="finding">
+  <div class="fh"><span class="id">A5</span> <span class="tag t-med">Médio</span> <span>Testabilidade ~ zero</span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato observado.</strong> Nenhum limite de módulo (JS 100% inline/global), nenhuma dependência de teste no <code>package.json</code>, nenhum arquivo de teste no repo.</p>
+    <p class="infer"><strong>Inferência.</strong> Sem funções exportáveis e puras, não há o que testar unitariamente. Toda validação é manual no navegador.</p>
+    <dl class="kv"><dt>Impacto</dt><dd>Médio.</dd><dt>Risco</dt><dd>Baixo.</dd><dt>Esforço</dt><dd>Médio.</dd></dl>
+    <p class="reco"><strong>Recomendação.</strong> Ao extrair regras de negócio para <code>js/domain/*</code> (A2), torná-las puras e exportáveis e cobrir as críticas (ex.: <code>gerarNumeroSequencial</code>, cálculos, validações) com testes leves. Habilita CI antes de refatorações maiores.</p>
+    <p><em>Depende de:</em> A2.</p>
+  </div>
+</div>
+
+<!-- A6 -->
+<div class="finding">
+  <div class="fh"><span class="id">A6</span> <span class="tag t-low">Atenção</span> <span>Config/credenciais hardcoded; segurança depende de RLS</span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato observado.</strong> <code>SUPABASE_URL</code> e a chave <code>SUPABASE_ANON</code> estão hardcoded em <code>vp-integration.js</code> (linhas 23–25).</p>
+    <p class="infer"><strong>Inferência.</strong> A chave <code>anon</code> é <em>pública por design</em> — expô-la no front-end é esperado e não é vulnerabilidade. O ponto de atenção real: como não há backend, <strong>toda a segurança recai sobre as políticas de RLS</strong> no Postgres. Se alguma tabela estiver sem RLS ou com política permissiva, os dados ficam abertos a qualquer um com a URL + anon key.</p>
+    <dl class="kv"><dt>Impacto</dt><dd>Médio (potencialmente alto se RLS falhar).</dd><dt>Risco</dt><dd>Baixo.</dd><dt>Esforço</dt><dd>Baixo.</dd></dl>
+    <p class="reco"><strong>Recomendação.</strong> (1) Auditar RLS de todas as tabelas usadas pelo app — é o controle de segurança de fato aqui (ver skill 02 do playbook). (2) Centralizar a config em um único <code>config.js</code>/objeto para facilitar troca de ambiente. Não remover a anon key do front — isso não é segredo.</p>
+    <p><em>Depende de:</em> nada; pode ser feito em paralelo.</p>
+  </div>
+</div>
+
+<h2>4. Roadmap faseado (mínimo risco de regressão)</h2>
+<div class="scroll">
+<table>
+  <thead><tr><th>Fase</th><th>Ação</th><th>Achados</th><th>Risco</th><th>Ganho</th></tr></thead>
+  <tbody>
+    <tr><td><strong>0 — Higiene</strong></td><td>Remover <code>app.js</code> órfão. Auditar RLS das tabelas. Centralizar config.</td><td>A1, A6</td><td>Baixo</td><td>Elimina drift + fecha risco de segurança já</td></tr>
+    <tr><td><strong>1 — Camada de dados</strong></td><td>Criar fachada <code>js/data/repo.js</code> e mover as chamadas Supabase do HTML pra ela.</td><td>A3</td><td>Médio</td><td>Direção de dependência correta; erro tratado num lugar só</td></tr>
+    <tr><td><strong>2 — Extrair domínio</strong></td><td>Mover regras puras pra <code>js/domain/*</code> + testes leves + CI.</td><td>A2, A5</td><td>Médio</td><td>Testabilidade e navegabilidade</td></tr>
+    <tr><td><strong>3 — Extrair UI</strong></td><td>Feature por feature: tirar JS inline, trocar <code>onclick</code> por listeners.</td><td>A2, A4</td><td>Alto</td><td>Fim do god-file; manutenção segura</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="sub">Regra de ouro: uma feature por vez, validando o site no ar a cada passo (o app é estático e está em produção — dá pra verificar via <code>/version.json</code> após cada deploy).</p>
+
+<div class="foot">
+  <p>Relatório gerado por auditoria somente-leitura. Distinção mantida entre fato observado, inferência e recomendação; nenhuma recomendação sem evidência do repositório. Nenhum código, commit ou configuração foi alterado.</p>
+  <p>Próxima skill sugerida do playbook: <strong>02 — Supabase/Postgres Best Practices</strong> (o app depende de RLS; ver A6).</p>
+</div>
+
+</div>
+</body>
+</html>
