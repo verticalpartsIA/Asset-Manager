@@ -221,14 +221,14 @@
 
   function assetToDb(a) {
     return {
-      uid: a.uid, brand: a.marca || a.brand || null, model: a.modelo || a.model || null,
+      uid: a.uid, type_id: resolveTypeId(a.type), brand: a.marca || a.brand || null, model: a.modelo || a.model || null,
       serial_number: a.serial || a.serial_number || null, imei: a.imei || null,
       status: mapStatus(a.status), value: num(a.valor != null ? a.valor : a.value), details: a
     };
   }
 
   // Mapas de resolução (nome/uid/app_id -> id) carregados sob demanda.
-  var maps = { dept:null, role:null, assetUid:null, empApp:null };
+  var maps = { dept:null, role:null, assetUid:null, empApp:null, typeByCode:null, typeByLabel:null };
   async function loadRefMaps() {
     if (!maps.dept) { try { var d = await db().from('departments').select('id,name'); maps.dept = {}; (d.data||[]).forEach(function(r){ maps.dept[r.name]=r.id; }); } catch(e){ maps.dept={}; } }
     if (!maps.role) { try { var j = await db().from('job_roles').select('id,name'); maps.role = {}; (j.data||[]).forEach(function(r){ maps.role[r.name]=r.id; }); } catch(e){ maps.role={}; } }
@@ -236,6 +236,30 @@
   async function loadFkMaps() {
     try { var a = await selectAllRows('assets', 'id,uid'); maps.assetUid = {}; a.forEach(function(r){ maps.assetUid[r.uid]=r.id; }); } catch(e){ maps.assetUid={}; }
     try { var e = await selectAllRows('employees', 'id,app_id'); maps.empApp = {}; e.forEach(function(r){ if(r.app_id!=null) maps.empApp[String(r.app_id)]=r.id; }); } catch(e){ maps.empApp={}; }
+  }
+  // issue #8: resolve assets.type_id. O app guarda o CÓDIGO do tipo (NB/DK/PR…),
+  // que diverge de alguns códigos do seed (DK↔DT, PR↔IM, KB↔TC, MS↔MO, OT↔OU),
+  // então traduzimos código-do-app → rótulo → id (com fallback por código/rótulo).
+  var APP_TYPE_TO_LABEL = { NB:'Notebook', DK:'Desktop', MN:'Monitor', PR:'Impressora',
+                            CL:'Celular', TB:'Tablet', KB:'Teclado', MS:'Mouse', HS:'Headset', OT:'Outro' };
+  async function loadTypeMap() {
+    if (maps.typeByCode) return;
+    maps.typeByCode = {}; maps.typeByLabel = {};
+    try {
+      var r = await db().from('asset_types').select('id,code,label');
+      (r.data || []).forEach(function (t) {
+        maps.typeByCode[t.code] = t.id;
+        if (t.label) maps.typeByLabel[String(t.label).toLowerCase()] = t.id;
+      });
+    } catch (e) {}
+  }
+  function resolveTypeId(t) {
+    if (t == null || t === '') return null;
+    var label = APP_TYPE_TO_LABEL[t];
+    if (label && maps.typeByLabel && maps.typeByLabel[label.toLowerCase()] != null) return maps.typeByLabel[label.toLowerCase()];
+    if (maps.typeByCode && maps.typeByCode[t] != null) return maps.typeByCode[t];
+    if (maps.typeByLabel && maps.typeByLabel[String(t).toLowerCase()] != null) return maps.typeByLabel[String(t).toLowerCase()];
+    return null;
   }
   function employeeToDb(e) {
     return {
@@ -256,7 +280,7 @@
 
   // Coleções promovidas: tipado = fonte de verdade, gravação por registro.
   var PROMOTED = {
-    assets:      { table: 'assets',      key: 'uid',    keyOf: function (r) { return r && r.uid; },        toDb: assetToDb,      prep: null },
+    assets:      { table: 'assets',      key: 'uid',    keyOf: function (r) { return r && r.uid; },        toDb: assetToDb,      prep: loadTypeMap },
     employees:   { table: 'employees',   key: 'app_id', keyOf: function (r) { return r && String(r.id); }, toDb: employeeToDb,   prep: loadRefMaps },
     allocations: { table: 'allocations', key: 'app_id', keyOf: function (r) { return r && String(r.id); }, toDb: allocationToDb, prep: loadFkMaps }
   };
