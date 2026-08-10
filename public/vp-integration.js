@@ -53,9 +53,39 @@
   Object.keys(SYNCED).forEach(function (c) { KEY_TO_COL[SYNCED[c]] = c; });
 
   var client = null;
-  var VP = window.VP = { ready: false, authed: false, session: null, user: null, enabled: false };
+  var VP = window.VP = { ready: false, authed: false, session: null, user: null, enabled: false, _baseline: {} };
 
   function db() { return client.schema(SCHEMA); }
+
+  // ---- Merge 3-vias por registro (issue #2: evita lost-update) ----
+  // Descobre o campo de identidade da coleção; null = coleção não-mesclável
+  // (listas de strings, mapas) → grava por sobrescrita (comportamento antigo).
+  function idResolver(col) {
+    if (col === 'assets') return function (r) { return r && (r.uid != null ? r.uid : r.id); };
+    var withId = { employees:1, allocations:1, tickets:1, ticketsTrash:1, comments:1,
+                   articles:1, assetHistory:1, checklists:1, supplies:1, notifications:1 };
+    if (withId[col]) return function (r) { return r && r.id; };
+    return null;
+  }
+  // Aplica só as mudanças DESTE cliente (local vs baseline) sobre a cópia
+  // ATUAL do servidor — preservando registros de outros usuários. Se algo
+  // impedir um merge seguro (falta de id, tipo inesperado), devolve `local`
+  // (= sobrescrita; nunca pior que hoje).
+  function vpMerge(baseline, local, server, idOf) {
+    if (!Array.isArray(local)) return local;
+    if (!Array.isArray(server)) return local; // sem cópia no servidor → grava local
+    baseline = Array.isArray(baseline) ? baseline : [];
+    function mapById(arr) { var m = {}; for (var i=0;i<arr.length;i++){ var id=idOf(arr[i]); if(id==null||id==='') return null; m[id]=arr[i]; } return m; }
+    var L = mapById(local), B = mapById(baseline), S = mapById(server);
+    if (!L || !B || !S) return local; // algum registro sem id → sobrescrita segura
+    var out = {}; Object.keys(S).forEach(function (k) { out[k] = S[k]; });
+    Object.keys(L).forEach(function (k) { // insert/update deste cliente
+      if (!(k in B) || JSON.stringify(L[k]) !== JSON.stringify(B[k])) out[k] = L[k];
+    });
+    Object.keys(B).forEach(function (k) { if (!(k in L)) delete out[k]; }); // delete deste cliente
+    return Object.keys(out).map(function (k) { return out[k]; });
+  }
+  VP._merge = vpMerge; // exposto p/ teste
 
   // ---------------------------------------------------------------- SSO
   function readSSO() {
@@ -137,6 +167,7 @@
     Object.keys(SYNCED).forEach(function (col) {
       if (map[col] !== undefined && map[col] !== null) {
         try { localStorage.setItem(SYNCED[col], JSON.stringify(map[col])); } catch (e) {}
+        VP._baseline[col] = map[col]; // snapshot do login p/ o merge por registro (issue #2)
       }
     });
     VP.ready = true;
@@ -174,15 +205,33 @@
     if (!VP.enabled || !VP.ready) return;
     var col = KEY_TO_COL[storageKey];
     if (!col) return; // sessao/tema/desconhecida → só local
+
+    // Merge por registro (issue #2): relê a cópia do servidor e aplica só as
+    // mudanças deste cliente, preservando o que outros usuários gravaram.
+    // Fail-safe: qualquer problema cai na gravação direta (comportamento antigo).
+    var toWrite = value;
+    try {
+      var idOf = idResolver(col);
+      if (idOf && Array.isArray(value)) {
+        var cur = null;
+        try {
+          var r = await db().from('app_state').select('data').eq('collection', col).maybeSingle();
+          cur = r && r.data ? r.data.data : null;
+        } catch (e) { cur = null; }
+        toWrite = vpMerge(VP._baseline[col], value, cur, idOf);
+      }
+    } catch (e) { toWrite = value; }
+
     try {
       await db().from('app_state').upsert({
         collection: col,
-        data: value,
+        data: toWrite,
         updated_at: new Date().toISOString(),
         updated_by: (VP.user && VP.user.id) || null
       }, { onConflict: 'collection' });
+      VP._baseline[col] = value; // baseline = visão deste cliente (não o merge)
     } catch (e) { console.warn('[VP] save app_state falhou:', col, e && e.message); }
-    if (col === 'assets') { mirrorAssets(value); }
+    if (col === 'assets') { mirrorAssets(toWrite); }
   };
 
   // Envolve getData/saveData do app (definidos no script inline) para
