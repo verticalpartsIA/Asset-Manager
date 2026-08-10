@@ -164,21 +164,40 @@
     catch (e) { console.warn('[VP] loadAll falhou (schema exposto?):', e && e.message); return; }
     var map = {};
     rows.forEach(function (row) { map[row.collection] = row.data; });
+
+    // Não-promovidas: fonte de verdade é o app_state (JSONB).
     Object.keys(SYNCED).forEach(function (col) {
+      if (PROMOTED[col]) return;
       if (map[col] !== undefined && map[col] !== null) {
         try { localStorage.setItem(SYNCED[col], JSON.stringify(map[col])); } catch (e) {}
-        VP._baseline[col] = map[col]; // snapshot do login p/ o merge por registro (issue #2)
+        VP._baseline[col] = map[col]; // baseline p/ o merge por registro (issue #2)
       }
     });
+
+    // Promovidas (issue #4): fonte de verdade são as tabelas tipadas (details).
+    // Fallback p/ app_state se a tipada estiver vazia (transição/erro).
+    for (var i = 0; i < PROMOTED_KEYS.length; i++) {
+      var col = PROMOTED_KEYS[i], cfg = PROMOTED[col], arr = null;
+      try { var t = await db().from(cfg.table).select('details'); arr = (t.data || []).map(function (x) { return x.details; }).filter(Boolean); }
+      catch (e) { arr = null; }
+      if (arr && arr.length) {
+        try { localStorage.setItem(SYNCED[col], JSON.stringify(arr)); } catch (e) {}
+        VP._baseline[col] = arr;
+      } else if (map[col] !== undefined && map[col] !== null) {
+        try { localStorage.setItem(SYNCED[col], JSON.stringify(map[col])); } catch (e) {}
+        VP._baseline[col] = map[col];
+      }
+    }
     VP.ready = true;
     return true;
   };
 
   // -------------------------------------------------------------- SAVE
-  // Espelho relacional tipado (issue #3): assets / employees / allocations.
-  // app_state (JSONB) segue como fonte de verdade; aqui mantemos as tabelas
-  // tipadas em sincronia — com propagação de DELETE — para o Painel
-  // Executivo/SQL enxergarem por coluna. Tudo best-effort (nunca quebra o app).
+  // Promoção relacional (issue #4): para assets/employees/allocations, as
+  // tabelas TIPADAS são a fonte de verdade e a gravação é POR REGISTRO
+  // (upsert só do que mudou + delete só do que saiu) — sem rewrite da coleção
+  // inteira. O objeto do app vive em details (leitura lossless). As demais
+  // coleções continuam no app_state (JSONB) com merge por registro (issue #2).
   var STATUS_MAP = { available:'Disponível', assigned:'Alocado', maintenance:'Manutenção', inactive:'Inativo', discarded:'Descartado' };
   var STATUS_OK = ['Disponível','Alocado','Manutenção','Inativo','Descartado'];
   function mapStatus(s) { return STATUS_MAP[s] || (STATUS_OK.indexOf(s) >= 0 ? s : 'Disponível'); }
@@ -219,31 +238,45 @@
     };
   }
 
-  // Upsert por keyField + PROPAGA DELETE: remove do espelho o que sumiu da
-  // coleção (lê as chaves existentes e apaga as ausentes) — corrige o drift.
-  async function syncMirror(table, rows, keyField) {
-    try {
-      if (rows.length) { await db().from(table).upsert(rows, { onConflict: keyField }); }
-      var keys = rows.map(function(r){ return r[keyField]; }).filter(function(k){ return k != null; });
-      var ex = await db().from(table).select(keyField);
-      var toDel = (ex.data||[]).map(function(r){ return r[keyField]; }).filter(function(k){ return keys.indexOf(k) < 0; });
-      if (toDel.length) { await db().from(table).delete().in(keyField, toDel); }
-    } catch (e) { console.warn('[VP] espelho ' + table + ' falhou:', e && e.message); }
+  // Coleções promovidas: tipado = fonte de verdade, gravação por registro.
+  var PROMOTED = {
+    assets:      { table: 'assets',      key: 'uid',    keyOf: function (r) { return r && r.uid; },        toDb: assetToDb,      prep: null },
+    employees:   { table: 'employees',   key: 'app_id', keyOf: function (r) { return r && String(r.id); }, toDb: employeeToDb,   prep: loadRefMaps },
+    allocations: { table: 'allocations', key: 'app_id', keyOf: function (r) { return r && String(r.id); }, toDb: allocationToDb, prep: loadFkMaps }
+  };
+  var PROMOTED_KEYS = Object.keys(PROMOTED);
+
+  // Diff por chave: o que mudou/entrou (changed) e o que saiu (removed) entre
+  // o baseline (visão anterior deste cliente) e o valor atual.
+  function diffByKey(baseline, value, keyOf) {
+    var B = {}; (Array.isArray(baseline) ? baseline : []).forEach(function (r) { var k = keyOf(r); if (k != null) B[k] = r; });
+    var changed = [], curKeys = [];
+    value.forEach(function (r) {
+      var k = keyOf(r); if (k == null) return; curKeys.push(k);
+      if (!(k in B) || JSON.stringify(r) !== JSON.stringify(B[k])) changed.push(r);
+    });
+    var removed = Object.keys(B).filter(function (k) { return curKeys.indexOf(k) < 0; });
+    return { changed: changed, removed: removed };
   }
 
-  async function mirrorTyped(col, value) {
+  // Grava a coleção promovida POR REGISTRO. Fail-safe: se algo falhar, cai no
+  // app_state (a coleção inteira) — o dado nunca se perde; só aí reamplifica.
+  async function savePromoted(col, value) {
     if (!Array.isArray(value)) return;
+    var cfg = PROMOTED[col];
     try {
-      if (col === 'assets') {
-        await syncMirror('assets', value.filter(function(a){ return a && a.uid; }).map(assetToDb), 'uid');
-      } else if (col === 'employees') {
-        await loadRefMaps();
-        await syncMirror('employees', value.filter(function(e){ return e && e.id != null; }).map(employeeToDb), 'app_id');
-      } else if (col === 'allocations') {
-        await loadFkMaps();
-        await syncMirror('allocations', value.filter(function(a){ return a && a.id != null; }).map(allocationToDb), 'app_id');
-      }
-    } catch (e) { console.warn('[VP] mirrorTyped falhou:', col, e && e.message); }
+      if (cfg.prep) await cfg.prep();
+      var d = diffByKey(VP._baseline[col], value, cfg.keyOf);
+      if (d.changed.length) await db().from(cfg.table).upsert(d.changed.map(cfg.toDb), { onConflict: cfg.key });
+      if (d.removed.length) await db().from(cfg.table).delete().in(cfg.key, d.removed);
+      VP._baseline[col] = value;
+    } catch (e) {
+      console.warn('[VP] savePromoted ' + col + ' falhou; fallback app_state:', e && e.message);
+      try {
+        await db().from('app_state').upsert({ collection: col, data: value, updated_at: new Date().toISOString(), updated_by: (VP.user && VP.user.id) || null }, { onConflict: 'collection' });
+        VP._baseline[col] = value;
+      } catch (e2) {}
+    }
   }
 
   VP.save = async function (storageKey, value) {
@@ -251,9 +284,11 @@
     var col = KEY_TO_COL[storageKey];
     if (!col) return; // sessao/tema/desconhecida → só local
 
-    // Merge por registro (issue #2): relê a cópia do servidor e aplica só as
-    // mudanças deste cliente, preservando o que outros usuários gravaram.
-    // Fail-safe: qualquer problema cai na gravação direta (comportamento antigo).
+    // Promovidas (issue #4): gravação por registro nas tabelas tipadas.
+    if (PROMOTED[col]) { await savePromoted(col, value); return; }
+
+    // Não-promovidas — merge por registro (issue #2): relê a cópia do servidor
+    // e aplica só as mudanças deste cliente. Fail-safe: cai na gravação direta.
     var toWrite = value;
     try {
       var idOf = idResolver(col);
@@ -276,7 +311,6 @@
       }, { onConflict: 'collection' });
       VP._baseline[col] = value; // baseline = visão deste cliente (não o merge)
     } catch (e) { console.warn('[VP] save app_state falhou:', col, e && e.message); }
-    mirrorTyped(col, toWrite); // espelha assets/employees/allocations (issue #3)
   };
 
   // Envolve getData/saveData do app (definidos no script inline) para
