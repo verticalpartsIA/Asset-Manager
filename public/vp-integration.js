@@ -57,6 +57,42 @@
 
   function db() { return client.schema(SCHEMA); }
 
+  // ---- Indicador de sincronização ----
+  // Mostra um selo quando as alterações NÃO estão indo para o Supabase (sessão
+  // SSO caiu/expirou → grava só no localStorage) e some quando está tudo certo.
+  var _syncHide = null;
+  function syncBadgeEl() {
+    var el = document.getElementById('vp-sync');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'vp-sync';
+      el.setAttribute('role', 'status');
+      el.style.cssText = 'position:fixed;right:12px;bottom:12px;z-index:9997;display:none;align-items:center;gap:6px;font-family:Poppins,sans-serif;font-size:12px;font-weight:600;padding:6px 11px;border-radius:999px;border:1px solid transparent;box-shadow:0 4px 14px rgba(0,0,0,.18);';
+      (document.body || document.documentElement).appendChild(el);
+    }
+    return el;
+  }
+  function _dot(c) { return '<span style="width:8px;height:8px;border-radius:50%;background:' + c + ';display:inline-block"></span>'; }
+  VP.updateSync = function () {
+    var el = syncBadgeEl();
+    var synced = VP.enabled && VP.ready && !VP._saveErr;
+    if (_syncHide) { clearTimeout(_syncHide); _syncHide = null; }
+    if (synced) {
+      el.style.display = 'flex';
+      el.style.background = 'rgba(16,185,129,.14)'; el.style.color = '#059669'; el.style.borderColor = 'rgba(16,185,129,.45)';
+      el.style.cursor = 'default'; el.title = ''; el.onclick = null;
+      el.innerHTML = _dot('#10b981') + 'Sincronizado';
+      _syncHide = setTimeout(function () { el.style.display = 'none'; }, 4000); // some quando ok
+    } else {
+      el.style.display = 'flex';
+      el.style.background = 'rgba(245,158,11,.16)'; el.style.color = '#b45309'; el.style.borderColor = 'rgba(245,158,11,.55)';
+      el.style.cursor = 'pointer';
+      el.title = 'Suas alterações estão salvas só neste navegador. Reentre pelo card do vpsistema.com para sincronizar com o servidor.';
+      el.onclick = function () { try { window.open('https://vpsistema.com', '_blank', 'noopener'); } catch (e) {} };
+      el.innerHTML = _dot('#f59e0b') + (VP._saveErr ? 'Falha ao sincronizar' : 'Não sincronizado') + ' — reentrar';
+    }
+  };
+
   // Lê TODAS as linhas de uma tabela em páginas de 1000 (issue #6). O PostgREST
   // limita cada select a ~1000 linhas por padrão; sem paginar, coleções grandes
   // seriam truncadas silenciosamente — e com a gravação por registro (#4) os
@@ -205,6 +241,7 @@
       }
     }
     VP.ready = true;
+    VP.updateSync();
     return true;
   };
 
@@ -310,8 +347,10 @@
       if (d.changed.length) await db().from(cfg.table).upsert(d.changed.map(cfg.toDb), { onConflict: cfg.key });
       if (d.removed.length) await db().from(cfg.table).delete().in(cfg.key, d.removed);
       VP._baseline[col] = value;
+      VP._saveErr = false; VP.updateSync();
     } catch (e) {
       console.warn('[VP] savePromoted ' + col + ' falhou; fallback app_state:', e && e.message);
+      VP._saveErr = true; VP.updateSync();
       try {
         await db().from('app_state').upsert({ collection: col, data: value, updated_at: new Date().toISOString(), updated_by: (VP.user && VP.user.id) || null }, { onConflict: 'collection' });
         VP._baseline[col] = value;
@@ -350,7 +389,8 @@
         updated_by: (VP.user && VP.user.id) || null
       }, { onConflict: 'collection' });
       VP._baseline[col] = value; // baseline = visão deste cliente (não o merge)
-    } catch (e) { console.warn('[VP] save app_state falhou:', col, e && e.message); }
+      VP._saveErr = false; VP.updateSync();
+    } catch (e) { console.warn('[VP] save app_state falhou:', col, e && e.message); VP._saveErr = true; VP.updateSync(); }
   };
 
   // Envolve getData/saveData do app (definidos no script inline) para
