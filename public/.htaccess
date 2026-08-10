@@ -1,0 +1,21 @@
+# Hospedagem compartilhada Hostinger — app servido como site estático.
+# index.html vence a "Página padrão" do Hostinger (que costuma ser index.php).
+DirectoryIndex index.html index.php
+
+<IfModule mod_headers.c>
+  # index.html sempre fresco (não cacheia a "casca" do app)
+  <FilesMatch "^index\.html$">
+    Header set Cache-Control "no-store, must-revalidate"
+  </FilesMatch>
+  # version.json nunca cacheado (é o gatilho do aviso de atualização)
+  <FilesMatch "version\.json$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
+
+# Força HTTPS
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+</IfModule>
