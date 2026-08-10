@@ -1140,8 +1140,8 @@ Atualizar
 <div class="form-card-title">Novo Colaborador</div>
 <form id="form-colab" onsubmit="cadastrarColaborador(event)">
 <div class="form-grid">
-<div class="form-field"><label>Nome Completo</label><input type="text" id="col-nome" placeholder="Nome do colaborador" required=""></div>
-<div class="form-field"><label>E-mail</label><input type="email" id="col-email" placeholder="email@empresa.com" required=""><span style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; display: block;">O login de acesso será gerado automaticamente no padrão nome.sobrenome (ex: ana.silva).</span></div>
+<div class="form-field"><label>Nome Completo</label><input type="text" id="col-nome" placeholder="Nome do colaborador" required="" autocomplete="name"></div>
+<div class="form-field"><label>E-mail</label><input type="email" id="col-email" placeholder="email@empresa.com" required="" autocomplete="email"><span style="font-size: 10.5px; color: var(--text-muted); margin-top: 4px; display: block;">O login de acesso será gerado automaticamente no padrão nome.sobrenome (ex: ana.silva).</span></div>
 <div class="form-field">
 <label>Departamento</label>
 <select id="col-depto" required=""><option value="">Selecione...</option><option value="ADMINISTRAÇÃO">ADMINISTRAÇÃO</option><option value="ALMOXERIFADO">ALMOXERIFADO</option><option value="ASSEIO E CONSERVAÇÃO">ASSEIO E CONSERVAÇÃO</option><option value="AUTOMAÇÃO">AUTOMAÇÃO</option><option value="COMERCIAL">COMERCIAL</option><option value="COMPRAS">COMPRAS</option><option value="COPA">COPA</option><option value="DIRETORIA">DIRETORIA</option><option value="ENGENHARIA">ENGENHARIA</option><option value="EXPEDIÇÃO">EXPEDIÇÃO</option><option value="FINANCEIRO">FINANCEIRO</option><option value="GENTE E GESTÃO">GENTE E GESTÃO</option><option value="INSTALAÇÃO E MANUTENÇÃO">INSTALAÇÃO E MANUTENÇÃO</option><option value="LOGISTICA">LOGISTICA</option><option value="MARKETING">MARKETING</option><option value="MONTAGEM">MONTAGEM</option><option value="MOTORISTA">MOTORISTA</option><option value="OPERAÇÕES">OPERAÇÕES</option><option value="PCP">PCP</option><option value="PÓS VENDA">PÓS VENDA</option><option value="PRODUÇÃO">PRODUÇÃO</option><option value="QUALIDADE">QUALIDADE</option><option value="SERRALHEIRO">SERRALHEIRO</option><option value="TI">TI</option></select>
@@ -3584,7 +3584,7 @@ const canvas = container.querySelector('canvas');
 const img = container.querySelector('img');
 const imgData = canvas ? canvas.toDataURL() : (img ? img.src : '');
 const printWindow = window.open('', '', 'width=400,height=500');
-printWindow.document.write('<html><head><title>Etiqueta ' + uid + '</title><style>body { font-family: Arial; text-align: center; padding: 20px; background: #ffffff; color: #000000; } .label { border: 2px solid #000000; padding: 20px; display: inline-block; background: #ffffff; } .uid { font-family: monospace; font-size: 16px; font-weight: bold; margin-top: 15px; color: #000000; }</style></head><body><div class="label">' + (imgData ? '<img src="' + imgData + '" width="200" height="200">' : '') + '<div class="uid">' + uid + '</div></div><script>setTimeout(function(){window.print();},300)<\/script></body></html>');
+printWindow.document.write('<html><head><title>Etiqueta ' + uid + '</title><style>body { font-family: Arial; text-align: center; padding: 20px; background: #ffffff; color: #000000; } .label { border: 2px solid #000000; padding: 20px; display: inline-block; background: #ffffff; } .uid { font-family: monospace; font-size: 16px; font-weight: bold; margin-top: 15px; color: #000000; }</style></head><body><div class="label">' + (imgData ? '<img src="' + imgData + '" width="200" height="200" alt="QR Code do ativo">' : '') + '<div class="uid">' + uid + '</div></div><script>setTimeout(function(){window.print();},300)<\/script></body></html>');
 printWindow.document.close();
 }
 function exportarPDF(tipo) {
@@ -4659,7 +4659,7 @@ function abrirFotoHistoricoLightbox(el) {
 const src = el.querySelector('img').src;
 const overlay = document.createElement('div');
 overlay.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: zoom-out; padding: 24px;';
-overlay.innerHTML = '<img src="' + src + '" style="max-width: 90vw; max-height: 90vh; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">';
+overlay.innerHTML = '<img src="' + src + '" alt="Foto ampliada" style="max-width: 90vw; max-height: 90vh; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">';
 overlay.onclick = function() { overlay.remove(); };
 document.body.appendChild(overlay);
 }
