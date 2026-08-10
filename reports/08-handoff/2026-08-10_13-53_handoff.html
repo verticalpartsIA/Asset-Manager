@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Handoff — Asset Manager (VerticalParts)</title>
+<style>
+  :root{--bg:#f6f7f9;--card:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--brand:#F5C400;--chip:#f3f4f6;
+    --ok:#16a34a;--warn:#d97706;--plan:#0ea5e9;--block:#dc2626;--defer:#64748b;}
+  @media (prefers-color-scheme:dark){:root{--bg:#0d0d0d;--card:#171717;--ink:#f3f4f6;--muted:#9ca3af;--line:#2b2b2b;--chip:#1f1f1f;}}
+  :root[data-theme="dark"]{--bg:#0d0d0d;--card:#171717;--ink:#f3f4f6;--muted:#9ca3af;--line:#2b2b2b;--chip:#1f1f1f;}
+  :root[data-theme="light"]{--bg:#f6f7f9;--card:#fff;--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--chip:#f3f4f6;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Poppins',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.55}
+  .wrap{max-width:1060px;margin:0 auto;padding:32px 20px 80px}
+  header.top{border-left:6px solid var(--brand);padding:14px 20px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin-bottom:22px}
+  h1{font-size:23px;margin:6px 0 4px}
+  h2{font-size:18px;margin:30px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--line)}
+  h3{font-size:14px;margin:16px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .muted{color:var(--muted)} .meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--muted);margin-top:8px}
+  code{background:var(--chip);padding:1px 6px;border-radius:6px;font-size:12.5px;font-family:ui-monospace,Consolas,monospace}
+  pre{background:var(--chip);padding:12px 14px;border-radius:10px;overflow-x:auto;font-size:12.5px;border:1px solid var(--line)}
+  ul{margin:6px 0 6px 2px;padding-left:20px} li{margin:4px 0}
+  .st{color:#fff;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+  .s-ok{background:var(--ok)} .s-warn{background:var(--warn)} .s-plan{background:var(--plan)} .s-block{background:var(--block)} .s-defer{background:var(--defer)}
+  table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--line);vertical-align:top} th{background:var(--chip);font-size:12px}
+  tr:last-child td{border-bottom:none}
+  .scroll{overflow-x:auto}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:12px 0}
+  .qs{background:var(--card);border:2px dashed var(--brand);border-radius:12px;padding:16px 18px;margin-top:16px}
+  .legend span{margin-right:12px;font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <span class="muted" style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase">08 · Handoff</span>
+    <h1>Asset Manager — VerticalParts · Continuidade de sessão</h1>
+    <div class="meta">
+      <span><strong>Data:</strong> 2026-08-10 13:53 (BRT)</span>
+      <span><strong>Repo:</strong> verticalpartsIA/Asset-Manager</span>
+      <span><strong>HEAD:</strong> <code>8b0af62</code></span>
+      <span><strong>Produção:</strong> https://assetmanager.vpsistema.com</span>
+    </div>
+    <div class="legend" style="margin-top:8px">
+      <span><span class="st s-ok">CONCLUÍDO+VERIFICADO</span></span>
+      <span><span class="st s-warn">CONCLUÍDO NÃO-VERIF.</span></span>
+      <span><span class="st s-plan">PLANEJADO</span></span>
+      <span><span class="st s-defer">ADIADO</span></span>
+      <span><span class="st s-block">BLOQUEADO</span></span>
+    </div>
+  </header>
+
+  <h2>1. Visão geral do projeto</h2>
+  <p>Portal interno de <strong>gestão de ativos de TI</strong> da VerticalParts. App <strong>estático</strong> (um <code>public/index.html</code> de ~5.700 linhas com script inline + <code>public/vp-integration.js</code>), servido como <strong>site estático no Hostinger</strong> em <code>assetmanager.vpsistema.com</code>. Backend: <strong>Supabase Core</strong> (projeto <em>vpsistema</em>, ref <code>ubdkoqxfwcraftesgmbw</code>), num schema dedicado <code>asset_manager</code>. Acesso via <strong>card no vpsistema</strong> com SSO. Identidade do VP Design System (cor <code>#F5C400</code>, Poppins, tela de entrada com vídeo, aviso de atualização).</p>
+
+  <h2>2. Objetivo do trabalho</h2>
+  <p>Alinhar o app ao Design System, <strong>ligá-lo ao Supabase</strong> (schema <code>asset_manager</code>) com <strong>SSO</strong>, publicar via deploy automático, rodar a <strong>auditoria Supabase (skill 02)</strong> e resolver as issues geradas (Supabase, arquitetura, UX).</p>
+
+  <h2>3. Arquitetura relevante</h2>
+  <ul>
+    <li><strong>Frontend:</strong> <code>index.html</code> (god-file, script inline) + <code>vp-integration.js</code> (camada de SSO + persistência Supabase). O app usa <code>getData/saveData</code> (localStorage) sincronamente; <code>saveData</code> é <strong>envelopado</strong> para write-through ao Supabase.</li>
+    <li><strong>Persistência híbrida:</strong> <code>assets</code>/<code>employees</code>/<code>allocations</code> → tabelas <strong>tipadas</strong> (fonte de verdade, gravação <strong>por registro</strong>: diff → upsert só do que mudou + delete só do que saiu; objeto original em <code>details</code>, leitura lossless). Demais coleções → <code>asset_manager.app_state</code> (JSONB) com <strong>merge por registro</strong> (evita lost-update).</li>
+    <li><strong>SSO token-only:</strong> lê <code>?sso_token=</code> do card, valida, pega o perfil em <code>public.profiles</code>, deriva o papel de <code>profiles.level</code>. <strong>Sem refresh</strong> → a sessão cai em F5/expiração (~1h) e o app volta a gravar só no localStorage. Mitigado por um <strong>indicador de sincronização</strong>.</li>
+    <li><strong>RLS por papel:</strong> leitura para qualquer <code>authenticated</code>; escrita só <em>staff</em> (Administrador), via <code>asset_manager.is_staff()</code>. <code>app_state</code> mantém insert/update abertos; delete só staff.</li>
+    <li><strong>Deploy:</strong> GitHub Actions → Hostinger estático (SCP de <code>public/*</code>), gera <code>version.json</code> e faz <strong>cache-bust</strong> do JS por commit (<code>?v=&lt;sha&gt;</code>).</li>
+  </ul>
+
+  <h2>4. Trabalho concluído</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Item</th><th>Status</th><th>Evidência</th></tr></thead>
+    <tbody>
+      <tr><td>Schema <code>asset_manager</code>: 20 tabelas + <code>app_state</code>, índices, triggers, isolado do <code>public</code></td><td><span class="st s-ok">VERIF.</span></td><td>SQL introspecção; advisor de segurança = 0 achados do schema</td></tr>
+      <tr><td>7 migrations versionadas em <code>supabase/migrations/</code> (exportadas da fonte de verdade)</td><td><span class="st s-ok">VERIF.</span></td><td><code>ls supabase/migrations</code> + <code>supabase_migrations.schema_migrations</code></td></tr>
+      <tr><td>RLS por papel aplicada (issue #1): read-all + write-staff em 20 tabelas + <code>app_state</code></td><td><span class="st s-ok">VERIF.</span></td><td>0 policies <code>am_authenticated_all</code>; <code>is_staff()</code> criada; 84 policies</td></tr>
+      <tr><td>Card no portal ativo (<code>public.modules</code>, slug <code>asset-manager</code>)</td><td><span class="st s-ok">VERIF.</span></td><td>SQL <code>is_active=true</code>; evento <code>enter</code> em activity_events</td></tr>
+      <tr><td><strong>SSO + persistência E2E</strong> (login real Administrador → INSERT/UPDATE em <code>assets</code> tipada)</td><td><span class="st s-ok">VERIF.</span></td><td>4 linhas reais em <code>asset_manager.assets</code> (type_id/status/details corretos)</td></tr>
+      <tr><td>Identidade DS: cor #F5C400, Poppins, tela de entrada (boot-video), aviso de atualização</td><td><span class="st s-ok">VERIF.</span></td><td>preview + live (boot/toast/version.json)</td></tr>
+      <tr><td>Correção de <strong>cache</strong> (Hostinger servia JS por 7 dias): index no-store + <code>?v=&lt;sha&gt;</code></td><td><span class="st s-ok">VERIF.</span></td><td>curl: index referencia <code>?v=commit</code>, JS servido é o novo</td></tr>
+      <tr><td>Merge 3-vias por registro (issue #2) — lógica</td><td><span class="st s-ok">VERIF.</span></td><td>6/6 cenários no navegador (VP._merge)</td></tr>
+      <tr><td>Indicador de sincronização (saúde da sessão SSO)</td><td><span class="st s-ok">VERIF.</span></td><td>2 estados no preview + deploy</td></tr>
+      <tr><td>Issues fechadas: <strong>#1–#9, #14, #18, #21, #22, #23, #25</strong> (15)</td><td><span class="st s-ok">VERIF.</span></td><td>GitHub issues</td></tr>
+      <tr><td>UX a11y (#18/#21/#22/#23/#25) — foco visível, autocomplete, alt, color-scheme/theme-color, reduced-motion</td><td><span class="st s-warn">NÃO-VERIF.</span></td><td>aditivo; estrutural OK; não auditado visualmente em todos os estados</td></tr>
+      <tr><td>Propagação de DELETE do espelho (colaboradores/coleções) — lógica</td><td><span class="st s-warn">NÃO-VERIF.</span></td><td>coberta pelos testes de merge; <strong>não</strong> exercida E2E via app (ativos não têm delete real, só "Descartar"=status)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>5. Arquivos/módulos alterados</h2>
+  <ul>
+    <li><code>public/vp-integration.js</code> — SSO, persistência híbrida, merge, espelho tipado, paginação, type_id, indicador de sync (núcleo da integração).</li>
+    <li><code>public/index.html</code> — renomeado de "Asset Manager.html"; boot-video, aviso de atualização, glue de bootstrap, a11y (focus/color-scheme/reduced-motion), autocomplete/alt.</li>
+    <li><code>public/.htaccess</code> — index.html/version.json/vp-integration.js no-cache, força HTTPS, DirectoryIndex.</li>
+    <li><code>server.js</code> — respeita <code>process.env.PORT</code> (apenas dev local).</li>
+    <li><code>.github/workflows/deploy-hostinger.yml</code> — deploy estático + version.json + cache-bust.</li>
+    <li><code>supabase/migrations/*</code> (7) + <code>supabase/README.md</code>.</li>
+    <li><code>public/app.js</code> — <strong>removido</strong> (código morto, issue #9).</li>
+    <li><code>reports/</code> — relatórios 01/02/04/08.</li>
+  </ul>
+
+  <h2>6. Decisões técnicas</h2>
+  <ul>
+    <li>Schema <strong>dedicado</strong> <code>asset_manager</code> (não poluir o <code>public</code> do Core, que hospeda o portal + 2 apps).</li>
+    <li>Persistência <strong>híbrida</strong> (tipado nas entidades centrais; JSONB no resto) — escolha do usuário sobre "só JSONB" ou "tudo relacional".</li>
+    <li><strong>SSO token-only</strong> (escolha do usuário) em vez de <code>sameproject</code> com refresh (que exigiria deploy da edge function do portal).</li>
+    <li>Deploy <strong>estático</strong> (a hospedagem é compartilhada, sem Node) — <code>server.js</code> só p/ dev.</li>
+    <li>RLS: <em>staff</em> = <code>Administrador</code> (níveis reais: Administrador/Lider/Colaborador; só Admin escreve tipado, o que bate com a UI).</li>
+  </ul>
+
+  <h2>7. Decisões rejeitadas / adiadas</h2>
+  <ul>
+    <li><span class="st s-defer">ADIADO</span> SSO <code>sameproject</code> com refresh (remove a queda de sessão do token-only) — precisa deploy de edge function no portal.</li>
+    <li><span class="st s-defer">ADIADO</span> Refatorações estruturais <strong>#10–#13</strong> (god-file, camada de dados, handlers inline, testabilidade) — grandes e arriscadas no app vivo; fazer incremental com validação humana, <strong>sem auto-merge</strong>.</li>
+    <li><span class="st s-block" style="background:var(--defer)">REJEITADO</span> Centralizar config num <code>config.js</code> (issue #14) — cosmético num app single-env; a anon key é pública por design.</li>
+  </ul>
+
+  <h2>8. Pendências e próximas ações (priorizadas)</h2>
+  <ol>
+    <li><span class="st s-plan">PLANEJADO</span> <strong>(adiado a pedido do usuário)</strong> Teste E2E real de DELETE: excluir um colaborador sem alocação ativa → confirmar que some de <code>asset_manager.employees</code>.</li>
+    <li><span class="st s-plan">PLANEJADO</span> UX médias em batches revisáveis: <strong>#19</strong> (<code>&lt;div onclick&gt;</code> → botão + teclado), <strong>#20</strong> (ARIA), <strong>#24</strong> (<code>alert()</code> → toast).</li>
+    <li><span class="st s-defer">ADIADO</span> Épico arquitetural <strong>#15</strong>: #10 god-file, #11 camada de dados, #12 handlers, #13 testabilidade — incremental, validado por login real, sem auto-merge.</li>
+    <li><span class="st s-plan">PLANEJADO</span> (opcional) Upgrade SSO <code>sameproject</code> com refresh — elimina a queda de sessão.</li>
+  </ol>
+
+  <h2>9. Bugs / problemas conhecidos</h2>
+  <ul>
+    <li><strong>Token-only:</strong> após F5/expiração (~1h) a sessão Supabase cai e o app grava só no localStorage. <em>Mitigado</em> (indicador de sync avisa e pede reentrar pelo card), <em>não eliminado</em>.</li>
+    <li><strong>Deploy transitório:</strong> às vezes falha por <code>i/o timeout</code> de SSH do Hostinger (fail2ban). Solução: re-disparar o workflow (<code>gh workflow run</code>).</li>
+    <li><strong>Ativos não têm DELETE real</strong> (só "Descartar" = status). A propagação de DELETE para <code>assets</code> é salvaguarda dormente (correto por design).</li>
+  </ul>
+
+  <h2>10. Riscos conhecidos</h2>
+  <ul>
+    <li>Refatorar o god-file (#10–#13) no app <strong>em produção</strong> é arriscado; o caminho autenticado não é testável fora de um login real.</li>
+    <li>Projeto Core <strong>compartilhado</strong> (asset_manager convive com o portal + Gente&amp;Gestão + Requisições) — isolamento mantido; cuidado ao mexer no <code>public</code>.</li>
+  </ul>
+
+  <h2>11. Questões em aberto</h2>
+  <ul>
+    <li>Migrar para SSO <code>sameproject</code> com refresh? (decisão do usuário)</li>
+    <li>Encarar o épico arquitetural agora ou depois? (decisão do usuário)</li>
+  </ul>
+
+  <h2>12. Premissas importantes</h2>
+  <ul>
+    <li>Repo/issues = <code>verticalpartsIA/Asset-Manager</code> (usado a sessão toda).</li>
+    <li><em>Staff</em> (quem escreve nas tipadas) = perfis com <code>level</code> ~ Administrador/Técnico/Suporte. Hoje só <strong>Administrador</strong> existe como staff.</li>
+    <li>Chave <code>anon</code> exposta no front é pública por design (protegida por RLS).</li>
+  </ul>
+
+  <h2>13. Banco / migrations</h2>
+  <p><span class="st s-ok">VERIF.</span> 7 migrations aplicadas no Core e versionadas em <code>supabase/migrations/</code>. RLS por papel ativa. Schema exposto no PostgREST (<em>Exposed schemas</em>). <strong>O deploy estático NÃO roda migrations</strong> — aplicar via Supabase CLI/Dashboard/MCP (ver <code>supabase/README.md</code>).</p>
+
+  <h2>14. Testes / E2E / regressão</h2>
+  <ul>
+    <li><span class="st s-ok">VERIF.</span> Checagens estruturais no navegador a cada mudança (VP presente, saveData envelopado, sem erro de parse).</li>
+    <li><span class="st s-ok">VERIF.</span> Merge por registro: 6/6 cenários. Persistência autenticada: assets INSERT/UPDATE reais na tipada.</li>
+    <li><span class="st s-warn">NÃO-VERIF.</span> DELETE E2E (colaborador). UX a11y visual em todos os estados.</li>
+    <li><span class="st s-block" style="background:var(--defer)">INEXISTENTE</span> Suíte de regressão automatizada (issue #13: testabilidade ~0).</li>
+  </ul>
+
+  <h2>15. Deploy / release</h2>
+  <p><span class="st s-ok">VERIF.</span> No ar em <code>assetmanager.vpsistema.com</code> (Hostinger estático), deploy automático a cada push em <code>main</code>, com cache-bust. Último deploy: <strong>success</strong> (<code>8b0af62</code>). Card ativo no portal.</p>
+
+  <h2>16. Comandos relevantes</h2>
+  <pre>git pull origin main
+node server.js                 # dev local (serve public/ em :3000)
+gh workflow run deploy-hostinger.yml --ref main   # re-disparar deploy (timeout SSH)
+gh issue list --repo verticalpartsIA/Asset-Manager --state open
+# migrations: aplicar via Supabase CLI/Dashboard/MCP (deploy estático não roda)</pre>
+
+  <h2>17. Arquivos e diretórios importantes</h2>
+  <pre>public/index.html            # app (god-file)
+public/vp-integration.js     # SSO + persistência Supabase (núcleo)
+public/.htaccess             # cache/HTTPS/index
+.github/workflows/deploy-hostinger.yml
+supabase/migrations/         # 7 migrations versionadas
+supabase/README.md           # ordem + como aplicar
+reports/                     # 01-architecture, 02-supabase-postgres, 04-web-design, 08-handoff</pre>
+
+  <h2>18. Relatórios produzidos</h2>
+  <ul>
+    <li><code>reports/01-architecture/</code> — revisão arquitetural (épico #15).</li>
+    <li><code>reports/02-supabase-postgres/</code> — auditoria Supabase (issues #1–#8).</li>
+    <li><code>reports/04-web-design/</code> — revisão UX/UI (épico #26).</li>
+    <li><code>reports/08-handoff/</code> — este documento.</li>
+  </ul>
+
+  <h2>19. Bloqueios</h2>
+  <p>Nenhum bloqueio técnico ativo. O épico arquitetural (#10–#13) está <em>condicionado a decisão</em> (risco em produção). O upgrade do SSO depende de deploy da edge function do portal (decisão do usuário).</p>
+
+  <h2>20. Ponto exato para começar a próxima sessão</h2>
+  <p>Retomar o <strong>teste E2E de DELETE</strong> que ficou combinado ("depois terminamos isso"): excluir um colaborador sem alocação ativa e confirmar a remoção em <code>asset_manager.employees</code>. Em seguida, escolher entre as <strong>UX médias (#19/#20/#24)</strong> ou iniciar o <strong>épico arquitetural</strong> (incremental).</p>
+
+  <div class="qs">
+    <h3 style="margin-top:0">NEXT SESSION QUICK START</h3>
+    <ol>
+      <li><strong>Objetivo atual:</strong> concluir a validação E2E de DELETE (colaborador) e então avançar nas issues abertas (UX #19/#20/#24 ou arquitetura #10–#13, incremental).</li>
+      <li><strong>Primeiros arquivos:</strong> <code>public/vp-integration.js</code> (savePromoted/loadAll/merge), <code>public/index.html</code> (glue + funções <code>excluirColaborador</code>).</li>
+      <li><strong>Primeiros comandos:</strong> <code>git pull origin main</code> · <code>node server.js</code> · <code>gh issue list --repo verticalpartsIA/Asset-Manager --state open</code></li>
+      <li><strong>Primeira tarefa:</strong> pedir ao usuário logado (Administrador) para excluir um colaborador sem alocação ativa; verificar via SQL que a linha some de <code>asset_manager.employees</code>.</li>
+      <li><strong>Testes que devem seguir verdes:</strong> merge 6/6 (<code>VP._merge</code>); carga estrutural (VP presente, <code>saveData.__vpWrapped</code>); escrita autenticada de <code>assets</code> na tabela tipada; deploy verde com <code>?v=&lt;sha&gt;</code>.</li>
+    </ol>
+  </div>
+
+  <p class="muted" style="margin-top:24px;font-size:12px">Documento gerado pela skill 08 — Handoff. Somente diagnóstico/continuidade; nenhum código foi alterado nesta etapa.</p>
+</div>
+</body>
+</html>
