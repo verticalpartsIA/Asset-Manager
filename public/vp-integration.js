@@ -175,30 +175,75 @@
   };
 
   // -------------------------------------------------------------- SAVE
-  // Espelho relacional (best-effort) da entidade central 'assets'.
-  function normalizeStatus(s) {
-    var ok = ['Disponível', 'Alocado', 'Manutenção', 'Inativo', 'Descartado'];
-    return ok.indexOf(s) >= 0 ? s : 'Disponível';
-  }
+  // Espelho relacional tipado (issue #3): assets / employees / allocations.
+  // app_state (JSONB) segue como fonte de verdade; aqui mantemos as tabelas
+  // tipadas em sincronia — com propagação de DELETE — para o Painel
+  // Executivo/SQL enxergarem por coluna. Tudo best-effort (nunca quebra o app).
+  var STATUS_MAP = { available:'Disponível', assigned:'Alocado', maintenance:'Manutenção', inactive:'Inativo', discarded:'Descartado' };
+  var STATUS_OK = ['Disponível','Alocado','Manutenção','Inativo','Descartado'];
+  function mapStatus(s) { return STATUS_MAP[s] || (STATUS_OK.indexOf(s) >= 0 ? s : 'Disponível'); }
   function num(v) { var n = parseFloat(v); return isNaN(n) ? null : n; }
+
   function assetToDb(a) {
     return {
-      uid: a.uid,
-      brand: a.marca || a.brand || null,
-      model: a.modelo || a.model || null,
-      serial_number: a.serial || a.serial_number || null,
-      imei: a.imei || null,
-      status: normalizeStatus(a.status),
-      value: num(a.valor != null ? a.valor : a.value),
-      details: a
+      uid: a.uid, brand: a.marca || a.brand || null, model: a.modelo || a.model || null,
+      serial_number: a.serial || a.serial_number || null, imei: a.imei || null,
+      status: mapStatus(a.status), value: num(a.valor != null ? a.valor : a.value), details: a
     };
   }
-  async function mirrorAssets(arr) {
-    if (!Array.isArray(arr) || !arr.length) return;
-    var rows = arr.filter(function (a) { return a && a.uid; }).map(assetToDb);
-    if (!rows.length) return;
-    try { await db().from('assets').upsert(rows, { onConflict: 'uid' }); }
-    catch (e) { console.warn('[VP] espelho assets falhou:', e && e.message); }
+
+  // Mapas de resolução (nome/uid/app_id -> id) carregados sob demanda.
+  var maps = { dept:null, role:null, assetUid:null, empApp:null };
+  async function loadRefMaps() {
+    if (!maps.dept) { try { var d = await db().from('departments').select('id,name'); maps.dept = {}; (d.data||[]).forEach(function(r){ maps.dept[r.name]=r.id; }); } catch(e){ maps.dept={}; } }
+    if (!maps.role) { try { var j = await db().from('job_roles').select('id,name'); maps.role = {}; (j.data||[]).forEach(function(r){ maps.role[r.name]=r.id; }); } catch(e){ maps.role={}; } }
+  }
+  async function loadFkMaps() {
+    try { var a = await db().from('assets').select('id,uid'); maps.assetUid = {}; (a.data||[]).forEach(function(r){ maps.assetUid[r.uid]=r.id; }); } catch(e){ maps.assetUid={}; }
+    try { var e = await db().from('employees').select('id,app_id'); maps.empApp = {}; (e.data||[]).forEach(function(r){ if(r.app_id!=null) maps.empApp[String(r.app_id)]=r.id; }); } catch(e){ maps.empApp={}; }
+  }
+  function employeeToDb(e) {
+    return {
+      app_id: String(e.id), full_name: e.name || null, email: e.email || null,
+      is_active: e.status !== 'inactive',
+      department_id: (maps.dept && maps.dept[e.depto]) || null,
+      job_role_id: (maps.role && maps.role[e.cargo]) || null, details: e
+    };
+  }
+  function allocationToDb(a) {
+    return {
+      app_id: String(a.id),
+      asset_id: (maps.assetUid && maps.assetUid[a.asset_uid]) || null,
+      employee_id: (maps.empApp && maps.empApp[String(a.employee_id)]) || null,
+      allocated_at: a.date || null, is_current: a.status === 'active', details: a
+    };
+  }
+
+  // Upsert por keyField + PROPAGA DELETE: remove do espelho o que sumiu da
+  // coleção (lê as chaves existentes e apaga as ausentes) — corrige o drift.
+  async function syncMirror(table, rows, keyField) {
+    try {
+      if (rows.length) { await db().from(table).upsert(rows, { onConflict: keyField }); }
+      var keys = rows.map(function(r){ return r[keyField]; }).filter(function(k){ return k != null; });
+      var ex = await db().from(table).select(keyField);
+      var toDel = (ex.data||[]).map(function(r){ return r[keyField]; }).filter(function(k){ return keys.indexOf(k) < 0; });
+      if (toDel.length) { await db().from(table).delete().in(keyField, toDel); }
+    } catch (e) { console.warn('[VP] espelho ' + table + ' falhou:', e && e.message); }
+  }
+
+  async function mirrorTyped(col, value) {
+    if (!Array.isArray(value)) return;
+    try {
+      if (col === 'assets') {
+        await syncMirror('assets', value.filter(function(a){ return a && a.uid; }).map(assetToDb), 'uid');
+      } else if (col === 'employees') {
+        await loadRefMaps();
+        await syncMirror('employees', value.filter(function(e){ return e && e.id != null; }).map(employeeToDb), 'app_id');
+      } else if (col === 'allocations') {
+        await loadFkMaps();
+        await syncMirror('allocations', value.filter(function(a){ return a && a.id != null; }).map(allocationToDb), 'app_id');
+      }
+    } catch (e) { console.warn('[VP] mirrorTyped falhou:', col, e && e.message); }
   }
 
   VP.save = async function (storageKey, value) {
@@ -231,7 +276,7 @@
       }, { onConflict: 'collection' });
       VP._baseline[col] = value; // baseline = visão deste cliente (não o merge)
     } catch (e) { console.warn('[VP] save app_state falhou:', col, e && e.message); }
-    if (col === 'assets') { mirrorAssets(toWrite); }
+    mirrorTyped(col, toWrite); // espelha assets/employees/allocations (issue #3)
   };
 
   // Envolve getData/saveData do app (definidos no script inline) para
