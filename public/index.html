@@ -3,6 +3,8 @@
 <html lang="pt-BR" data-theme="light"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111111">
+<meta name="color-scheme" content="light dark">
 <title>Asset Manager - Plataforma de Gestão</title>
 <link href="./Asset Manager_files/css2" rel="stylesheet">
 <!-- Identidade VP Design System: Poppins (fonte oficial) -->
@@ -16,6 +18,22 @@
 <!-- SSO (token do vpsistema) + persistência no Supabase (schema asset_manager) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/vp-integration.js"></script>
+<style id="vp-a11y">
+  /* #23 — color-scheme acompanha o tema do app (controles/scrollbars nativos) */
+  :root[data-theme="dark"]  { color-scheme: dark; }
+  :root[data-theme="light"] { color-scheme: light; }
+  /* #18 — foco de teclado sempre visível (só teclado; não atrapalha o mouse) */
+  :focus-visible { outline: 2px solid var(--gold-primary); outline-offset: 2px; border-radius: 4px; }
+  /* #25 — respeita "reduzir movimento" do sistema */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
 <style>
 :root {
 --black-deep: #FAFAF8;
