@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão UX/UI &amp; Acessibilidade — Asset Manager</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#ffffff; --ink:#1c2330; --muted:#5b6472; --line:#e3e7ee;
+    --accent:#2f6bff; --crit:#c0392b; --high:#e67e22; --med:#d4a017; --low:#2e8b57; --chip:#eef2ff;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0f141b; --card:#161d27; --ink:#e7ecf3; --muted:#9aa6b6; --line:#26303d; --accent:#5b8bff; --chip:#1b2740;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:960px;margin:0 auto;padding:40px 22px 80px}
+  header.hero{border-left:5px solid var(--accent);padding:6px 0 6px 18px;margin-bottom:8px}
+  h1{font-size:28px;margin:0 0 6px}
+  .sub{color:var(--muted);font-size:14px}
+  h2{font-size:21px;margin:38px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+  p{margin:8px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:14px 0}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0}
+  .metric{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .metric .n{font-size:26px;font-weight:700}
+  .metric .l{color:var(--muted);font-size:13px}
+  .chip{display:inline-block;background:var(--chip);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;margin-right:6px}
+  .tag{display:inline-block;border-radius:6px;padding:2px 9px;font-size:12px;font-weight:700;color:#fff}
+  .t-crit{background:var(--crit)} .t-high{background:var(--high)} .t-med{background:var(--med)} .t-low{background:var(--low)}
+  .legend{border-left:4px solid var(--accent);background:var(--chip);padding:10px 14px;border-radius:8px;font-size:14px}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+  code{background:var(--chip);padding:1px 6px;border-radius:5px;font-size:13px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+  .finding{border:1px solid var(--line);border-radius:12px;margin:16px 0;overflow:hidden;background:var(--card)}
+  .finding .fh{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .finding .fh .id{font-weight:700}
+  .finding .fb{padding:6px 18px 16px}
+  .kv{display:grid;grid-template-columns:130px 1fr;gap:4px 14px;margin:10px 0;font-size:14px}
+  .kv dt{color:var(--muted);font-weight:600}
+  .kv dd{margin:0}
+  .fact{border-left:3px solid var(--low);padding-left:10px}
+  .infer{border-left:3px solid var(--med);padding-left:10px}
+  .reco{border-left:3px solid var(--accent);padding-left:10px}
+  .foot{color:var(--muted);font-size:13px;margin-top:40px;border-top:1px solid var(--line);padding-top:14px}
+  .scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>Revisão UX/UI &amp; Acessibilidade — Asset Manager</h1>
+  <div class="sub">VerticalParts · <code>verticalpartsIA/Asset-Manager</code> · Playbook passo 04 (web-design-guidelines) · Gerado em 10/08/2026 10:58 (local) · Somente-leitura, nenhum código alterado</div>
+</header>
+
+<div class="card">
+  <p><strong>Escopo &amp; método.</strong> Auditoria de <code>public/index.html</code> contra as <em>Web Interface Guidelines</em> (Vercel Labs, versão atual). App estático (HTML/JS vanilla, sem build/React) — todas as regras foram aplicadas à implementação real. As evidências vêm de contagem/inspeção via <code>git grep</code> em 10/08/2026. <strong>Não</strong> houve inspeção do DOM renderizado com login (exigiria SSO); onde isso agregaria, está sinalizado.</p>
+  <p class="legend"><strong>Como ler.</strong> Todos os achados abaixo são <strong>violações objetivas de guideline</strong> (não preferência estética). Cada um separa <span class="chip">Fato</span> · <span class="chip">Inferência</span> · <span class="chip">Recomendação</span>. Prioridade = Impacto no Usuário × Severidade × Esforço.</p>
+</div>
+
+<h2>1. Métricas observadas (fatos)</h2>
+<div class="grid">
+  <div class="metric"><div class="n">1 / 151</div><div class="l"><code>aria-label</code> vs <code>&lt;button&gt;</code></div></div>
+  <div class="metric"><div class="n">19</div><div class="l"><code>&lt;div onclick&gt;</code> (não-semântico)</div></div>
+  <div class="metric"><div class="n">0</div><div class="l"><code>aria-live</code> / <code>aria-hidden</code></div></div>
+  <div class="metric"><div class="n">0</div><div class="l"><code>:focus-visible</code> (3× <code>outline:none</code>)</div></div>
+  <div class="metric"><div class="n">2 / 100</div><div class="l">inputs com <code>autocomplete</code></div></div>
+  <div class="metric"><div class="n">17</div><div class="l"><code>transition: all</code> · 0 reduced-motion</div></div>
+</div>
+<p class="sub">Positivos observados: <code>&lt;meta viewport&gt;</code> presente, <code>&lt;html lang="pt-BR"&gt;</code>, 159 <code>&lt;label&gt;</code> para 100 inputs, uso majoritário de <code>&lt;button&gt;</code> semântico, e <code>confirm()</code> em 17 ações destrutivas (há confirmação).</p>
+
+<h2>2. Sumário executivo</h2>
+<div class="card">
+<p>A interface é funcional, responsiva (viewport + tema claro/escuro) e usa bastante HTML semântico (<code>&lt;button&gt;</code>, <code>&lt;label&gt;</code>). Porém a <strong>acessibilidade tem lacunas materiais</strong>: foco de teclado removido sem substituto em pontos-chave, 19 elementos clicáveis feitos com <code>&lt;div onclick&gt;</code> (inacessíveis por teclado/leitor de tela), praticamente nenhum <code>aria-label</code> nos 151 botões (muitos são só emoji), e nenhum <code>aria-live</code> para anunciar atualizações assíncronas. Há ainda ajustes de médio impacto: <code>autocomplete</code> ausente nos formulários, imagens sem <code>alt</code>/dimensões, tema escuro sem <code>color-scheme</code>/<code>theme-color</code>, e feedback via <code>alert()</code> nativo. Nada disso quebra o app, mas exclui usuários de teclado/leitor de tela e degrada a experiência.</p>
+</div>
+
+<h3>Prioridade dos achados</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>ID</th><th>Achado</th><th>Categoria</th><th>Severidade</th><th>Esforço</th></tr></thead>
+  <tbody>
+    <tr><td>U1</td><td>Foco de teclado removido sem substituto visível</td><td>Acessibilidade</td><td><span class="tag t-high">Alto</span></td><td>Baixo</td></tr>
+    <tr><td>U2</td><td>19 <code>&lt;div onclick&gt;</code> — clicáveis não-semânticos</td><td>Acessibilidade</td><td><span class="tag t-high">Alto</span></td><td>Médio</td></tr>
+    <tr><td>U3</td><td>ARIA quase ausente (label/hidden/live)</td><td>Acessibilidade</td><td><span class="tag t-high">Alto</span></td><td>Médio</td></tr>
+    <tr><td>U4</td><td>Formulários sem <code>autocomplete</code></td><td>Forms/UX</td><td><span class="tag t-med">Médio</span></td><td>Baixo</td></tr>
+    <tr><td>U5</td><td>Imagens sem <code>alt</code> e sem <code>width/height</code></td><td>A11y/Layout</td><td><span class="tag t-med">Médio</span></td><td>Baixo</td></tr>
+    <tr><td>U6</td><td>Tema escuro sem <code>color-scheme</code>/<code>theme-color</code></td><td>Theming</td><td><span class="tag t-med">Médio</span></td><td>Baixo</td></tr>
+    <tr><td>U7</td><td>Feedback via <code>alert()</code> nativo (bloqueante)</td><td>UX</td><td><span class="tag t-med">Médio</span></td><td>Médio</td></tr>
+    <tr><td>U8</td><td>Sem <code>prefers-reduced-motion</code> + <code>transition: all</code></td><td>Animação/A11y</td><td><span class="tag t-low">Baixo</span></td><td>Baixo</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>3. Achados detalhados</h2>
+
+<div class="finding">
+  <div class="fh"><span class="id">U1</span> <span class="tag t-high">Alto</span> <span>Foco de teclado removido sem substituto visível</span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato.</strong> <code>outline: none</code> em <code>index.html:474</code> e <code>:495</code>; <strong>zero</strong> ocorrências de <code>:focus-visible</code> em todo o arquivo (apenas 3 usos de <code>:focus</code>). O caso de <code>.login-form input:focus</code> (<code>:628</code>) até substitui por <code>border</code>+<code>box-shadow</code> — os outros não.</p>
+    <p class="infer"><strong>Inferência.</strong> Onde o <code>outline</code> é zerado sem substituto, quem navega por teclado perde a indicação de onde está — barreira direta de acessibilidade. Guideline: <em>"Never use outline-none without focus replacement"</em> e <em>"Use :focus-visible over :focus"</em>.</p>
+    <dl class="kv"><dt>Impacto</dt><dd>Alto (usuários de teclado).</dd><dt>Severidade</dt><dd>Alta.</dd><dt>Esforço</dt><dd>Baixo.</dd></dl>
+    <p class="reco"><strong>Recomendação.</strong> Substituir <code>outline:none</code> por um estilo <code>:focus-visible</code> consistente (ex.: <code>outline: 2px solid var(--gold-primary); outline-offset: 2px</code>) aplicado a todos os interativos.</p>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="fh"><span class="id">U2</span> <span class="tag t-high">Alto</span> <span>19 elementos clicáveis feitos com <code>&lt;div onclick&gt;</code></span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato.</strong> 19 <code>&lt;div ... onclick=&gt;</code>. Exemplos: itens de notificação (<code>index.html:915</code>, <code>abrirNotificacao(...)</code>) e cards de artigo da base de conhecimento (<code>:1279</code>, <code>:1283</code>, <code>:1288</code>, <code>verArtigo(...)</code>) — inclusive com <code>onclick="event.stopPropagation()"</code> aninhado.</p>
+    <p class="infer"><strong>Inferência.</strong> <code>&lt;div&gt;</code> não é focável nem operável por teclado e não é anunciado como controle por leitores de tela — a ação fica inacessível. O <code>stopPropagation</code> aninhado (card clicável contendo botões) também é frágil. Guideline: <em>"Use &lt;button&gt; for actions… avoid &lt;div onClick&gt;"</em>.</p>
+    <dl class="kv"><dt>Impacto</dt><dd>Alto.</dd><dt>Severidade</dt><dd>Alta.</dd><dt>Esforço</dt><dd>Médio.</dd></dl>
+    <p class="reco"><strong>Recomendação.</strong> Trocar os <code>&lt;div onclick&gt;</code> de ação por <code>&lt;button&gt;</code> (ou <code>role="button"</code> + <code>tabindex="0"</code> + handler de teclado, se o layout exigir bloco). Evitar clique aninhado — usar botões explícitos dentro do card em vez de card+stopPropagation.</p>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="fh"><span class="id">U3</span> <span class="tag t-high">Alto</span> <span>ARIA quase ausente: <code>aria-label</code>, <code>aria-hidden</code>, <code>aria-live</code></span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato.</strong> 151 <code>&lt;button&gt;</code> mas só <strong>1</strong> <code>aria-label</code>; <strong>0</strong> <code>aria-hidden</code>; <strong>0</strong> <code>aria-live</code>. Muitos botões são só ícone/emoji (ex.: <code>✏️ Editar</code>, <code>🗑️ Excluir</code>, ícones <code>🔴/🟡</code> em notificações).</p>
+    <p class="infer"><strong>Inferência.</strong> (a) Botões só-ícone sem rótulo acessível são anunciados como "botão" sem propósito. (b) Ícones emoji decorativos sem <code>aria-hidden</code> são lidos ("emoji lápis…"). (c) Sem <code>aria-live</code>, atualizações assíncronas (novas notificações, resultado de salvar, carregamento de listas Supabase) não são anunciadas. Guidelines: <em>icon-only buttons require aria-label</em>; <em>decorative icons need aria-hidden</em>; <em>async updates need aria-live="polite"</em>.</p>
+    <dl class="kv"><dt>Impacto</dt><dd>Alto (leitores de tela).</dd><dt>Severidade</dt><dd>Alta.</dd><dt>Esforço</dt><dd>Médio.</dd></dl>
+    <p class="reco"><strong>Recomendação.</strong> Adicionar <code>aria-label</code> aos botões só-ícone; marcar emojis decorativos com <code>aria-hidden="true"</code>; envolver as áreas que atualizam sozinhas (toasts, lista de notificações, status de formulário) em uma região <code>aria-live="polite"</code>.</p>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="fh"><span class="id">U4</span> <span class="tag t-med">Médio</span> <span>Formulários sem <code>autocomplete</code></span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato.</strong> 100 <code>&lt;input&gt;</code> (todos com <code>type=</code>), mas só <strong>2</strong> com <code>autocomplete</code>.</p>
+    <p class="infer"><strong>Inferência.</strong> Sem <code>autocomplete</code>/<code>name</code> significativos, o navegador não preenche e-mail, senha e dados repetidos — atrito em cada login/cadastro. Guideline: <em>inputs need autocomplete and meaningful name</em>.</p>
+    <dl class="kv"><dt>Impacto</dt><dd>Médio.</dd><dt>Severidade</dt><dd>Média.</dd><dt>Esforço</dt><dd>Baixo.</dd></dl>
+    <p class="reco"><strong>Recomendação.</strong> Definir <code>autocomplete</code> nos campos de login/perfil (<code>email</code>, <code>current-password</code>, <code>new-password</code>, <code>name</code>, <code>tel</code>) e <code>autocomplete="off"</code> onde não fizer sentido.</p>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="fh"><span class="id">U5</span> <span class="tag t-med">Médio</span> <span>Imagens sem <code>alt</code> e sem <code>width/height</code></span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato.</strong> 9 <code>&lt;img&gt;</code>: 2 sem <code>alt</code> (ex.: overlay/lightbox em <code>index.html:4644</code>) e apenas 1 com <code>width/height</code> explícitos.</p>
+    <p class="infer"><strong>Inferência.</strong> <code>&lt;img&gt;</code> sem <code>alt</code> é opaco para leitor de tela; sem <code>width/height</code> gera <em>layout shift</em> (CLS) no carregamento. Guidelines: <em>images require alt (or alt="")</em>; <em>&lt;img&gt; needs explicit width and height</em>.</p>
+    <dl class="kv"><dt>Impacto</dt><dd>Médio.</dd><dt>Severidade</dt><dd>Média.</dd><dt>Esforço</dt><dd>Baixo.</dd></dl>
+    <p class="reco"><strong>Recomendação.</strong> Adicionar <code>alt</code> descritivo (ou <code>alt=""</code> se decorativa) e <code>width/height</code> em todas as imagens; imagens abaixo da dobra com <code>loading="lazy"</code>.</p>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="fh"><span class="id">U6</span> <span class="tag t-med">Médio</span> <span>Tema escuro sem <code>color-scheme</code> e sem <code>meta theme-color</code></span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato.</strong> Existe tema (<code>&lt;html ... data-theme="light"&gt;</code> em <code>:3</code>, regras <code>[data-theme="dark"]</code> em <code>:44+</code> e <code>toggleTheme</code>), mas <strong>0</strong> <code>color-scheme</code> e <strong>0</strong> <code>&lt;meta name="theme-color"&gt;</code>.</p>
+    <p class="infer"><strong>Inferência.</strong> Sem <code>color-scheme: dark</code>, controles nativos (scrollbar, date/color pickers, autofill, <code>&lt;select&gt;</code>) continuam claros no modo escuro; sem <code>theme-color</code>, a barra do navegador (mobile) não acompanha o tema. Guidelines: <em>set color-scheme: dark on html</em>; <em>set meta theme-color</em>.</p>
+    <dl class="kv"><dt>Impacto</dt><dd>Médio.</dd><dt>Severidade</dt><dd>Média.</dd><dt>Esforço</dt><dd>Baixo.</dd></dl>
+    <p class="reco"><strong>Recomendação.</strong> Sincronizar <code>color-scheme</code> (light/dark) com o <code>data-theme</code> e atualizar <code>&lt;meta name="theme-color"&gt;</code> ao alternar o tema.</p>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="fh"><span class="id">U7</span> <span class="tag t-med">Médio</span> <span>Feedback via <code>alert()</code> nativo (bloqueante)</span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato.</strong> 8 usos de <code>alert(</code> para feedback ao usuário. (Há também 17 <code>confirm(</code> em ações destrutivas — a confirmação existe, o que é positivo.)</p>
+    <p class="infer"><strong>Inferência.</strong> <code>alert()</code> bloqueia toda a página, não é estilizável, quebra o fluxo e não integra com <code>aria-live</code> — feedback pobre e pouco acessível. Ações destrutivas idealmente teriam também janela de <em>undo</em>. Guideline: feedback não-bloqueante; <em>destructive actions need confirmation or undo</em>.</p>
+    <dl class="kv"><dt>Impacto</dt><dd>Médio.</dd><dt>Severidade</dt><dd>Média.</dd><dt>Esforço</dt><dd>Médio.</dd></dl>
+    <p class="reco"><strong>Recomendação.</strong> Substituir <code>alert()</code> por toast/inline em região <code>aria-live</code> (resolve U3 junto). Manter <code>confirm()</code> nas destrutivas ou evoluir para modal + undo.</p>
+  </div>
+</div>
+
+<div class="finding">
+  <div class="fh"><span class="id">U8</span> <span class="tag t-low">Baixo</span> <span>Sem <code>prefers-reduced-motion</code> + uso de <code>transition: all</code></span></div>
+  <div class="fb">
+    <p class="fact"><strong>Fato.</strong> <strong>0</strong> ocorrências de <code>prefers-reduced-motion</code>; 17 <code>transition: all</code> (ex.: <code>index.html:221</code>, <code>:256</code>, <code>:338</code>).</p>
+    <p class="infer"><strong>Inferência.</strong> Sem <code>prefers-reduced-motion</code>, usuários sensíveis a movimento não têm alívio. <code>transition: all</code> anima propriedades caras/inesperadas (custo de performance e efeitos visuais acidentais). Guidelines: <em>honor prefers-reduced-motion</em>; <em>never use transition: all — list properties</em>; <em>animate only transform/opacity</em>.</p>
+    <dl class="kv"><dt>Impacto</dt><dd>Baixo–Médio.</dd><dt>Severidade</dt><dd>Baixa.</dd><dt>Esforço</dt><dd>Baixo.</dd></dl>
+    <p class="reco"><strong>Recomendação.</strong> Adicionar bloco <code>@media (prefers-reduced-motion: reduce)</code> reduzindo/anulando transições; trocar <code>transition: all</code> por listas explícitas (ex.: <code>transition: transform .2s, opacity .2s</code>).</p>
+  </div>
+</div>
+
+<h2>4. Roadmap sugerido (Impacto × Severidade × Esforço)</h2>
+<div class="scroll">
+<table>
+  <thead><tr><th>Fase</th><th>Ação</th><th>Achados</th><th>Ganho</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Quick wins</strong></td><td>Foco visível global; <code>autocomplete</code> nos forms; <code>alt</code>+dimensões nas imagens; <code>color-scheme</code>/<code>theme-color</code>; <code>prefers-reduced-motion</code>.</td><td>U1, U4, U5, U6, U8</td><td>Muito a11y/UX por baixo esforço</td></tr>
+    <tr><td><strong>A11y estrutural</strong></td><td>Converter <code>&lt;div onclick&gt;</code> em <code>&lt;button&gt;</code>; <code>aria-label</code> nos ícones; <code>aria-hidden</code> nos emojis.</td><td>U2, U3</td><td>Acesso por teclado/leitor de tela</td></tr>
+    <tr><td><strong>Feedback</strong></td><td>Trocar <code>alert()</code> por toast em região <code>aria-live</code>.</td><td>U7, U3</td><td>Feedback moderno e acessível</td></tr>
+  </tbody>
+</table>
+</div>
+
+<div class="foot">
+  <p>Auditoria somente-leitura contra as Web Interface Guidelines (Vercel Labs). Todos os achados são violações objetivas de guideline, com evidência (arquivo:linha) do repositório; nenhuma sugestão foi feita por preferência estética. Nenhum código, commit ou configuração foi alterado. Validação funcional/E2E completa é responsabilidade do passo 07 (<code>agent-browser</code>).</p>
+</div>
+
+</div>
+</body>
+</html>
