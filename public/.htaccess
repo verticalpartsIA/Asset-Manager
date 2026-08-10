@@ -11,6 +11,11 @@ DirectoryIndex index.html index.php
   <FilesMatch "version\.json$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
+  # vp-integration.js: código do app — sempre revalida (o Hostinger cacheia JS
+  # por 7 dias por padrão, o que impediria correções de chegarem aos usuários)
+  <FilesMatch "^vp-integration\.js$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
 </IfModule>
 
 # Força HTTPS

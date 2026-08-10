@@ -29,6 +29,15 @@ jobs:
             "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > public/version.json
           cat public/version.json
 
+      # Cache-busting: o Hostinger serve JS com max-age=604800 (7 dias), então
+      # sem isso o código novo não chega aos usuários. index.html é no-store,
+      # logo carregar vp-integration.js com ?v=<commit> força buscar a versão
+      # nova a cada deploy.
+      - name: Cache-bust do script do app
+        run: |
+          sed -i "s#/vp-integration\.js#/vp-integration.js?v=${GITHUB_SHA}#g" public/index.html
+          grep -o 'vp-integration\.js?v=[0-9a-f]\{7,\}' public/index.html | head -1
+
       # ── Deploy estático via SSH/SCP ─────────────────────────────────────
       # Secrets (Settings → Secrets and variables → Actions), do hPanel →
       # Avançado → Acesso SSH do site assetmanager.vpsistema.com:
