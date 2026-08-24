@@ -945,10 +945,10 @@ Atualizar
 <p class="page-subtitle">Visão geral do inventário e métricas em tempo real</p>
 <div class="dashboard-layout">
 <div class="kpi-sidebar">
-<div class="kpi-sidebar-item"><div class="kpi-sidebar-label">Colaboradores Ativos</div><div class="kpi-sidebar-value" id="kpi-colab-ativos">4</div></div>
-<div class="kpi-sidebar-item"><div class="kpi-sidebar-label">Colaboradores Inativos</div><div class="kpi-sidebar-value" id="kpi-colab-inativos">1</div></div>
-<div class="kpi-sidebar-item"><div class="kpi-sidebar-label">Total de Ativos</div><div class="kpi-sidebar-value" id="kpi-total-ativos">2</div></div>
-<div class="kpi-sidebar-item"><div class="kpi-sidebar-label">Ativos Alocados</div><div class="kpi-sidebar-value" id="kpi-ativos-alocados">2</div></div>
+<div class="kpi-sidebar-item"><div class="kpi-sidebar-label">Colaboradores Ativos</div><div class="kpi-sidebar-value" id="kpi-colab-ativos">0</div></div>
+<div class="kpi-sidebar-item"><div class="kpi-sidebar-label">Colaboradores Inativos</div><div class="kpi-sidebar-value" id="kpi-colab-inativos">0</div></div>
+<div class="kpi-sidebar-item"><div class="kpi-sidebar-label">Total de Ativos</div><div class="kpi-sidebar-value" id="kpi-total-ativos">0</div></div>
+<div class="kpi-sidebar-item"><div class="kpi-sidebar-label">Ativos Alocados</div><div class="kpi-sidebar-value" id="kpi-ativos-alocados">0</div></div>
 <div class="kpi-sidebar-item"><div class="kpi-sidebar-label">Ativos Disponíveis</div><div class="kpi-sidebar-value" id="kpi-ativos-disp">0</div></div>
 </div>
 <div id="dashboard-widgets-container" data-drag-init="1">
@@ -2424,6 +2424,7 @@ document.getElementById('btn-tab-lixeira').style.display = (isAdmin || isTecnico
 aplicarRestricoesEdicaoPorPerfil();
 restaurarEstadoSidebar();
 initData();
+removerDadosTesteAtivosColaboradores();
 purgeTrashAntiga();
 const initialPage = pageFromCurrentPath() || defaultPageForUser(userData);
 showPage(initialPage, navForPage(initialPage), true);
@@ -2810,6 +2811,52 @@ const artigosFaltantes = artigosBaseAcesso.filter(function(a) { return idsExiste
 if (artigosFaltantes.length > 0) {
 localStorage.setItem(SK.articles, JSON.stringify(articlesAtuais.concat(artigosFaltantes)));
 }
+}
+function removerDadosTesteAtivosColaboradores() {
+const testAssetUids = ['VP-NB-2026-00001', 'VP-CL-2026-00001'];
+const testEmployeeNames = ['Ana Silva', 'Carlos Santos', 'Marina Costa', 'Pedro Alves', 'Juliana Lima'];
+const testEmployeeEmails = ['ana@empresa.com', 'carlos@empresa.com', 'marina@empresa.com', 'pedro@empresa.com', 'juliana@empresa.com'];
+const assets = getData(SK.assets);
+const employees = getData(SK.employees);
+const removedAssetUids = assets.filter(function(a) { return testAssetUids.indexOf(a.uid) !== -1; }).map(function(a) { return a.uid; });
+const removedEmployeeIds = employees.filter(function(e) {
+return testEmployeeNames.indexOf(e.name) !== -1 || testEmployeeEmails.indexOf(String(e.email || '').toLowerCase()) !== -1;
+}).map(function(e) { return e.id; });
+if (!removedAssetUids.length && !removedEmployeeIds.length) return;
+function isRemovedEmployeeId(id) { return removedEmployeeIds.map(String).indexOf(String(id)) !== -1; }
+saveData(SK.assets, assets.filter(function(a) { return removedAssetUids.indexOf(a.uid) === -1; }));
+saveData(SK.employees, employees.filter(function(e) { return !isRemovedEmployeeId(e.id); }));
+saveData(SK.allocations, getData(SK.allocations).filter(function(a) {
+return removedAssetUids.indexOf(a.asset_uid) === -1 && !isRemovedEmployeeId(a.employee_id);
+}));
+saveData(SK.assetHistory, getData(SK.assetHistory).filter(function(h) {
+return removedAssetUids.indexOf(h.asset_uid) === -1 && testEmployeeNames.indexOf(h.usuario_anterior) === -1 && testEmployeeNames.indexOf(h.usuario_novo) === -1;
+}));
+const checklists = getData(SK.checklists);
+if (Array.isArray(checklists)) {
+saveData(SK.checklists, checklists.filter(function(c) {
+return !isRemovedEmployeeId(c.colaborador_id) && testEmployeeNames.indexOf(c.colaborador_nome) === -1;
+}));
+} else if (checklists && typeof checklists === 'object') {
+Object.keys(checklists).forEach(function(ano) {
+Object.keys(checklists[ano] || {}).forEach(function(semestre) {
+checklists[ano][semestre] = (checklists[ano][semestre] || []).filter(function(c) {
+return !isRemovedEmployeeId(c.colaboradorId) && testEmployeeNames.indexOf(c.colaboradorNome) === -1;
+});
+});
+});
+saveData(SK.checklists, checklists);
+}
+saveData(SK.tickets, getData(SK.tickets).filter(function(t) {
+return removedAssetUids.indexOf(t.asset_uid) === -1 && !isRemovedEmployeeId(t.requester_id);
+}));
+saveData(SK.ticketsTrash, getData(SK.ticketsTrash).filter(function(t) {
+return removedAssetUids.indexOf(t.asset_uid) === -1 && !isRemovedEmployeeId(t.requester_id);
+}));
+saveData(SK.notifications, getData(SK.notifications).filter(function(n) {
+const text = JSON.stringify(n);
+return removedAssetUids.every(function(uid) { return text.indexOf(uid) === -1; }) && testEmployeeNames.every(function(name) { return text.indexOf(name) === -1; });
+}));
 }
 function getData(key) { return JSON.parse(localStorage.getItem(key) || '[]'); }
 function saveData(key, data) {
