@@ -5789,10 +5789,9 @@ window.addEventListener('load', function () {
   if (!window.VP) return;
   VP.wrapDataLayer();
   var hasToken = /[?#&]sso_token=/.test(location.href);
-  if (!hasToken) { VP.updateSync && VP.updateSync(); return; } // sem token → não sincronizado
   (async function () {
     try {
-      var ok = await VP.bootSSO();
+      var ok = hasToken ? await VP.bootSSO() : await VP.bootExistingSession();
       if (!ok) { VP.updateSync && VP.updateSync(); return; } // token inválido → permanece no login local
       await VP.loadAll();              // popula o cache local a partir do Supabase
       VP.wrapDataLayer();              // idempotente

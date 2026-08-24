@@ -175,32 +175,7 @@
     };
   }
 
-  // Remove sso_token da URL depois de consumir (não deixa o JWT na barra).
-  function cleanUrl() {
-    try {
-      var u = new URL(location.href);
-      u.searchParams.delete('sso_token'); u.searchParams.delete('sso_refresh');
-      history.replaceState({}, document.title, u.pathname + (u.search || '') + '');
-    } catch (e) {}
-  }
-
-  VP.bootSSO = async function () {
-    var s = readSSO();
-    if (!s.tok) return false;
-    if (!window.supabase || !window.supabase.createClient) {
-      console.warn('[VP] supabase-js não carregou; SSO indisponível.');
-      return false;
-    }
-    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
-      auth: { persistSession: false, autoRefreshToken: !!s.ref, detectSessionInUrl: false },
-      global: { headers: { Authorization: 'Bearer ' + s.tok } }
-    });
-    if (s.ref) { try { await client.auth.setSession({ access_token: s.tok, refresh_token: s.ref }); } catch (e) {} }
-
-    var user = null;
-    try { var r = await client.auth.getUser(s.tok); user = r.data && r.data.user; } catch (e) {}
-    if (!user) { console.warn('[VP] sso_token inválido/expirado.'); return false; }
-
+  async function buildSessionFromUser(user) {
     var prof = null;
     try {
       var p = await client.from('profiles').select('*').eq('id', user.id).single();
@@ -219,7 +194,58 @@
     };
     try { localStorage.setItem(SK.sessao, JSON.stringify(session)); } catch (e) {}
     VP.authed = true; VP.enabled = true; VP.session = session; VP.user = user;
+    return session;
+  }
+
+  // Remove sso_token da URL depois de consumir (não deixa o JWT na barra).
+  function cleanUrl() {
+    try {
+      var u = new URL(location.href);
+      u.searchParams.delete('sso_token'); u.searchParams.delete('sso_refresh');
+      history.replaceState({}, document.title, u.pathname + (u.search || '') + '');
+    } catch (e) {}
+  }
+
+  VP.bootSSO = async function () {
+    var s = readSSO();
+    if (!s.tok) return false;
+    if (!window.supabase || !window.supabase.createClient) {
+      console.warn('[VP] supabase-js não carregou; SSO indisponível.');
+      return false;
+    }
+    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+      auth: { persistSession: !!s.ref, autoRefreshToken: !!s.ref, detectSessionInUrl: false },
+      global: { headers: { Authorization: 'Bearer ' + s.tok } }
+    });
+    if (s.ref) { try { await client.auth.setSession({ access_token: s.tok, refresh_token: s.ref }); } catch (e) {} }
+
+    var user = null;
+    try { var r = await client.auth.getUser(s.tok); user = r.data && r.data.user; } catch (e) {}
+    if (!user) { console.warn('[VP] sso_token inválido/expirado.'); return false; }
+
+    await buildSessionFromUser(user, s.tok);
     cleanUrl();
+    return true;
+  };
+
+  VP.bootExistingSession = async function () {
+    if (!window.supabase || !window.supabase.createClient) return false;
+    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+    });
+    var session = null;
+    try {
+      var s = await client.auth.getSession();
+      session = s.data && s.data.session;
+    } catch (e) {}
+    if (!session || !session.access_token) return false;
+    var user = null;
+    try {
+      var r = await client.auth.getUser();
+      user = r.data && r.data.user;
+    } catch (e) {}
+    if (!user) return false;
+    await buildSessionFromUser(user, session.access_token);
     return true;
   };
 
@@ -359,7 +385,7 @@
     while (true) {
       var r = await client
         .from('profiles')
-        .select('id,email,name,department,level,is_active,is_department_lead,is_placeholder,created_at')
+        .select('id,email,name,department,level,is_active,is_department_lead,is_placeholder')
         .order('name')
         .range(from, from + PAGE - 1);
       if (r.error) throw r.error;
