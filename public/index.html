@@ -2855,20 +2855,20 @@ localStorage.setItem(SK.articles, JSON.stringify(articlesAtuais.concat(artigosFa
 }
 }
 function removerDadosTesteAtivosColaboradores() {
-const testAssetUids = ['VP-NB-2026-00001', 'VP-CL-2026-00001'];
+const testAssetUids = ['VP-NB-2026-00001', 'VP-CL-2026-00001', 'VP-NB-2026-001', 'VP-NB-2026-002'];
 const testEmployeeNames = ['Ana Silva', 'Carlos Santos', 'Marina Costa', 'Pedro Alves', 'Juliana Lima'];
 const testEmployeeEmails = ['ana@empresa.com', 'carlos@empresa.com', 'marina@empresa.com', 'pedro@empresa.com', 'juliana@empresa.com'];
 const assets = getData(SK.assets);
 const employees = getData(SK.employees);
-if (employees.some(function(e) { return e.source === 'vpsistema'; })) return;
+const employeesFromPortal = employees.some(function(e) { return e.source === 'vpsistema'; });
 const removedAssetUids = assets.filter(function(a) { return testAssetUids.indexOf(a.uid) !== -1; }).map(function(a) { return a.uid; });
-const removedEmployeeIds = employees.filter(function(e) {
+const removedEmployeeIds = employeesFromPortal ? [] : employees.filter(function(e) {
 return testEmployeeNames.indexOf(e.name) !== -1 || testEmployeeEmails.indexOf(String(e.email || '').toLowerCase()) !== -1;
 }).map(function(e) { return e.id; });
 if (!removedAssetUids.length && !removedEmployeeIds.length) return;
 function isRemovedEmployeeId(id) { return removedEmployeeIds.map(String).indexOf(String(id)) !== -1; }
 saveData(SK.assets, assets.filter(function(a) { return removedAssetUids.indexOf(a.uid) === -1; }));
-saveData(SK.employees, employees.filter(function(e) { return !isRemovedEmployeeId(e.id); }));
+if (!employeesFromPortal) saveData(SK.employees, employees.filter(function(e) { return !isRemovedEmployeeId(e.id); }));
 saveData(SK.allocations, getData(SK.allocations).filter(function(a) {
 return removedAssetUids.indexOf(a.asset_uid) === -1 && !isRemovedEmployeeId(a.employee_id);
 }));
