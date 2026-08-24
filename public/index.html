@@ -884,7 +884,7 @@ tbody tr:hover { background: #FAFAF8; }
 <div class="user-info">
 <div class="user-avatar" id="user-avatar">F</div>
 <div>
-<div class="user-name" id="user-name">Fernanda Freires</div>
+<div class="user-name" id="user-name">Usuário</div>
 </div>
 </div>
 <div class="user-role" id="user-role-label">Técnico</div>
@@ -930,7 +930,7 @@ Atualizar
 <button onclick="limparNotificacoes()">Limpar</button>
 </div>
 </div>
-<div class="notif-list" id="notif-list"><div class="notif-item level-danger unread" onclick="abrirNotificacao(&#39;N-1785782538247-364&#39;)"><div class="notif-icon">🔴</div><div class="notif-body"><div class="notif-title">Estoque esgotado</div><div class="notif-msg">Tinta teste (teste) está esgotada no estoque.</div><div class="notif-time">há 11 min</div></div><div class="notif-dot"></div></div><div class="notif-item level-warning unread" onclick="abrirNotificacao(&#39;N-1785782533737-284&#39;)"><div class="notif-icon">🟡</div><div class="notif-body"><div class="notif-title">Estoque baixo</div><div class="notif-msg">Tinta teste (teste) com apenas 1 unidade(s) restante(s).</div><div class="notif-time">há 11 min</div></div><div class="notif-dot"></div></div><div class="notif-item level-danger unread" onclick="abrirNotificacao(&#39;N-1785782510965-141&#39;)"><div class="notif-icon">🔴</div><div class="notif-body"><div class="notif-title">Estoque esgotado</div><div class="notif-msg">Película teste (teste) está esgotada no estoque.</div><div class="notif-time">há 11 min</div></div><div class="notif-dot"></div></div><div class="notif-item level-warning" onclick="abrirNotificacao(&#39;N-1785772100650-698&#39;)"><div class="notif-icon">🟡</div><div class="notif-body"><div class="notif-title">Estoque baixo</div><div class="notif-msg">Película teste (teste) com apenas 1 unidade(s) restante(s).</div><div class="notif-time">há 3h</div></div></div><div class="notif-item level-warning" onclick="abrirNotificacao(&#39;N-1785764466215-825&#39;)"><div class="notif-icon">🟡</div><div class="notif-body"><div class="notif-title">Estoque baixo</div><div class="notif-msg">Película teste (b) com apenas 1 unidade(s) restante(s).</div><div class="notif-time">há 5h</div></div></div></div>
+<div class="notif-list" id="notif-list"></div>
 </div>
 </div>
 <button class="user-icon-btn" onclick="toggleTheme()" title="Alternar tema" id="theme-btn">
@@ -988,7 +988,7 @@ Atualizar
 </div>
 <table>
 <thead><tr><th>UID</th><th>Tipo</th><th>Descrição</th><th>Serial</th><th>Status</th></tr></thead>
-<tbody id="recent-assets-body"><tr><td class="uid-cell">VP-CL-2026-00001</td><td>Celular</td><td>Apple iPhone 13</td><td style="font-family: monospace; font-size: 12px;">IMEI-001</td><td><span class="badge badge-assigned">Alocado</span></td></tr><tr><td class="uid-cell">VP-NB-2026-00001</td><td>Notebook</td><td>Dell Latitude 5440</td><td style="font-family: monospace; font-size: 12px;">NB-001</td><td><span class="badge badge-assigned">Alocado</span></td></tr></tbody>
+<tbody id="recent-assets-body"></tbody>
 </table>
 </div>
 </div>
@@ -1016,7 +1016,7 @@ Atualizar
 <div class="table-header-bar"><div class="table-title">Estoque de Películas</div></div>
 <table>
 <thead><tr><th>Modelo</th><th>Material</th><th>Quantidade</th><th>Status</th><th>Ações</th></tr></thead>
-<tbody id="estoque-peliculas-body"><tr><td>teste</td><td>teste</td><td>0</td><td><span class="badge badge-discarded">Esgotado</span></td><td><span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span></td></tr></tbody>
+<tbody id="estoque-peliculas-body"></tbody>
 </table>
 </div>
 </div>
@@ -1043,7 +1043,7 @@ Atualizar
 <div class="table-header-bar"><div class="table-title">Estoque de Tintas</div></div>
 <table>
 <thead><tr><th>Modelo Impressora</th><th>Cor / Tipo</th><th>Nível</th><th>Quantidade</th><th>Status</th><th>Ações</th></tr></thead>
-<tbody id="estoque-tintas-body"><tr><td>teste</td><td>teste</td><td><span class="badge badge-discarded">Menos da metade</span></td><td>0</td><td><span class="badge badge-discarded">Esgotado</span></td><td><span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span></td></tr></tbody>
+<tbody id="estoque-tintas-body"></tbody>
 </table>
 </div>
 </div>
@@ -1061,7 +1061,7 @@ Atualizar
 <div class="filter-field"><label>Tipo</label><select id="f-tipo"><option value="todos">Todos</option><option value="NB">Notebook</option><option value="DK">Desktop</option><option value="MN">Monitor</option><option value="PR">Impressora</option><option value="CL">Celular</option><option value="TB">Tablet</option><option value="KB">Teclado</option><option value="MS">Mouse</option><option value="HS">Headset</option><option value="OT">Outro</option></select></div>
 <div class="filter-field"><label>Status</label><select id="f-status"><option value="todos">Todos</option><option value="available">Disponível</option><option value="assigned">Alocado</option><option value="inactive">Inativo</option><option value="maintenance">Manutenção</option><option value="discarded">Descartado</option></select></div>
 <div class="filter-field"><label>Departamento</label><select id="f-depto"><option value="todos">Todos</option><option value="COMERCIAL">COMERCIAL</option><option value="FINANCEIRO">FINANCEIRO</option><option value="RH">RH</option><option value="TI">TI</option></select></div>
-<div class="filter-field"><label>Colaborador</label><select id="f-colab"><option value="todos">Todos</option><option value="1">Ana Silva</option><option value="2">Carlos Santos</option><option value="3">Marina Costa</option><option value="5">Juliana Lima</option></select></div>
+<div class="filter-field"><label>Colaborador</label><select id="f-colab"><option value="todos">Todos</option></select></div>
 <div class="filter-field" style="flex: 0 0 auto;"><label>&nbsp;</label><button class="btn btn-gold" onclick="aplicarFiltrosRelatorio()">Filtrar</button></div>
 <div class="filter-field" style="flex: 0 0 auto;"><label>&nbsp;</label><button class="btn btn-primary" onclick="limparFiltrosRelatorio()">Limpar</button></div>
 </div>
@@ -1076,7 +1076,7 @@ Atualizar
 </div>
 <table>
 <thead><tr><th>UID</th><th>Tipo</th><th>Marca/Modelo</th><th>Serial</th><th>Colaborador</th><th>Depto</th><th>Status</th><th>Ações</th></tr></thead>
-<tbody id="rel-table-body"><tr><td class="uid-cell">VP-NB-2026-00001</td><td>Notebook</td><td>Dell Latitude 5440</td><td style="font-family: monospace; font-size: 12px;">NB-001</td><td>Ana Silva</td><td>TI</td><td><span class="badge badge-assigned">Alocado</span></td><td><button class="btn btn-outline btn-sm" onclick="mostrarQR(&#39;VP-NB-2026-00001&#39;)">QR</button></td></tr><tr><td class="uid-cell">VP-CL-2026-00001</td><td>Celular</td><td>Apple iPhone 13</td><td style="font-family: monospace; font-size: 12px;">IMEI-001</td><td>Carlos Santos</td><td>RH</td><td><span class="badge badge-assigned">Alocado</span></td><td><button class="btn btn-outline btn-sm" onclick="mostrarQR(&#39;VP-CL-2026-00001&#39;)">QR</button></td></tr></tbody>
+<tbody id="rel-table-body"></tbody>
 </table>
 </div>
 </div>
@@ -1114,7 +1114,7 @@ Atualizar
 </div>
 <table>
 <thead><tr><th>UID</th><th>Tipo</th><th>Descrição</th><th>Serial</th><th>Info Extra</th><th>Status</th><th>Observação</th><th>Ações</th></tr></thead>
-<tbody id="ativos-table-body"><tr><td class="uid-cell">VP-NB-2026-00001</td><td>Notebook</td><td>Dell Latitude 5440</td><td style="font-family: monospace; font-size: 12px;">NB-001</td><td><span style="font-size: 11px; font-family: monospace;">ST: ABC1234</span></td><td><span class="badge badge-assigned">Alocado</span></td><td style="font-size: 11px; color: var(--text-secondary);">—</td><td><div class="btn-group"><button class="btn btn-outline btn-sm" onclick="mostrarDetalhesAtivo(&#39;VP-NB-2026-00001&#39;)">Detalhes</button> <button class="btn btn-outline btn-sm" onclick="mostrarQR(&#39;VP-NB-2026-00001&#39;)">QR</button></div></td></tr><tr><td class="uid-cell">VP-CL-2026-00001</td><td>Celular</td><td>Apple iPhone 13</td><td style="font-family: monospace; font-size: 12px;">IMEI-001</td><td><span style="font-size: 11px;">Tel: (11) 99999-9999<br>IMEI: 353456789012345</span></td><td><span class="badge badge-assigned">Alocado</span></td><td style="font-size: 11px; color: var(--text-secondary);">—</td><td><div class="btn-group"><button class="btn btn-outline btn-sm" onclick="mostrarDetalhesAtivo(&#39;VP-CL-2026-00001&#39;)">Detalhes</button> <button class="btn btn-outline btn-sm" onclick="mostrarQR(&#39;VP-CL-2026-00001&#39;)">QR</button></div></td></tr></tbody>
+<tbody id="ativos-table-body"></tbody>
 </table>
 </div>
 </div>
@@ -1165,7 +1165,7 @@ Atualizar
 </div>
 <table>
 <thead><tr><th>Nome</th><th>E-mail</th><th>Departamento</th><th>Cargo</th><th>Status</th><th>Ações</th></tr></thead>
-<tbody id="colab-table-body"><tr><td><strong>Ana Silva</strong></td><td>ana@empresa.com</td><td>TI</td><td>Analista de TI</td><td><span class="badge badge-active">Ativo</span></td><td><div class="btn-group"><span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span></div></td></tr><tr><td><strong>Carlos Santos</strong></td><td>carlos@empresa.com</td><td>RH</td><td>Gerente de RH</td><td><span class="badge badge-active">Ativo</span></td><td><div class="btn-group"><span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span></div></td></tr><tr><td><strong>Marina Costa</strong></td><td>marina@empresa.com</td><td>FINANCEIRO</td><td>Analista Financeiro</td><td><span class="badge badge-active">Ativo</span></td><td><div class="btn-group"><span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span></div></td></tr><tr><td><strong>Pedro Alves</strong></td><td>pedro@empresa.com</td><td>TI</td><td>Desenvolvedor</td><td><span class="badge badge-inactive">Inativo</span></td><td><div class="btn-group"><span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span></div></td></tr><tr><td><strong>Juliana Lima</strong></td><td>juliana@empresa.com</td><td>COMERCIAL</td><td>Vendedora</td><td><span class="badge badge-active">Ativo</span></td><td><div class="btn-group"><span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span></div></td></tr></tbody>
+<tbody id="colab-table-body"></tbody>
 </table>
 </div>
 </div>
@@ -1178,7 +1178,7 @@ Atualizar
 <div class="form-grid">
 <div class="form-field">
 <label>Colaborador</label>
-<select id="alloc-emp"><option value="">Selecione...</option><option value="1">Ana Silva - TI (ana@empresa.com)</option><option value="2">Carlos Santos - RH (carlos@empresa.com)</option><option value="3">Marina Costa - FINANCEIRO (marina@empresa.com)</option><option value="5">Juliana Lima - COMERCIAL (juliana@empresa.com)</option></select>
+<select id="alloc-emp"><option value="">Selecione...</option></select>
 </div>
 <div class="form-field">
 <label>Ativo Disponível</label>
@@ -1193,7 +1193,7 @@ Atualizar
 <div class="table-header-bar"><div class="table-title">Alocações Ativas</div></div>
 <table>
 <thead><tr><th>Colaborador</th><th>Departamento</th><th>Ativo</th><th>Data</th><th>Status</th><th>Ações</th></tr></thead>
-<tbody id="alloc-table-body"><tr><td><strong>Ana Silva</strong></td><td>TI</td><td class="uid-cell">VP-NB-2026-00001</td><td>01/07/2026</td><td><span class="badge badge-assigned">Alocado</span></td><td><span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span></td></tr><tr><td><strong>Carlos Santos</strong></td><td>RH</td><td class="uid-cell">VP-CL-2026-00001</td><td>03/07/2026</td><td><span class="badge badge-assigned">Alocado</span></td><td><span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span></td></tr></tbody>
+<tbody id="alloc-table-body"></tbody>
 </table>
 </div>
 </div>
@@ -1230,7 +1230,7 @@ Atualizar
 <div class="form-grid">
 <div class="form-field">
 <label>Colaborador <span class="required-mark">*</span></label>
-<select id="chamado-colaborador" required="" onchange="buscarEquipamentosColaborador()"><option value="">Selecione o colaborador...</option><option value="1">Ana Silva - TI</option><option value="2">Carlos Santos - RH</option><option value="3">Marina Costa - FINANCEIRO</option><option value="5">Juliana Lima - COMERCIAL</option></select>
+<select id="chamado-colaborador" required="" onchange="buscarEquipamentosColaborador()"><option value="">Selecione o colaborador...</option></select>
 </div>
 <div class="form-field">
 <label>Prioridade <span class="required-mark">*</span></label>
@@ -1385,9 +1385,9 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <div class="table-card">
 <div class="table-header-bar">
 <div class="table-title">Chamados na Lixeira</div>
-<div class="table-count" id="lixeira-count-info"><strong>1</strong> chamado(s) na lixeira</div>
+<div class="table-count" id="lixeira-count-info"><strong>0</strong> chamado(s) na lixeira</div>
 </div>
-<div id="lixeira-list" style="padding: 16px 20px;"><div class="ticket-card" style="cursor: default;"><div class="ticket-header"><div><div class="ticket-id">TK-001</div><div class="ticket-subject">teste</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Solicitante: Ana Silva</div></div></div><div class="ticket-meta"><div class="ticket-meta-item">🗑️ Excluído por: Suporte Técnico (Administrador)</div><div class="ticket-meta-item">📅 Excluído em: 03/08/2026, 10:09:08</div><div class="ticket-meta-item">⏳ 90 dia(s) até a exclusão definitiva</div></div><div style="margin-top: 10px; padding: 10px 12px; background: rgba(220, 38, 38, 0.06); border: 1px solid rgba(220, 38, 38, 0.2); border-radius: 6px; font-size: 12.5px;"><strong style="color: #dc2626;">Motivo da exclusão:</strong> teste</div><div class="btn-group" style="margin-top: 12px; justify-content: flex-start;"><button class="btn btn-success-outline btn-sm" onclick="restaurarChamado(&#39;TK-001&#39;)">↩️ Restaurar</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirChamadoDefinitivo(&#39;TK-001&#39;)">🗑️ Excluir Definitivamente</button></div></div></div>
+<div id="lixeira-list" style="padding: 16px 20px;"></div>
 </div>
 </div>
 </div>
@@ -1407,7 +1407,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 </div>
 <div class="filter-field">
 <label>Colaborador</label>
-<select id="f-hist-colab"><option value="todos">Todos</option><option value="1">Ana Silva</option><option value="2">Carlos Santos</option><option value="3">Marina Costa</option><option value="5">Juliana Lima</option></select>
+<select id="f-hist-colab"><option value="todos">Todos</option></select>
 </div>
 <div class="filter-field">
 <label>Tipo de Dispositivo</label>
@@ -1440,7 +1440,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 </div>
 <div class="filters-bar">
 <div class="filter-field"><label>Buscar</label><input type="text" id="hist-search" placeholder="UID, modelo, usuário, parecer..." onkeyup="renderHistorico()"></div>
-<div class="filter-field"><label>Ativo</label><select id="hist-filtro-ativo" onchange="renderHistorico()"><option value="todos">Todos</option><option value="VP-NB-2026-00001">VP-NB-2026-00001 - Dell Latitude 5440</option><option value="VP-CL-2026-00001">VP-CL-2026-00001 - Apple iPhone 13</option></select></div>
+<div class="filter-field"><label>Ativo</label><select id="hist-filtro-ativo" onchange="renderHistorico()"><option value="todos">Todos</option></select></div>
 <div class="filter-field" style="flex: 0 0 auto;">
 <label>&nbsp;</label>
 <label class="upload-btn" style="margin: 0;">
@@ -1457,12 +1457,12 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
     <div class="form-grid" style="align-items: end; margin-bottom: 50px;">
         <div class="form-field">
             <label>Ativo <span class="required-mark">*</span></label>
-            <select id="hist-ativo" required="" onchange="popularUsuarioAnteriorHistorico()"><option value="">Selecione...</option><option value="VP-NB-2026-00001">VP-NB-2026-00001 - Dell Latitude 5440</option><option value="VP-CL-2026-00001">VP-CL-2026-00001 - Apple iPhone 13</option></select>
+            <select id="hist-ativo" required="" onchange="popularUsuarioAnteriorHistorico()"><option value="">Selecione...</option></select>
         </div>
         <div class="form-field" style="position: relative;">
             <label>Usuário Anterior / Com quem está</label>
             <input type="text" id="hist-usuario-anterior" list="datalist-colaboradores" placeholder="Nome do colaborador que utilizava o ativo" style="background: rgba(245, 197, 24, 0.10); border: 1.5px solid var(--gold-primary); font-weight: 600;">
-            <datalist id="datalist-colaboradores"><option value="Ana Silva"></option><option value="Carlos Santos"></option><option value="Marina Costa"></option><option value="Juliana Lima"></option></datalist>
+            <datalist id="datalist-colaboradores"></datalist>
             <label style="position: absolute; bottom: -40px; left: 0; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; color: var(--text-secondary); white-space: nowrap;">
                 <input type="checkbox" id="hist-mesmo-usuario" onchange="toggleMesmoUsuario()" style="width: 16px; height: 16px; min-width: 16px; padding: 0; margin: 0; border: none; background: none; border-radius: 0; accent-color: var(--gold-primary); flex-shrink: 0;">
                 <span>Usuário permanece o mesmo (sem mudança)</span>
@@ -1510,9 +1510,9 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <div class="table-card">
 <div class="table-header-bar">
 <div class="table-title">Linha do Tempo do Ativo</div>
-<div class="table-count" id="hist-count-info"><strong>2</strong> registros</div>
+<div class="table-count" id="hist-count-info"><strong>0</strong> registros</div>
 </div>
-<div id="historico-list" style="padding: 16px 20px;"><div class="ticket-card" style="cursor: default;"><div class="ticket-header"><div><div class="ticket-id">VP-CL-2026-00001 — Apple iPhone 13</div><div class="ticket-subject" style="font-size: 13px;">Alocação<span class="badge badge-inactive" style="margin-left: 6px;">Gerado pelo Sistema</span></div></div><span class="badge badge-available">Íntegro</span></div><div style="font-size: 13px; line-height: 1.5; margin: 8px 0; color: var(--text-primary); white-space: pre-wrap;">Equipamento alocado para Carlos Santos (RH) em 03/07/2026.</div><div class="ticket-meta"><div class="ticket-meta-item">👤 Usuário anterior: Carlos Santos</div><div class="ticket-meta-item">✍️ Registrado por: Sistema (Alocações)</div><div class="ticket-meta-item">📅 03/07/2026, 14:14:34</div></div></div><div class="ticket-card" style="cursor: default;"><div class="ticket-header"><div><div class="ticket-id">VP-NB-2026-00001 — Dell Latitude 5440</div><div class="ticket-subject" style="font-size: 13px;">Alocação<span class="badge badge-inactive" style="margin-left: 6px;">Gerado pelo Sistema</span></div></div><span class="badge badge-available">Íntegro</span></div><div style="font-size: 13px; line-height: 1.5; margin: 8px 0; color: var(--text-primary); white-space: pre-wrap;">Equipamento alocado para Ana Silva (TI) em 01/07/2026.</div><div class="ticket-meta"><div class="ticket-meta-item">👤 Usuário anterior: Ana Silva</div><div class="ticket-meta-item">✍️ Registrado por: Sistema (Alocações)</div><div class="ticket-meta-item">📅 01/07/2026, 14:14:34</div></div></div></div>
+<div id="historico-list" style="padding: 16px 20px;"></div>
 </div>
 </div>
 <!-- CHECKLISTS -->
@@ -1534,7 +1534,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <div class="form-grid">
 <div class="form-field">
 <label>Colaborador <span class="required-mark">*</span></label>
-<select id="chk-colaborador" required="" onchange="preencherSetorColaborador()"><option value="">Selecione o colaborador...</option><option value="1" data-setor="TI" data-name="Ana Silva">Ana Silva (ana@empresa.com)</option><option value="2" data-setor="RH" data-name="Carlos Santos">Carlos Santos (carlos@empresa.com)</option><option value="3" data-setor="FINANCEIRO" data-name="Marina Costa">Marina Costa (marina@empresa.com)</option><option value="5" data-setor="COMERCIAL" data-name="Juliana Lima">Juliana Lima (juliana@empresa.com)</option></select>
+<select id="chk-colaborador" required="" onchange="preencherSetorColaborador()"><option value="">Selecione o colaborador...</option></select>
 </div>
 <div class="form-field">
 <label>Setor/Departamento <span class="required-mark">*</span></label>
@@ -1628,7 +1628,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <div id="pendencias-checklist-list"></div>
 </div>
 <div id="view-visualizar-checklists" class="checklist-view" style="display: block;">
-<div id="checklists-organized-list"><div class="checklist-year-folder"><div class="checklist-year-header" onclick="toggleYearFolder(&#39;2026&#39;)"><div class="checklist-year-title">📁 2026</div><div class="checklist-year-count">1 checklist(s)</div></div><div class="checklist-year-content active" id="year-2026"><div class="checklist-semester-folder"><div class="checklist-semester-header" onclick="toggleSemesterFolder(&#39;2026&#39;, &#39;1&#39;)"><div class="checklist-semester-title">📂 1° Avaliação</div><div class="checklist-semester-count">1 checklist(s)</div></div><div class="checklist-semester-content active" id="semester-2026-1"><div class="checklist-item-card"><div class="checklist-item-header"><div><div class="checklist-item-title">Ana Silva - TI <span class="checklist-status-badge completo">Completo</span></div><div class="checklist-item-meta"><div class="ticket-meta-item">📅 28/08/2026</div><div class="ticket-meta-item">👤 Por: Suporte Técnico</div></div></div><div class="checklist-item-actions"><button class="btn btn-outline btn-sm" onclick="verDetalhesChecklist(&#39;CHK-1785518868078&#39;)">Ver Detalhes</button></div></div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">3/17 itens conformes — <strong style="color: #dc2626;">18% de conformidade</strong></div><div style="font-size: 12px; color: var(--text-muted); margin-top: 4px; font-style: italic;">📝 teste</div></div></div></div><div class="checklist-semester-folder"><div class="checklist-semester-header" onclick="toggleSemesterFolder(&#39;2026&#39;, &#39;2&#39;)"><div class="checklist-semester-title">📂 2° Avaliação</div><div class="checklist-semester-count">0 checklist(s)</div></div><div class="checklist-semester-content" id="semester-2026-2"><div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px;">Nenhum checklist neste semestre</div></div></div></div></div></div>
+<div id="checklists-organized-list"></div>
 </div>
 </div>
 <!-- CONFIGURAÇÕES (ADMIN) -->
@@ -1970,7 +1970,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <div id="modal-checklist-detalhes" class="modal-overlay">
 <div class="modal" style="max-width: 900px;">
 <button class="modal-close" onclick="fecharModal(&#39;modal-checklist-detalhes&#39;)">×</button>
-<div id="checklist-detalhes-content"><div class="modal-title">Checklist: Ana Silva <span class="checklist-status-badge completo">Completo</span></div><div class="modal-subtitle">TI • 28/08/2026 • 1° Semestre</div><div style="margin: 8px 0 16px; padding: 10px 16px; background: var(--black-secondary); border-radius: 8px; font-size: 13px; display: flex; justify-content: space-between; align-items: center;"><span>Conformidade do checklist</span><strong style="color: #dc2626; font-size: 15px;">3/17 (18%)</strong></div><div style="margin: 20px 0;"><div style="margin-bottom: 16px;"><div style="background: var(--gold-primary); color: var(--black-primary); padding: 8px 16px; font-weight: 700; border-radius: 6px 6px 0 0;">LIMPEZA (1/4)</div><div style="background: var(--black-secondary); padding: 12px 16px; border-radius: 0 0 6px 6px;"><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> Teclado limpo <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: var(--text-primary);"><span style="color: #059669; font-weight: 700;">✔</span> Mouse limpo</div><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> Monitor limpo <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> Ventoinhas limpas <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div></div></div><div style="margin-bottom: 16px;"><div style="background: var(--gold-primary); color: var(--black-primary); padding: 8px 16px; font-weight: 700; border-radius: 6px 6px 0 0;">ORGANIZAÇÃO (1/3)</div><div style="background: var(--black-secondary); padding: 12px 16px; border-radius: 0 0 6px 6px;"><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> Cabos organizados <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> Mesa livre <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: var(--text-primary);"><span style="color: #059669; font-weight: 700;">✔</span> Periféricos guardados</div></div></div><div style="margin-bottom: 16px;"><div style="background: var(--gold-primary); color: var(--black-primary); padding: 8px 16px; font-weight: 700; border-radius: 6px 6px 0 0;">CONSERVAÇÃO FÍSICA (1/4)</div><div style="background: var(--black-secondary); padding: 12px 16px; border-radius: 0 0 6px 6px;"><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> Sem amassados <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> Cabos íntegros <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> Portas USB/HDMI ok <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: var(--text-primary);"><span style="color: #059669; font-weight: 700;">✔</span> Sem marcas de queda</div></div></div><div style="margin-bottom: 16px;"><div style="background: var(--gold-primary); color: var(--black-primary); padding: 8px 16px; font-weight: 700; border-radius: 6px 6px 0 0;">SEGURANÇA (0/3)</div><div style="background: var(--black-secondary); padding: 12px 16px; border-radius: 0 0 6px 6px;"><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> PC Bloqueado <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> Celular guardado <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> Carregadores ok <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div></div></div><div style="margin-bottom: 16px;"><div style="background: var(--gold-primary); color: var(--black-primary); padding: 8px 16px; font-weight: 700; border-radius: 6px 6px 0 0;">REGISTRO — TI (0/3)</div><div style="background: var(--black-secondary); padding: 12px 16px; border-radius: 0 0 6px 6px;"><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> Inspecionado <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> Ocorrências registradas <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div><div style="padding: 6px 0; border-bottom: 1px solid var(--border-subtle); font-size: 13px; color: #dc2626;"><span style="color: #dc2626; font-weight: 700;">✘</span> Colaborador orientado <span style="font-size: 11px; color: #dc2626; opacity: 0.8;">(não conforme)</span></div></div></div></div><div style="margin: 16px 0; padding: 16px; background: var(--black-secondary); border-radius: 8px;"><div style="font-weight: 700; margin-bottom: 8px; color: var(--gold-primary);">Observações:</div><div style="font-size: 13px; line-height: 1.6;">teste</div></div><div style="margin-top: 20px; padding: 16px; background: var(--black-secondary); border-radius: 8px;"><div style="font-weight: 700; margin-bottom: 12px; color: var(--gold-primary);">Assinaturas:</div><div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;"><div><div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Colaborador</div><div style="font-size: 13px;">Ana Silva</div><div style="margin-top: 4px;"><span style="color: #10b981; font-size: 10.5px; font-weight: 700;">✓ Ciente em 31/07/2026, 14:31:05</span></div></div><div><div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Gestão TI/Marketing</div><div style="font-size: 13px;">Giovanna Maeno</div><div style="margin-top: 4px;"><span style="color: #10b981; font-size: 10.5px; font-weight: 700;">✓ Ciente em 31/07/2026, 14:30:05</span></div></div><div><div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">TI — Fernanda</div><div style="font-size: 13px;">Fernanda Freires</div><div style="margin-top: 4px;"><span style="color: #10b981; font-size: 10.5px; font-weight: 700;">✓ Ciente em 31/07/2026, 14:30:44</span></div></div></div></div></div>
+<div id="checklist-detalhes-content"></div>
 </div>
 </div>
 <!-- MODAL PRÉVIA OBRIGATÓRIA DO CHECKLIST (ciência) -->
@@ -1989,8 +1989,8 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <div class="modal" style="max-width: 800px;">
 <button class="modal-close" onclick="fecharModal(&#39;modal-asset-details&#39;)">×</button>
 <div class="modal-title">Detalhes do Hardware</div>
-<div class="modal-subtitle" id="modal-asset-details-uid">VP-NB-2026-00001 - Dell Latitude 5440</div>
-<div id="modal-asset-details-content" style="margin-top: 20px;"><div class="form-grid"><div class="form-field"><label>Service Tag</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">ABC1234</div></div><div class="form-field"><label>Sistema Operacional</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">Windows 11 Pro</div></div><div class="form-field"><label>Windows Update</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">Atualizado</div></div><div class="form-field"><label>Antivírus</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">Defender</div></div><div class="form-field"><label>HD / SSD</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">512GB NVMe</div></div><div class="form-field"><label>Processador</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">i7 11th Gen</div></div><div class="form-field"><label>RAM</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">16GB</div></div><div class="form-field"><label>Bitlocker ID</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">BL-001</div></div><div class="form-field" style="grid-column: 1 / -1;"><label>Bitlocker Recovery Pass</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px; font-family: monospace;">123456-7890</div></div><div class="form-field"><label>Anydesk</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">123456789</div></div><div class="form-field"><label>Intune</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">Sim</div></div></div></div>
+<div class="modal-subtitle" id="modal-asset-details-uid"></div>
+<div id="modal-asset-details-content" style="margin-top: 20px;"></div>
 <div class="modal-actions">
 <button class="btn btn-secondary" onclick="fecharModal(&#39;modal-asset-details&#39;)">Fechar</button>
 </div>
@@ -2102,6 +2102,78 @@ const USUARIOS_PADRAO = [
 { username: 'giovanna.maeno', password: 'G1ov@nna!Maeno', role: 'user', name: 'Giovanna Maeno' },
 { username: 'tecnico.suporte', password: 'Tec@2024!VP', role: 'tecnico', name: 'Técnico de Suporte' }
 ];
+const ROUTE_TO_PAGE = {
+'/': 'dashboard',
+'/dashboard': 'dashboard',
+'/meus-dispositivos': 'meus-dispositivos',
+'/relatorios': 'relatorios',
+'/ativos': 'ativos',
+'/estoque': 'estoque',
+'/colaboradores': 'colaboradores',
+'/alocacoes': 'alocacoes',
+'/suporte': 'suporte',
+'/historico': 'historico',
+'/historico-de-ativos': 'historico',
+'/checklists': 'checklists',
+'/configuracoes': 'configuracoes',
+'/log': 'log',
+'/log-do-sistema': 'log'
+};
+const PAGE_TO_ROUTE = {
+dashboard: '/dashboard',
+'meus-dispositivos': '/meus-dispositivos',
+relatorios: '/relatorios',
+ativos: '/ativos',
+estoque: '/estoque',
+colaboradores: '/colaboradores',
+alocacoes: '/alocacoes',
+suporte: '/suporte',
+historico: '/historico',
+checklists: '/checklists',
+configuracoes: '/configuracoes',
+log: '/log'
+};
+const PAGE_TO_NAV_ID = {
+dashboard: 'nav-dashboard',
+'meus-dispositivos': 'nav-meus-dispositivos',
+relatorios: 'nav-relatorios',
+ativos: 'nav-ativos',
+estoque: 'nav-estoque',
+colaboradores: 'nav-colaboradores',
+alocacoes: 'nav-alocacoes',
+suporte: 'nav-suporte',
+historico: 'nav-historico',
+checklists: 'nav-checklists',
+configuracoes: 'nav-config',
+log: 'nav-log'
+};
+function normalizeRoutePath(pathname) {
+try {
+return decodeURIComponent(pathname || '/').replace(/\/+$/, '').toLowerCase() || '/';
+} catch (e) {
+return '/';
+}
+}
+function pageFromCurrentPath() {
+return ROUTE_TO_PAGE[normalizeRoutePath(window.location.pathname)] || null;
+}
+function navForPage(pageName) {
+return document.getElementById(PAGE_TO_NAV_ID[pageName] || ('nav-' + pageName));
+}
+function defaultPageForUser(userData) {
+if (userData && userData.role === 'tecnico') return 'suporte';
+if (userData && userData.role === 'user') return 'meus-dispositivos';
+return 'dashboard';
+}
+function updateRouteForPage(pageName, replace) {
+if (!window.history || !PAGE_TO_ROUTE[pageName]) return;
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('uid')) return;
+const nextPath = PAGE_TO_ROUTE[pageName];
+if (normalizeRoutePath(window.location.pathname) === nextPath && !window.location.search && !window.location.hash) return;
+const method = replace ? 'replaceState' : 'pushState';
+window.history[method]({ pageName: pageName }, '', nextPath);
+}
 // Tipos de ativo padrão (incluindo Headset)
 const TIPOS_ATIVO_PADRAO = [
 { codigo: 'NB', nome: 'Notebook' },
@@ -2353,13 +2425,8 @@ aplicarRestricoesEdicaoPorPerfil();
 restaurarEstadoSidebar();
 initData();
 purgeTrashAntiga();
-if (isTecnico) {
-showPage('suporte', document.getElementById('nav-suporte'));
-} else if (isUser) {
-showPage('meus-dispositivos', document.getElementById('nav-meus-dispositivos'));
-} else {
-renderDashboard();
-}
+const initialPage = pageFromCurrentPath() || defaultPageForUser(userData);
+showPage(initialPage, navForPage(initialPage), true);
 iniciarPollingNotificacoes();
 }
 function logout() {
@@ -2406,16 +2473,21 @@ try { collapsed = localStorage.getItem('sidebarCollapsed') || '0'; } catch (e) {
 const shell = document.querySelector('.app-shell');
 if (shell) shell.classList.toggle('sidebar-collapsed', collapsed === '1');
 }
-function showPage(pageName, btn) {
+function showPage(pageName, btn, replaceRoute, skipRouteUpdate) {
 if (currentUser && currentUser.role === 'user' && pageName !== 'meus-dispositivos' && pageName !== 'suporte' && pageName !== 'checklists') {
 showToast('Acesso restrito. Usuários comuns podem ver apenas seus dispositivos e abrir chamados de suporte.');
 pageName = 'meus-dispositivos';
 btn = document.getElementById('nav-meus-dispositivos');
 }
+if (!document.getElementById('page-' + pageName)) {
+pageName = defaultPageForUser(currentUser);
+btn = navForPage(pageName);
+}
 document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
 document.getElementById('page-' + pageName).classList.add('active');
 document.querySelectorAll('.nav-item').forEach(a => a.classList.remove('active'));
 if (btn) btn.classList.add('active');
+if (!skipRouteUpdate) updateRouteForPage(pageName, !!replaceRoute);
 if (pageName === 'dashboard') renderDashboard();
 if (pageName === 'meus-dispositivos') renderMeusDispositivos();
 if (pageName === 'relatorios') renderRelatorios();
@@ -2430,6 +2502,11 @@ if (pageName === 'configuracoes') renderConfiguracoes();
 if (pageName === 'log') renderLog();
 document.getElementById('nav-bar').classList.remove('show');
 }
+window.addEventListener('popstate', function() {
+if (!currentUser) return;
+const pageName = pageFromCurrentPath() || defaultPageForUser(currentUser);
+showPage(pageName, navForPage(pageName), false, true);
+});
 function refreshData() {
 const activePage = document.querySelector('.page.active').id.replace('page-', '');
 const activeNav = document.querySelector('.nav-item.active');
@@ -2696,26 +2773,13 @@ if (!localStorage.getItem(SK.cargos)) {
 localStorage.setItem(SK.cargos, JSON.stringify(['Analista', 'Gerente', 'Coordenador', 'Supervisor', 'Técnico', 'Assistente', 'Diretor', 'Operador', 'Auxiliar', 'Engenheiro', 'Inspetor', 'Comprador', 'Almoxarife', 'Conferente', 'Motorista', 'Atendente', 'Serralheiro', 'Vendedor', 'Desenvolvedor']));
 }
 if (!localStorage.getItem(SK.employees)) {
-localStorage.setItem(SK.employees, JSON.stringify([
-{id: 1, name: "Ana Silva", email: "ana@empresa.com", depto: "TI", cargo: "Analista de TI", status: "active", created_at: new Date().toISOString()},
-{id: 2, name: "Carlos Santos", email: "carlos@empresa.com", depto: "RH", cargo: "Gerente de RH", status: "active", created_at: new Date().toISOString()},
-{id: 3, name: "Marina Costa", email: "marina@empresa.com", depto: "FINANCEIRO", cargo: "Analista Financeiro", status: "active", created_at: new Date().toISOString()},
-{id: 4, name: "Pedro Alves", email: "pedro@empresa.com", depto: "TI", cargo: "Desenvolvedor", status: "inactive", created_at: new Date().toISOString()},
-{id: 5, name: "Juliana Lima", email: "juliana@empresa.com", depto: "COMERCIAL", cargo: "Vendedora", status: "active", created_at: new Date().toISOString()}
-]));
+localStorage.setItem(SK.employees, JSON.stringify([]));
 }
 if (!localStorage.getItem(SK.assets)) {
-const now = new Date().toISOString();
-localStorage.setItem(SK.assets, JSON.stringify([
-{id: "a1", uid: "VP-NB-2026-00001", type: "NB", brand: "Dell", model: "Latitude 5440", serial: "NB-001", status: "assigned", valor: 8500, serviceTag: "ABC1234", so: "Windows 11 Pro", winupdate: "Atualizado", antivirus: "Defender", hd: "512GB NVMe", processador: "i7 11th Gen", ram: "16GB", bitlockerId: "BL-001", bitlockerPass: "123456-7890", anydesk: "123456789", intune: "Sim", created_at: now},
-{id: "a2", uid: "VP-CL-2026-00001", type: "CL", brand: "Apple", model: "iPhone 13", serial: "IMEI-001", status: "assigned", valor: 5000, telefone: "(11) 99999-9999", imei: "353456789012345", armazenamento: "128GB", ram: "4GB", sistema: "iOS", versao: "15", atualizado: "Sim", intune: "Sim", created_at: now}
-]));
+localStorage.setItem(SK.assets, JSON.stringify([]));
 }
 if (!localStorage.getItem(SK.allocations)) {
-localStorage.setItem(SK.allocations, JSON.stringify([
-{id: "al1", employee_id: 1, asset_uid: "VP-NB-2026-00001", date: new Date(Date.now() - 86400000*30).toISOString(), status: "active"},
-{id: "al2", employee_id: 2, asset_uid: "VP-CL-2026-00001", date: new Date(Date.now() - 86400000*28).toISOString(), status: "active"}
-]));
+localStorage.setItem(SK.allocations, JSON.stringify([]));
 }
 if (!localStorage.getItem(SK.systemLog)) localStorage.setItem(SK.systemLog, JSON.stringify([]));
 if (!localStorage.getItem(SK.sequenciaAtivos)) localStorage.setItem(SK.sequenciaAtivos, JSON.stringify({}));
@@ -2730,11 +2794,7 @@ if (!localStorage.getItem(SK.notifications)) localStorage.setItem(SK.notificatio
 if (!localStorage.getItem(SK.notifDedup)) localStorage.setItem(SK.notifDedup, JSON.stringify({}));
 if (!localStorage.getItem(SK.emailQueue)) localStorage.setItem(SK.emailQueue, JSON.stringify([]));
 if (!localStorage.getItem(SK.articles)) {
-const artigosExemplo = [
-{id: 'ART-001', title: 'Como configurar a impressora de rede', content: 'Para configurar a impressora de rede no Windows:\n1. Acesse Painel de Controle\n2. Clique em Adicionar impressora\n3. Selecione a impressora de rede\n4. Instale os drivers\n5. Teste a impressão', category: 'impressoras', tags: ['impressora', 'rede', 'windows'], views: 45, created_by: 'supporte', created_at: new Date(Date.now() - 30*24*60*60*1000).toISOString(), updated_at: new Date().toISOString()},
-{id: 'ART-002', title: 'Reset de senha do e-mail corporativo', content: 'Para resetar sua senha:\n1. Acesse o portal\n2. Clique em Esqueci minha senha\n3. Insira seu e-mail\n4. Verifique o link de reset\n5. Crie uma nova senha', category: 'email', tags: ['email', 'senha', 'reset'], views: 128, created_by: 'supporte', created_at: new Date(Date.now() - 15*24*60*60*1000).toISOString(), updated_at: new Date().toISOString()}
-];
-localStorage.setItem(SK.articles, JSON.stringify(artigosExemplo));
+localStorage.setItem(SK.articles, JSON.stringify([]));
 }
 const artigosBaseAcesso = [
 {id: 'ART-003', title: 'Como solicitar a alteração da minha senha de acesso', content: 'No momento, a alteração de senha não pode ser feita pelo próprio usuário dentro da plataforma — apenas por um Administrador.\n\nSe você esqueceu sua senha ou deseja alterá-la:\n1. Entre em contato com o Administrador ou a equipe de TI (por chamado, e-mail ou pessoalmente).\n2. Peça para gerarem uma nova senha provisória para o seu usuário.\n3. Você receberá um e-mail de convite com o novo login e a senha provisória.\n4. Guarde essas informações em local seguro; por segurança, a senha não é exibida novamente depois de gerada.\n\nSe você é Administrador: acesse Configurações, localize o colaborador ou usuário, clique em Editar, preencha o campo "Nova Senha" e depois em Salvar Alterações. Um novo e-mail de acesso será enviado automaticamente (simulado).', category: 'acesso', tags: ['senha', 'acesso', 'login', 'esqueci minha senha'], views: 0, created_by: 'supporte', created_at: new Date().toISOString(), updated_at: new Date().toISOString()},
@@ -5328,8 +5388,8 @@ const originalShowPage = showPage;
 window.addEventListener('load', function() {
 // Popular dropdown de tipos quando a página de ativos for carregada
 const origShowPage = showPage;
-showPage = function(pageName, btn) {
-origShowPage(pageName, btn);
+showPage = function(pageName, btn, replaceRoute, skipRouteUpdate) {
+origShowPage(pageName, btn, replaceRoute, skipRouteUpdate);
 if (pageName === 'ativos') {
 popularDropdownTipos();
 }
