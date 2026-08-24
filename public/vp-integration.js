@@ -254,7 +254,7 @@
     if (!VP.authed) return;
     var rows = [];
     try { var r = await db().from('app_state').select('collection,data'); rows = r.data || []; }
-    catch (e) { console.warn('[VP] loadAll falhou (schema exposto?):', e && e.message); return; }
+    catch (e) { console.warn('[VP] app_state indisponível; seguindo com colaboradores do portal:', e && e.message); rows = []; }
     var map = {};
     rows.forEach(function (row) { map[row.collection] = row.data; });
 

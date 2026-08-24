@@ -3322,6 +3322,10 @@ let filtered = employees;
 if (colabFiltro === 'active') filtered = employees.filter(function(e) { return e.status === 'active'; });
 if (colabFiltro === 'inactive') filtered = employees.filter(function(e) { return e.status === 'inactive'; });
 const tbody = document.getElementById('colab-table-body');
+if (employees.length === 0 && window.VP && !window.VP.ready) {
+tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color: var(--text-muted);">Sessão do portal não sincronizada. Reentre pelo vpsistema.com para carregar os colaboradores.</td></tr>';
+return;
+}
 tbody.innerHTML = filtered.map(function(e) {
 const badgeClass = e.status === 'active' ? 'active' : 'inactive';
 const badgeLabel = e.status === 'active' ? 'Ativo' : 'Inativo';
