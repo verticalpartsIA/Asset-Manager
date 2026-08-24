@@ -249,6 +249,17 @@
     return true;
   };
 
+  VP.signOut = async function () {
+    try {
+      if (!client && window.supabase && window.supabase.createClient) {
+        client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+          auth: { persistSession: true, autoRefreshToken: false, detectSessionInUrl: false }
+        });
+      }
+      if (client && client.auth) await client.auth.signOut();
+    } catch (e) {}
+  };
+
   // -------------------------------------------------------------- LOAD
   VP.loadAll = async function () {
     if (!VP.authed) return;

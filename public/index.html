@@ -2354,6 +2354,14 @@ localStorage.setItem(SK.usuarios, JSON.stringify(USUARIOS_PADRAO));
 if (!localStorage.getItem(SK.tiposAtivo)) {
 localStorage.setItem(SK.tiposAtivo, JSON.stringify([]));
 }
+const tema = localStorage.getItem(SK.tema) || 'dark';
+document.documentElement.setAttribute('data-theme', tema);
+atualizarIconeTema(tema);
+if (isPortalOnlyAccess()) {
+document.getElementById('login-screen').style.display = 'none';
+document.getElementById('main-app').style.display = 'none';
+return;
+}
 const sessao = localStorage.getItem(SK.sessao);
 if (sessao) {
 const userData = JSON.parse(sessao);
@@ -2363,12 +2371,41 @@ mostrarApp(userData);
 document.getElementById('login-screen').style.display = 'flex';
 document.getElementById('main-app').style.display = 'none';
 }
-const tema = localStorage.getItem(SK.tema) || 'dark';
-document.documentElement.setAttribute('data-theme', tema);
-atualizarIconeTema(tema);
+}
+function isPortalOnlyAccess() {
+return location.hostname === 'assetmanager.vpsistema.com';
+}
+function showPortalAccessRequired(message) {
+try { localStorage.removeItem(SK.sessao); } catch (e) {}
+currentUser = null;
+const login = document.getElementById('login-screen');
+const app = document.getElementById('main-app');
+if (app) app.style.display = 'none';
+if (!login) return;
+login.style.display = 'flex';
+const title = login.querySelector('.login-title');
+const subtitle = login.querySelector('.login-subtitle');
+const form = login.querySelector('.login-form');
+if (title) title.textContent = 'Entrar pelo portal';
+if (subtitle) subtitle.textContent = message || 'A sessão precisa vir do vpsistema.com para carregar permissões e colaboradores corretamente.';
+if (form) form.style.display = 'none';
+let btn = document.getElementById('btn-portal-login');
+if (!btn) {
+btn = document.createElement('button');
+btn.id = 'btn-portal-login';
+btn.type = 'button';
+btn.className = 'btn btn-primary login-btn';
+btn.textContent = 'Abrir vpsistema.com';
+btn.onclick = function () { location.href = 'https://vpsistema.com'; };
+login.querySelector('.login-container').appendChild(btn);
+}
 }
 function handleLogin(event) {
 event.preventDefault();
+if (isPortalOnlyAccess()) {
+showPortalAccessRequired();
+return;
+}
 const username = document.getElementById('login-username').value.trim();
 const password = document.getElementById('login-password').value;
 const usuarios = JSON.parse(localStorage.getItem(SK.usuarios) || '[]');
@@ -2437,6 +2474,14 @@ addLog('Logout', 'Usuário ' + currentUser.name + ' fez logout', 'logout');
 }
 localStorage.removeItem(SK.sessao);
 currentUser = null;
+if (isPortalOnlyAccess()) {
+if (window.VP && typeof VP.signOut === 'function') {
+VP.signOut().finally(function () { location.href = 'https://vpsistema.com'; });
+} else {
+location.href = 'https://vpsistema.com';
+}
+return;
+}
 location.reload();
 }
 function toggleTheme() {
@@ -5785,9 +5830,7 @@ return '<div class="heatmap-cell" style="background:' + cor.bg + '; border-color
 
 <!-- ===== SSO + PERSISTÊNCIA SUPABASE (bootstrap) ===== -->
 <!-- Roda DEPOIS do initApp() do app (registrado antes, em outro load listener).
-     Se veio ?sso_token= do vpsistema: autentica, carrega os dados do Supabase
-     para o cache local e entra no app com a sessão SSO. Sem token, o app segue
-     funcionando em localStorage (dev/fallback). -->
+     Em produção, a entrada válida vem sempre do portal vpsistema.com. -->
 <script>
 window.addEventListener('load', function () {
   if (!window.VP) return;
@@ -5796,14 +5839,26 @@ window.addEventListener('load', function () {
   (async function () {
     try {
       var ok = hasToken ? await VP.bootSSO() : await VP.bootExistingSession();
-      if (!ok) { VP.updateSync && VP.updateSync(); return; } // token inválido → permanece no login local
+      if (!ok) {
+        if (typeof isPortalOnlyAccess === 'function' && isPortalOnlyAccess() && typeof showPortalAccessRequired === 'function') {
+          showPortalAccessRequired(hasToken ? 'A sessão recebida do portal expirou. Entre novamente pelo vpsistema.com.' : 'Abra o Asset Manager pelo card do vpsistema.com para sincronizar permissões e colaboradores.');
+        }
+        VP.updateSync && VP.updateSync();
+        return;
+      }
       await VP.loadAll();              // popula o cache local a partir do Supabase
       VP.wrapDataLayer();              // idempotente
       if (typeof mostrarApp === 'function' && VP.session) {
         mostrarApp(VP.session);        // entra no app com a sessão do SSO
       }
       VP.updateSync && VP.updateSync(); // confirma "Sincronizado"
-    } catch (e) { console.warn('[VP] bootstrap SSO falhou', e); VP.updateSync && VP.updateSync(); }
+    } catch (e) {
+      console.warn('[VP] bootstrap SSO falhou', e);
+      if (typeof isPortalOnlyAccess === 'function' && isPortalOnlyAccess() && typeof showPortalAccessRequired === 'function') {
+        showPortalAccessRequired('Não foi possível confirmar sua sessão. Entre novamente pelo vpsistema.com.');
+      }
+      VP.updateSync && VP.updateSync();
+    }
   })();
 });
 </script>
