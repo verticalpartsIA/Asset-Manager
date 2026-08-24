@@ -160,6 +160,21 @@
     return 'user';
   }
 
+  function profileToEmployee(profile) {
+    return {
+      id: profile.id,
+      name: profile.name || profile.email || 'Colaborador',
+      email: profile.email || '',
+      depto: profile.department || '',
+      cargo: profile.level || 'Colaborador',
+      status: profile.is_active === false ? 'inactive' : 'active',
+      is_department_lead: !!profile.is_department_lead,
+      is_placeholder: !!profile.is_placeholder,
+      source: 'vpsistema',
+      created_at: profile.created_at || null
+    };
+  }
+
   // Remove sso_token da URL depois de consumir (não deixa o JWT na barra).
   function cleanUrl() {
     try {
@@ -198,7 +213,7 @@
       username: user.email,
       name: (prof && prof.name) || (user.email || '').split('@')[0],
       role: levelToRole(prof && prof.level),
-      employee_id: null,
+      employee_id: prof && prof.id || null,
       department: prof && prof.department || null,
       sso: true
     };
@@ -219,7 +234,7 @@
 
     // Não-promovidas: fonte de verdade é o app_state (JSONB).
     Object.keys(SYNCED).forEach(function (col) {
-      if (PROMOTED[col]) return;
+      if (col === 'employees' || PROMOTED[col]) return;
       if (map[col] !== undefined && map[col] !== null) {
         try { localStorage.setItem(SYNCED[col], JSON.stringify(map[col])); } catch (e) {}
         VP._baseline[col] = map[col]; // baseline p/ o merge por registro (issue #2)
@@ -230,6 +245,7 @@
     // Fallback p/ app_state se a tipada estiver vazia (transição/erro).
     for (var i = 0; i < PROMOTED_KEYS.length; i++) {
       var col = PROMOTED_KEYS[i], cfg = PROMOTED[col], arr = null;
+      if (col === 'employees') continue;
       try { var t = await selectAllRows(cfg.table, 'details'); arr = t.map(function (x) { return x.details; }).filter(Boolean); }
       catch (e) { arr = null; }
       if (arr && arr.length) {
@@ -240,6 +256,7 @@
         VP._baseline[col] = map[col];
       }
     }
+    await VP.loadPortalEmployees();
     VP.ready = true;
     VP.updateSync();
     return true;
@@ -306,6 +323,53 @@
       job_role_id: (maps.role && maps.role[e.cargo]) || null, details: e
     };
   }
+
+  async function syncPortalEmployeeMirror(employees) {
+    if (!Array.isArray(employees) || !employees.length) return;
+    try {
+      await loadRefMaps();
+      await db().from('employees').upsert(employees.map(employeeToDb), { onConflict: 'app_id' });
+    } catch (e) {
+      console.warn('[VP] espelho de colaboradores do portal falhou:', e && e.message);
+    }
+  }
+
+  VP.loadPortalEmployees = async function () {
+    if (!VP.authed || !client) return false;
+    try {
+      var profiles = await selectAllPortalProfiles();
+      var employees = profiles.map(profileToEmployee);
+      localStorage.setItem(SK.employees, JSON.stringify(employees));
+      VP._baseline.employees = employees;
+      await syncPortalEmployeeMirror(employees);
+      if (VP.session && VP.user) {
+        var current = employees.find(function(e) { return e.id === VP.user.id; });
+        VP.session.employee_id = current ? current.id : null;
+        try { localStorage.setItem(SK.sessao, JSON.stringify(VP.session)); } catch (e) {}
+      }
+      return true;
+    } catch (e) {
+      console.warn('[VP] loadPortalEmployees falhou:', e && e.message);
+      return false;
+    }
+  };
+
+  async function selectAllPortalProfiles() {
+    var PAGE = 1000, from = 0, out = [];
+    while (true) {
+      var r = await client
+        .from('profiles')
+        .select('id,email,name,department,level,is_active,is_department_lead,is_placeholder,created_at')
+        .order('name')
+        .range(from, from + PAGE - 1);
+      if (r.error) throw r.error;
+      var rows = r.data || [];
+      out = out.concat(rows);
+      if (rows.length < PAGE) break;
+      from += PAGE;
+    }
+    return out;
+  }
   function allocationToDb(a) {
     return {
       app_id: String(a.id),
@@ -362,6 +426,7 @@
     if (!VP.enabled || !VP.ready) return;
     var col = KEY_TO_COL[storageKey];
     if (!col) return; // sessao/tema/desconhecida → só local
+    if (col === 'employees') return; // colaboradores vêm do public.profiles (portal vpsistema.com)
 
     // Promovidas (issue #4): gravação por registro nas tabelas tipadas.
     if (PROMOTED[col]) { await savePromoted(col, value); return; }

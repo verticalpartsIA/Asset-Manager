@@ -1135,7 +1135,7 @@ Atualizar
 </div>
 <div id="page-colaboradores" class="page">
 <h1 class="page-heading">Gestão de Colaboradores</h1>
-<p class="page-subtitle">Cadastro, ativação e inativação. A edição de dados do colaborador é feita exclusivamente em Configurações, pelo Administrador.</p>
+<p class="page-subtitle">Lista herdada do portal vpsistema.com. Cadastros, edições, ativações e inativações são feitos no portal central.</p>
 <div class="form-card" id="card-novo-colaborador" style="display: none;">
 <div class="form-card-title">Novo Colaborador</div>
 <form id="form-colab" onsubmit="cadastrarColaborador(event)">
@@ -1662,8 +1662,8 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 </div>
 </div>
 <div class="config-section">
-<div class="config-section-title">Colaboradores (Usuários Comuns) — Edição de Dados</div>
-<p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 12px;">Todo Colaborador cadastrado já é, automaticamente, um Usuário Comum do sistema — os dois são a mesma conta e têm as mesmas permissões. Por isso, o cadastro, a edição (departamento e cargo) e o acesso desses usuários são gerenciados apenas aqui, e não na lista de Usuários do Sistema abaixo. O login é criado automaticamente com o e-mail cadastrado.</p>
+<div class="config-section-title">Colaboradores — Fonte vpsistema.com</div>
+<p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 12px;">A lista de colaboradores vem do portal central. Para incluir, editar, ativar ou inativar alguém, use o vpsistema.com; o Asset Manager apenas consulta esses dados para alocações, suporte, histórico e checklists.</p>
 <div class="config-list" id="config-colab-list"></div>
 </div>
 <div class="config-section">
@@ -2201,7 +2201,7 @@ return false;
 }
 function aplicarRestricoesEdicaoPorPerfil() {
 const admin = isAdminUser();
-['card-novo-ativo', 'card-nova-pelicula', 'card-nova-tinta', 'card-novo-colaborador', 'card-nova-alocacao'].forEach(function(id) {
+['card-novo-ativo', 'card-nova-pelicula', 'card-nova-tinta', 'card-nova-alocacao'].forEach(function(id) {
 const el = document.getElementById(id);
 if (el) el.style.display = admin ? '' : 'none';
 });
@@ -2561,13 +2561,10 @@ showToast('Tipo de ativo removido!');
 }
 function renderColabConfigList() {
 const employees = getData(SK.employees).filter(function(e) { return e.status === 'active'; });
-const usuarios = getData(SK.usuarios);
 const container = document.getElementById('config-colab-list');
 if (!container) return;
 container.innerHTML = employees.map(function(e) {
-const usuario = usuarios.find(function(u) { return u.employee_id === e.id; });
-const login = usuario ? usuario.username : '—';
-return '<div class="config-item"><span class="config-item-text">' + e.name + ' — ' + e.depto + ' / ' + e.cargo + ' <span style="color: var(--text-muted); font-size: 11px;">(login: ' + login + ')</span></span><div class="config-item-actions"><button class="btn-icon" onclick="reenviarConviteColab(' + e.id + ')" title="Reenviar convite por e-mail">✉️</button><button class="btn-icon" onclick="abrirModalEditarColab(' + e.id + ')" title="Editar">✏️</button></div></div>';
+return '<div class="config-item"><span class="config-item-text">' + e.name + ' — ' + e.depto + ' / ' + e.cargo + ' <span style="color: var(--text-muted); font-size: 11px;">(vpsistema.com)</span></span><div class="config-item-actions"><span style="color: var(--text-muted); font-size: 11px;">Gerenciado no portal</span></div></div>';
 }).join('') || '<div style="padding: 12px; color: var(--text-muted); font-size: 13px;">Nenhum colaborador ativo encontrado</div>';
 }
 function renderConfigList() {
@@ -2818,6 +2815,7 @@ const testEmployeeNames = ['Ana Silva', 'Carlos Santos', 'Marina Costa', 'Pedro 
 const testEmployeeEmails = ['ana@empresa.com', 'carlos@empresa.com', 'marina@empresa.com', 'pedro@empresa.com', 'juliana@empresa.com'];
 const assets = getData(SK.assets);
 const employees = getData(SK.employees);
+if (employees.some(function(e) { return e.source === 'vpsistema'; })) return;
 const removedAssetUids = assets.filter(function(a) { return testAssetUids.indexOf(a.uid) !== -1; }).map(function(a) { return a.uid; });
 const removedEmployeeIds = employees.filter(function(e) {
 return testEmployeeNames.indexOf(e.name) !== -1 || testEmployeeEmails.indexOf(String(e.email || '').toLowerCase()) !== -1;
@@ -3323,25 +3321,12 @@ const employees = getData(SK.employees);
 let filtered = employees;
 if (colabFiltro === 'active') filtered = employees.filter(function(e) { return e.status === 'active'; });
 if (colabFiltro === 'inactive') filtered = employees.filter(function(e) { return e.status === 'inactive'; });
-const contagemNomes = {};
-employees.forEach(function(e) { const chave = nomeNormalizado(e.name); contagemNomes[chave] = (contagemNomes[chave] || 0) + 1; });
 const tbody = document.getElementById('colab-table-body');
 tbody.innerHTML = filtered.map(function(e) {
 const badgeClass = e.status === 'active' ? 'active' : 'inactive';
 const badgeLabel = e.status === 'active' ? 'Ativo' : 'Inativo';
-const ehDuplicado = contagemNomes[nomeNormalizado(e.name)] > 1;
-const avisoDuplicidade = ehDuplicado ? ' <span title="Existe mais de um colaborador com este nome. Verifique se não é um cadastro duplicado — isso desconecta dispositivos e checklists já vinculados à pessoa correta." style="color: var(--status-maintenance); font-size: 11px; cursor: help;">⚠️ possível duplicidade</span>' : '';
-let actions = '';
-if (isAdminUser()) {
-actions += '<button class="btn btn-outline btn-sm" onclick="abrirModalEditarColab(' + e.id + ')">Editar</button>';
-if (ehDuplicado) { actions += ' <button class="btn btn-warning-outline btn-sm" onclick="mesclarColaboradorDuplicado(' + e.id + ')" title="Transferir login, dispositivos, checklists e chamados para o outro registro com este nome">Mesclar</button>'; }
-if (e.status === 'active') { actions += ' <button class="btn btn-warning-outline btn-sm" onclick="abrirModalInativarColab(' + e.id + ', \'' + e.name + '\')">Inativar</button>'; }
-else { actions += ' <button class="btn btn-success-outline btn-sm" onclick="reativarColaborador(' + e.id + ')">Ativar</button>'; }
-actions += ' <button class="btn btn-danger-outline btn-sm" onclick="excluirColaborador(' + e.id + ')">Excluir</button>';
-} else {
-actions = '<span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span>';
-}
-return '<tr><td><strong>' + e.name + '</strong>' + avisoDuplicidade + '</td><td>' + e.email + '</td><td>' + e.depto + '</td><td>' + e.cargo + '</td><td><span class="badge badge-' + badgeClass + '">' + badgeLabel + '</span></td><td><div class="btn-group">' + actions + '</div></td></tr>';
+const origem = e.source === 'vpsistema' ? 'vpsistema.com' : 'Somente leitura';
+return '<tr><td><strong>' + e.name + '</strong></td><td>' + (e.email || '—') + '</td><td>' + (e.depto || '—') + '</td><td>' + (e.cargo || 'Colaborador') + '</td><td><span class="badge badge-' + badgeClass + '">' + badgeLabel + '</span></td><td><span style="color: var(--text-muted); font-size: 11px;">' + origem + '</span></td></tr>';
 }).join('') || '<tr><td colspan="6" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhum colaborador encontrado</td></tr>';
 }
 function filtrarColaboradores(filtro) { colabFiltro = filtro; renderColaboradores(); }
@@ -3422,7 +3407,8 @@ return username;
 }
 function cadastrarColaborador(e) {
 e.preventDefault();
-if (bloquearSeNaoAdmin()) return;
+showToast('Colaboradores são cadastrados no portal vpsistema.com.');
+return;
 try {
 const name = document.getElementById('col-nome').value.trim();
 const email = document.getElementById('col-email').value.trim().toLowerCase();
@@ -3473,7 +3459,8 @@ const employees = getData(SK.employees);
 return !employees.some(function(e) { return e.id === usuario.employee_id; });
 }
 function abrirModalEditarColab(id) {
-if (!currentUser || currentUser.role !== 'admin') { showToast('Apenas administradores podem editar colaboradores, pela seção de Configurações.'); return; }
+showToast('Colaboradores são editados no portal vpsistema.com.');
+return;
 const employees = getData(SK.employees);
 const emp = employees.find(function(e) { return e.id === id; });
 if (emp) {
@@ -3490,7 +3477,8 @@ document.getElementById('modal-editar-colab').classList.add('active');
 }
 }
 function confirmarEditarColaborador() {
-if (!currentUser || currentUser.role !== 'admin') { showToast('Apenas administradores podem editar colaboradores.'); return; }
+showToast('Colaboradores são editados no portal vpsistema.com.');
+return;
 if (!colabParaEditar) return;
 const novoDepto = document.getElementById('editar-colab-depto').value;
 const novoCargo = document.getElementById('editar-colab-cargo').value;
@@ -3527,14 +3515,16 @@ renderColaboradores();
 }
 }
 function abrirModalInativarColab(id, nome) {
-if (bloquearSeNaoAdmin()) return;
+showToast('Colaboradores são inativados no portal vpsistema.com.');
+return;
 document.getElementById('inativar-colab-nome').value = nome;
 document.getElementById('inativar-colab-motivo').value = '';
 document.getElementById('modal-inativar-colab').classList.add('active');
 document.getElementById('modal-inativar-colab').dataset.colabId = id;
 }
 function confirmarInativarColab() {
-if (bloquearSeNaoAdmin()) return;
+showToast('Colaboradores são inativados no portal vpsistema.com.');
+return;
 const motivo = document.getElementById('inativar-colab-motivo').value.trim();
 if (!motivo) { alert('Por favor, informe o motivo da inativação.'); return; }
 const id = parseInt(document.getElementById('modal-inativar-colab').dataset.colabId);
@@ -3554,7 +3544,8 @@ renderColaboradores();
 }
 }
 function reativarColaborador(id) {
-if (bloquearSeNaoAdmin()) return;
+showToast('Colaboradores são reativados no portal vpsistema.com.');
+return;
 if (!confirm('Deseja reativar este colaborador?')) return;
 const employees = getData(SK.employees);
 const emp = employees.find(function(e) { return e.id === id; });
