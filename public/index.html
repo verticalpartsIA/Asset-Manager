@@ -1614,7 +1614,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 </div>
 <div class="signature-card">
 <label>TI — Fernanda</label>
-<input type="text" id="chk-assTI" value="Fernanda Freires" readonly="">
+<input type="text" id="chk-assTI" value="Fernanda Denis" readonly="">
 <span class="signature-pending-tag">Aguardará ciência após salvar</span>
 </div>
 </div>
@@ -2195,6 +2195,7 @@ let ativoParaEditar = null;
 let suprimentoParaEditar = null;
 let suprimentoParaUsar = null;
 function isAdminUser() { return !!(currentUser && currentUser.role === 'admin'); }
+function isStaffUser() { return !!(currentUser && (currentUser.role === 'admin' || currentUser.role === 'tecnico')); }
 function bloquearSeNaoAdmin(mensagem) {
 if (!isAdminUser()) { showToast(mensagem || 'Apenas administradores podem realizar esta ação. Técnicos têm acesso somente às funções de suporte, checklists e histórico.'); return true; }
 return false;
@@ -2446,7 +2447,7 @@ document.getElementById('btn-painel-tecnico').style.display = 'none';
 document.getElementById('nav-dashboard').style.display = isUser ? 'none' : 'flex';
 document.getElementById('nav-meus-dispositivos').style.display = isUser ? 'flex' : 'none';
 document.getElementById('nav-relatorios').style.display = isUser ? 'none' : 'flex';
-document.getElementById('nav-ativos').style.display = isUser ? 'none' : 'flex';
+document.getElementById('nav-ativos').style.display = 'flex';
 document.getElementById('nav-estoque').style.display = isUser ? 'none' : 'flex';
 document.getElementById('nav-colaboradores').style.display = isUser ? 'none' : 'flex';
 document.getElementById('nav-alocacoes').style.display = isUser ? 'none' : 'flex';
@@ -2520,10 +2521,10 @@ const shell = document.querySelector('.app-shell');
 if (shell) shell.classList.toggle('sidebar-collapsed', collapsed === '1');
 }
 function showPage(pageName, btn, replaceRoute, skipRouteUpdate) {
-if (currentUser && currentUser.role === 'user' && pageName !== 'meus-dispositivos' && pageName !== 'suporte' && pageName !== 'checklists') {
-showToast('Acesso restrito. Usuários comuns podem ver apenas seus dispositivos e abrir chamados de suporte.');
-pageName = 'meus-dispositivos';
-btn = document.getElementById('nav-meus-dispositivos');
+if (currentUser && currentUser.role === 'user' && pageName !== 'ativos' && pageName !== 'meus-dispositivos' && pageName !== 'suporte' && pageName !== 'checklists') {
+showToast('Acesso restrito. Usuários comuns podem ver apenas seus ativos sob tutela e abrir chamados de suporte.');
+pageName = 'ativos';
+btn = document.getElementById('nav-ativos');
 }
 if (!document.getElementById('page-' + pageName)) {
 pageName = defaultPageForUser(currentUser);
@@ -3046,13 +3047,38 @@ options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins:
 });
 }
 let ativoFiltro = 'todos';
-function renderAtivos() {
+function alocacaoAtivaDoUsuarioAtual(al) {
+return !!(currentUser && currentUser.employee_id && al && String(al.employee_id) === String(currentUser.employee_id) && al.status === 'active');
+}
+function ativosSobTutelaDoUsuarioAtual() {
+if (!currentUser || !currentUser.employee_id) return [];
+const allocations = getData(SK.allocations).filter(alocacaoAtivaDoUsuarioAtual);
 const assets = getData(SK.assets);
-let filtered = assets;
-if (ativoFiltro !== 'todos') filtered = assets.filter(function(a) { return a.status === ativoFiltro; });
+return allocations.map(function(al) {
+const asset = assets.find(function(a) { return a.uid === al.asset_uid; });
+if (!asset || asset.status === 'discarded' || asset.status === 'inactive') return null;
+return { asset: asset, allocation: al };
+}).filter(Boolean);
+}
+function usuarioPodeVerAtivo(uid) {
+if (isStaffUser()) return true;
+return ativosSobTutelaDoUsuarioAtual().some(function(item) { return item.asset.uid === uid; });
+}
+function renderAtivos() {
+const userScoped = currentUser && currentUser.role === 'user';
+const scopedItems = userScoped ? ativosSobTutelaDoUsuarioAtual() : getData(SK.assets).map(function(asset) { return { asset: asset, allocation: null }; });
+let filtered = scopedItems;
+if (ativoFiltro !== 'todos') filtered = scopedItems.filter(function(item) { return item.asset.status === ativoFiltro; });
 const tbody = document.getElementById('ativos-table-body');
-tbody.innerHTML = filtered.map(function(a) {
-const observacao = a.observacao || '—';
+if (userScoped && (!currentUser || !currentUser.employee_id)) {
+tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhum colaborador vinculado a este usuário. Entre novamente pelo vpsistema.com ou contate o administrador.</td></tr>';
+return;
+}
+tbody.innerHTML = filtered.map(function(item) {
+const a = item.asset;
+const al = item.allocation;
+const observacaoBase = a.observacao || '—';
+const observacao = userScoped ? ('Desde ' + (al && al.date ? new Date(al.date).toLocaleDateString('pt-BR') : '—') + (al && al.condition_out ? ' • Condição: ' + al.condition_out : '') + (observacaoBase !== '—' ? ' • ' + observacaoBase : '')) : observacaoBase;
 let infoExtra = '—';
 if (a.type === 'CL') {
 infoExtra = '<span style="font-size: 11px;">Tel: ' + (a.telefone || '—') + '<br>IMEI: ' + (a.imei || a.serial || '—') + '</span>';
@@ -3064,10 +3090,14 @@ if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn
 if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-status btn-sm" onclick="abrirModalStatus(\'' + a.id + '\')">⚙️ Status</button>'; }
 if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-discarded btn-sm" onclick="abrirModalDescartar(\'' + a.id + '\')">🗑️ Descartar</button>'; }
 return '<tr><td class="uid-cell">' + a.uid + '</td><td>' + typeLabel(a.type) + '</td><td>' + a.brand + ' ' + a.model + '</td><td style="font-family: monospace; font-size: 12px;">' + a.serial + '</td><td>' + infoExtra + '</td><td><span class="badge badge-' + a.status + '">' + STATUS_LABELS[a.status] + '</span></td><td style="font-size: 11px; color: var(--text-secondary);">' + observacao + '</td><td><div class="btn-group">' + actions + '</div></td></tr>';
-}).join('') || '<tr><td colspan="8" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhum ativo encontrado</td></tr>';
+}).join('') || '<tr><td colspan="8" style="text-align:center; padding:30px; color: var(--text-muted);">' + (userScoped ? 'Nenhum equipamento está atualmente sob sua tutela.' : 'Nenhum ativo encontrado') + '</td></tr>';
 }
 function filtrarAtivos(filtro) { ativoFiltro = filtro; renderAtivos(); }
 function mostrarDetalhesAtivo(uid) {
+if (!usuarioPodeVerAtivo(uid)) {
+showToast('Você só pode visualizar detalhes dos ativos atualmente sob sua tutela.');
+return;
+}
 const assets = getData(SK.assets);
 const a = assets.find(x => x.uid === uid);
 if(!a) return;
@@ -3642,7 +3672,7 @@ let assets = getData(SK.assets);
 const asset = assets.find(function(a) { return a.uid === assetUid; });
 if (asset) { asset.status = 'assigned'; saveData(SK.assets, assets); }
 const allocations = getData(SK.allocations);
-allocations.push({ id: 'al' + Date.now(), employee_id: parseInt(empId), asset_uid: assetUid, date: new Date().toISOString(), status: 'active' });
+allocations.push({ id: 'al' + Date.now(), employee_id: empId, asset_uid: assetUid, date: new Date().toISOString(), status: 'active' });
 saveData(SK.allocations, allocations);
 addLog('Ativo Alocado', 'Ativo ' + assetUid + ' foi alocado para colaborador ID ' + empId, 'cadastro');
 showToast('Alocação realizada com sucesso!');
@@ -5037,7 +5067,7 @@ if (view === 'novo-checklist') popularColaboradoresChecklist();
 if (view === 'visualizar-checklists') renderChecklistsOrganizados();
 if (view === 'pendencias-checklist') renderPendenciasChecklist();
 }
-const CHECKLIST_ASSINATURA_FIXA = { qualidade: 'Giovanna Maeno', ti: 'Fernanda Freires' };
+const CHECKLIST_ASSINATURA_FIXA = { qualidade: 'Giovanna Maeno', ti: 'Fernanda Denis' };
 const CHECKLIST_ITENS_SECOES = {
 limpeza: ['Teclado limpo', 'Mouse limpo', 'Monitor limpo', 'Ventoinhas limpas'],
 organizacao: ['Cabos organizados', 'Mesa livre', 'Periféricos guardados'],

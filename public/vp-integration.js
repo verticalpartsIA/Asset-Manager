@@ -263,6 +263,7 @@
   // -------------------------------------------------------------- LOAD
   VP.loadAll = async function () {
     if (!VP.authed) return;
+    var staffSession = !!(VP.session && (VP.session.role === 'admin' || VP.session.role === 'tecnico'));
     var rows = [];
     try { var r = await db().from('app_state').select('collection,data'); rows = r.data || []; }
     catch (e) { console.warn('[VP] app_state indisponível; seguindo com colaboradores do portal:', e && e.message); rows = []; }
@@ -288,6 +289,9 @@
       if (arr && arr.length) {
         try { localStorage.setItem(SYNCED[col], JSON.stringify(arr)); } catch (e) {}
         VP._baseline[col] = arr;
+      } else if (!staffSession && (col === 'assets' || col === 'allocations')) {
+        try { localStorage.setItem(SYNCED[col], JSON.stringify([])); } catch (e) {}
+        VP._baseline[col] = [];
       } else if (map[col] !== undefined && map[col] !== null) {
         try { localStorage.setItem(SYNCED[col], JSON.stringify(map[col])); } catch (e) {}
         VP._baseline[col] = map[col];
