@@ -2312,11 +2312,12 @@ localStorage.setItem(SK.systemLog, JSON.stringify(logs));
 function gerarNumeroSequencial(tipo) {
 // Prioriza reaproveitar o menor UID liberado por uma exclusão definitiva
 // (ver issue #40). UIDs de ativos apenas inativados nunca entram nesta lista.
-let liberados = JSON.parse(localStorage.getItem(SK.uidsLiberados) || '{}');
+let liberados = getData(SK.uidsLiberados);
+if (!liberados || Array.isArray(liberados)) liberados = {};
 if (Array.isArray(liberados[tipo]) && liberados[tipo].length > 0) {
 liberados[tipo].sort(function(a, b) { return a - b; });
 const numeroReaproveitado = liberados[tipo].shift();
-localStorage.setItem(SK.uidsLiberados, JSON.stringify(liberados));
+saveData(SK.uidsLiberados, liberados);
 return String(numeroReaproveitado).padStart(3, '0');
 }
 let sequencia = JSON.parse(localStorage.getItem(SK.sequenciaAtivos) || '{}');
@@ -2333,10 +2334,11 @@ const partes = String(uid || '').split('-');
 const numeroStr = partes[partes.length - 1];
 const numero = parseInt(numeroStr, 10);
 if (!tipo || isNaN(numero)) return;
-let liberados = JSON.parse(localStorage.getItem(SK.uidsLiberados) || '{}');
+let liberados = getData(SK.uidsLiberados);
+if (!liberados || Array.isArray(liberados)) liberados = {};
 if (!Array.isArray(liberados[tipo])) liberados[tipo] = [];
 if (liberados[tipo].indexOf(numero) === -1) liberados[tipo].push(numero);
-localStorage.setItem(SK.uidsLiberados, JSON.stringify(liberados));
+saveData(SK.uidsLiberados, liberados);
 }
 // Função para obter todos os tipos de ativo (padrão + customizados)
 function getTiposAtivo() {
@@ -2957,6 +2959,10 @@ localStorage.setItem(key, JSON.stringify(data));
 // ser um bloco (card) em vez de um <button> — usar junto de role="button" e
 // tabindex="0". Dispara o próprio onclick do elemento via .click() (issue #19).
 function onCardKeydown(e) {
+// Ignora eventos originados em controles aninhados (ex: botão Editar/Excluir
+// dentro do card) — senão o Enter/Espaço deles também aciona o clique do
+// card, sobrepondo a ação nativa do controle. Ver revisão do PR #42.
+if (e.target !== e.currentTarget) return;
 if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
 e.preventDefault();
 e.currentTarget.click();
@@ -3262,11 +3268,20 @@ if (!assetParaExcluir) return;
 const assets = getData(SK.assets);
 const asset = assets.find(function(a) { return a.id === assetParaExcluir; });
 if (!asset) return;
+// Antes de liberar o UID, remove todo registro vinculado a ele
+// (alocações, histórico, chamados) — senão, ao reaproveitar o UID num
+// ativo novo, esses registros antigos passam a ser atribuídos ao
+// substituto (ex: incidentes e alocações do equipamento descartado
+// aparecem como se fossem do novo). Ver revisão do PR #42.
+saveData(SK.allocations, getData(SK.allocations).filter(function(a) { return a.asset_uid !== asset.uid; }));
+saveData(SK.assetHistory, getData(SK.assetHistory).filter(function(h) { return h.asset_uid !== asset.uid; }));
+saveData(SK.tickets, getData(SK.tickets).filter(function(t) { return t.asset_uid !== asset.uid; }));
+saveData(SK.ticketsTrash, getData(SK.ticketsTrash).filter(function(t) { return t.asset_uid !== asset.uid; }));
 // Exclusão definitiva libera o UID para reuso (issue #40). Isso é
 // deliberadamente diferente de inativar, que nunca libera o UID.
 liberarUidPorExclusao(asset.uid, asset.type);
 saveData(SK.assets, assets.filter(function(a) { return a.id !== assetParaExcluir; }));
-addLog('Ativo Excluído', 'Ativo ' + asset.uid + ' (' + asset.brand + ' ' + asset.model + ') foi excluído definitivamente. UID liberado para reutilização.', 'exclusao');
+addLog('Ativo Excluído', 'Ativo ' + asset.uid + ' (' + asset.brand + ' ' + asset.model + ') foi excluído definitivamente, junto com alocações/histórico/chamados vinculados. UID liberado para reutilização.', 'exclusao');
 showToast('Ativo ' + asset.uid + ' excluído definitivamente. UID liberado para reutilização.');
 fecharModal('modal-excluir-ativo');
 assetParaExcluir = null;
