@@ -1842,6 +1842,22 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 </div>
 </div>
 </div>
+<!-- MODAL EXCLUIR ATIVO DEFINITIVAMENTE -->
+<div id="modal-excluir-ativo" class="modal-overlay">
+<div class="modal">
+<button class="modal-close" onclick="fecharModal(&#39;modal-excluir-ativo&#39;)" aria-label="Fechar">×</button>
+<div class="modal-title">Excluir Ativo Definitivamente</div>
+<div class="modal-subtitle">Esta ação remove o ativo permanentemente do sistema e libera o UID para reutilização em um novo cadastro. Não pode ser desfeita.</div>
+<div class="form-field" style="margin-bottom: 16px;">
+<label>Ativo <span class="required-mark">*</span></label>
+<input type="text" id="excluir-ativo-uid" readonly="" style="opacity: 0.7;">
+</div>
+<div class="modal-actions">
+<button class="btn btn-secondary" onclick="fecharModal(&#39;modal-excluir-ativo&#39;)">Cancelar</button>
+<button class="btn btn-danger-outline" onclick="confirmarExcluirAtivoDefinitivo()">Excluir Definitivamente</button>
+</div>
+</div>
+</div>
 <!-- MODAL INATIVAR COLABORADOR -->
 <div id="modal-inativar-colab" class="modal-overlay">
 <div class="modal">
@@ -2090,6 +2106,7 @@ tema: 'am_tema',
 sessao: 'am_sessao',
 systemLog: 'am_system_log',
 sequenciaAtivos: 'am_sequencia_ativos',
+uidsLiberados: 'am_uids_liberados',
 tickets: 'am_tickets',
 ticketsTrash: 'am_tickets_trash',
 comments: 'am_comments',
@@ -2198,6 +2215,7 @@ let charts = {};
 let currentFilters = { search: '', tipo: 'todos', status: 'todos', depto: 'todos', colab: 'todos' };
 let assetParaAlterarStatus = null;
 let assetParaDescartar = null;
+let assetParaExcluir = null;
 let ativoParaEditar = null;
 let suprimentoParaEditar = null;
 let suprimentoParaUsar = null;
@@ -2292,11 +2310,33 @@ if (logs.length > 100) logs.pop();
 localStorage.setItem(SK.systemLog, JSON.stringify(logs));
 }
 function gerarNumeroSequencial(tipo) {
+// Prioriza reaproveitar o menor UID liberado por uma exclusão definitiva
+// (ver issue #40). UIDs de ativos apenas inativados nunca entram nesta lista.
+let liberados = JSON.parse(localStorage.getItem(SK.uidsLiberados) || '{}');
+if (Array.isArray(liberados[tipo]) && liberados[tipo].length > 0) {
+liberados[tipo].sort(function(a, b) { return a - b; });
+const numeroReaproveitado = liberados[tipo].shift();
+localStorage.setItem(SK.uidsLiberados, JSON.stringify(liberados));
+return String(numeroReaproveitado).padStart(3, '0');
+}
 let sequencia = JSON.parse(localStorage.getItem(SK.sequenciaAtivos) || '{}');
 if (!sequencia[tipo]) { sequencia[tipo] = 0; }
 sequencia[tipo]++;
 localStorage.setItem(SK.sequenciaAtivos, JSON.stringify(sequencia));
 return String(sequencia[tipo]).padStart(3, '0');
+}
+// Extrai o número sequencial de um UID no formato VP-{TIPO}-{ANO}-{NNN} e o
+// devolve à lista de números disponíveis para reuso, indexada por tipo.
+// Chamada apenas em exclusão definitiva — nunca em inativação (issue #40).
+function liberarUidPorExclusao(uid, tipo) {
+const partes = String(uid || '').split('-');
+const numeroStr = partes[partes.length - 1];
+const numero = parseInt(numeroStr, 10);
+if (!tipo || isNaN(numero)) return;
+let liberados = JSON.parse(localStorage.getItem(SK.uidsLiberados) || '{}');
+if (!Array.isArray(liberados[tipo])) liberados[tipo] = [];
+if (liberados[tipo].indexOf(numero) === -1) liberados[tipo].push(numero);
+localStorage.setItem(SK.uidsLiberados, JSON.stringify(liberados));
 }
 // Função para obter todos os tipos de ativo (padrão + customizados)
 function getTiposAtivo() {
@@ -3096,6 +3136,7 @@ let actions = '<button class="btn btn-outline btn-sm" onclick="mostrarDetalhesAt
 if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-outline btn-sm" onclick="abrirModalEditarAtivo(\'' + a.id + '\')">✏️ Editar</button>'; }
 if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-status btn-sm" onclick="abrirModalStatus(\'' + a.id + '\')">⚙️ Status</button>'; }
 if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-discarded btn-sm" onclick="abrirModalDescartar(\'' + a.id + '\')">🗑️ Descartar</button>'; }
+if (isAdminUser() && (a.status === 'inactive' || a.status === 'discarded')) { actions += ' <button class="btn btn-danger-outline btn-sm" onclick="abrirModalExcluirAtivo(\'' + a.id + '\')">❌ Excluir Definitivamente</button>'; }
 return '<tr><td class="uid-cell">' + a.uid + '</td><td>' + typeLabel(a.type) + '</td><td>' + a.brand + ' ' + a.model + '</td><td style="font-family: monospace; font-size: 12px;">' + a.serial + '</td><td>' + infoExtra + '</td><td><span class="badge badge-' + a.status + '">' + STATUS_LABELS[a.status] + '</span></td><td style="font-size: 11px; color: var(--text-secondary);">' + observacao + '</td><td><div class="btn-group">' + actions + '</div></td></tr>';
 }).join('') || '<tr><td colspan="8" style="text-align:center; padding:30px; color: var(--text-muted);">' + (userScoped ? 'Nenhum equipamento está atualmente sob sua tutela.' : 'Nenhum ativo encontrado') + '</td></tr>';
 }
@@ -3196,6 +3237,31 @@ showToast('Ativo descartado com sucesso!');
 fecharModal('modal-descartar');
 renderAtivos();
 }
+}
+function abrirModalExcluirAtivo(assetId) {
+if (bloquearSeNaoAdmin()) return;
+assetParaExcluir = assetId;
+const assets = getData(SK.assets);
+const asset = assets.find(function(a) { return a.id === assetId; });
+if (!asset) return;
+document.getElementById('excluir-ativo-uid').value = asset.uid + ' - ' + asset.brand + ' ' + asset.model;
+document.getElementById('modal-excluir-ativo').classList.add('active');
+}
+function confirmarExcluirAtivoDefinitivo() {
+if (bloquearSeNaoAdmin()) return;
+if (!assetParaExcluir) return;
+const assets = getData(SK.assets);
+const asset = assets.find(function(a) { return a.id === assetParaExcluir; });
+if (!asset) return;
+// Exclusão definitiva libera o UID para reuso (issue #40). Isso é
+// deliberadamente diferente de inativar, que nunca libera o UID.
+liberarUidPorExclusao(asset.uid, asset.type);
+saveData(SK.assets, assets.filter(function(a) { return a.id !== assetParaExcluir; }));
+addLog('Ativo Excluído', 'Ativo ' + asset.uid + ' (' + asset.brand + ' ' + asset.model + ') foi excluído definitivamente. UID liberado para reutilização.', 'exclusao');
+showToast('Ativo ' + asset.uid + ' excluído definitivamente. UID liberado para reutilização.');
+fecharModal('modal-excluir-ativo');
+assetParaExcluir = null;
+renderAtivos();
 }
 // Função atualizada para popular dropdown de tipos dinamicamente
 function popularDropdownTipos() {
