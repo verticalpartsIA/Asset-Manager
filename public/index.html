@@ -20,6 +20,8 @@
 <script src="/vp-integration.js"></script>
 <!-- Regras puras de UID (issue #40 / #13), testadas em tests/domain/uid.test.mjs -->
 <script type="module" src="./js/domain/uid.js"></script>
+<!-- Classificação de SLA (issue #13), testada em tests/domain/sla.test.mjs -->
+<script type="module" src="./js/domain/sla.js"></script>
 <style id="vp-a11y">
   /* #23 — color-scheme acompanha o tema do app (controles/scrollbars nativos) */
   :root[data-theme="dark"]  { color-scheme: dark; }
@@ -4213,13 +4215,13 @@ return '<div class="ticket-card" role="button" tabindex="0" onclick="verDetalhes
 }).join('');
 }
 function getSlaIndicator(ticket) {
-const slaDate = new Date(ticket.sla_due_at);
-const now = new Date();
-const diffHours = (slaDate - now) / (1000 * 60 * 60);
-if (['resolvido', 'fechado'].includes(ticket.status)) { return '<span style="color: #10b981; font-size: 11px;">✓ Concluído</span>'; }
-if (diffHours <= 0) { return '<span style="color: #dc2626; font-size: 11px;">⚠️ SLA Expirado</span>'; }
-else if (diffHours <= 4) { return '<span style="color: #f59e0b; font-size: 11px;">⏰ ' + Math.round(diffHours) + 'h restantes</span>'; }
-else { return '<span style="color: #10b981; font-size: 11px;">✓ ' + Math.round(diffHours) + 'h restantes</span>'; }
+// Classificação em public/js/domain/sla.js (pura, testada em
+// tests/domain/sla.test.mjs) — esta função só decide o HTML/cor por situação.
+const sla = window.SlaDomain.classificarSla(ticket.status, ticket.sla_due_at, Date.now());
+if (sla.situacao === 'concluido') { return '<span style="color: #10b981; font-size: 11px;">✓ Concluído</span>'; }
+if (sla.situacao === 'expirado') { return '<span style="color: #dc2626; font-size: 11px;">⚠️ SLA Expirado</span>'; }
+if (sla.situacao === 'proximo') { return '<span style="color: #f59e0b; font-size: 11px;">⏰ ' + Math.round(sla.horasRestantes) + 'h restantes</span>'; }
+return '<span style="color: #10b981; font-size: 11px;">✓ ' + Math.round(sla.horasRestantes) + 'h restantes</span>';
 }
 function filtrarMeusChamados(filter) { filtroMeusChamados = filter; renderMeusChamados(); }
 function renderMeusAtendimentos() {
@@ -5777,13 +5779,13 @@ if (!currentUser || currentUser.role === 'user') return;
 const tickets = getData(SK.tickets);
 const now = Date.now();
 tickets.forEach(function(t) {
-if (['resolvido', 'fechado'].includes(t.status)) return;
-const dueMs = new Date(t.sla_due_at).getTime();
-const diffH = (dueMs - now) / 3600000;
-if (diffH <= 0) {
+// Mesma classificação de public/js/domain/sla.js usada em getSlaIndicator
+// (antes os dois lugares recalculavam o limiar de "próximo" cada um por si).
+const sla = window.SlaDomain.classificarSla(t.status, t.sla_due_at, now);
+if (sla.situacao === 'expirado') {
 pushNotification({ dedupKey: 'sla-vencido-' + t.id, dedupMinutes: 180, type: 'sla', level: 'danger', title: 'SLA vencido — ' + t.id, message: 'O chamado "' + t.subject + '" ultrapassou o prazo de SLA.', page: 'suporte' });
-} else if (diffH <= 4) {
-pushNotification({ dedupKey: 'sla-proximo-' + t.id, dedupMinutes: 180, type: 'sla', level: 'warning', title: 'SLA próximo do vencimento — ' + t.id, message: 'O chamado "' + t.subject + '" vence em aproximadamente ' + Math.max(0, Math.round(diffH)) + 'h.', page: 'suporte' });
+} else if (sla.situacao === 'proximo') {
+pushNotification({ dedupKey: 'sla-proximo-' + t.id, dedupMinutes: 180, type: 'sla', level: 'warning', title: 'SLA próximo do vencimento — ' + t.id, message: 'O chamado "' + t.subject + '" vence em aproximadamente ' + Math.max(0, Math.round(sla.horasRestantes)) + 'h.', page: 'suporte' });
 }
 });
 }
