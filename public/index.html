@@ -18,6 +18,8 @@
 <!-- SSO (token do vpsistema) + persistência no Supabase (schema asset_manager) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/vp-integration.js"></script>
+<!-- Regras puras de UID (issue #40 / #13), testadas em tests/domain/uid.test.mjs -->
+<script type="module" src="./js/domain/uid.js"></script>
 <style id="vp-a11y">
   /* #23 — color-scheme acompanha o tema do app (controles/scrollbars nativos) */
   :root[data-theme="dark"]  { color-scheme: dark; }
@@ -2309,35 +2311,32 @@ logs.unshift(logEntry);
 if (logs.length > 100) logs.pop();
 localStorage.setItem(SK.systemLog, JSON.stringify(logs));
 }
+// Regras de geração/reaproveitamento em public/js/domain/uid.js (puras,
+// testadas em tests/domain/uid.test.mjs — issue #13). Estas duas funções só
+// leem/gravam o estado (getData/saveData) e delegam a decisão ao módulo.
 function gerarNumeroSequencial(tipo) {
 // Prioriza reaproveitar o menor UID liberado por uma exclusão definitiva
 // (ver issue #40). UIDs de ativos apenas inativados nunca entram nesta lista.
 let liberados = getData(SK.uidsLiberados);
 if (!liberados || Array.isArray(liberados)) liberados = {};
-if (Array.isArray(liberados[tipo]) && liberados[tipo].length > 0) {
-liberados[tipo].sort(function(a, b) { return a - b; });
-const numeroReaproveitado = liberados[tipo].shift();
-saveData(SK.uidsLiberados, liberados);
-return String(numeroReaproveitado).padStart(3, '0');
+const reaproveitado = window.UidDomain.reaproveitarUidLiberado(liberados, tipo);
+if (reaproveitado) {
+saveData(SK.uidsLiberados, reaproveitado.liberados);
+return window.UidDomain.formatarUid(reaproveitado.numero);
 }
-let sequencia = JSON.parse(localStorage.getItem(SK.sequenciaAtivos) || '{}');
-if (!sequencia[tipo]) { sequencia[tipo] = 0; }
-sequencia[tipo]++;
-localStorage.setItem(SK.sequenciaAtivos, JSON.stringify(sequencia));
-return String(sequencia[tipo]).padStart(3, '0');
+let sequencia = getData(SK.sequenciaAtivos);
+if (!sequencia || Array.isArray(sequencia)) sequencia = {};
+const proximo = window.UidDomain.proximoSequencial(sequencia, tipo);
+saveData(SK.sequenciaAtivos, proximo.sequencia);
+return window.UidDomain.formatarUid(proximo.numero);
 }
-// Extrai o número sequencial de um UID no formato VP-{TIPO}-{ANO}-{NNN} e o
-// devolve à lista de números disponíveis para reuso, indexada por tipo.
-// Chamada apenas em exclusão definitiva — nunca em inativação (issue #40).
+// Devolve o UID de um ativo excluído definitivamente à lista de números
+// disponíveis para reuso, indexada por tipo. Chamada apenas em exclusão
+// definitiva — nunca em inativação (issue #40).
 function liberarUidPorExclusao(uid, tipo) {
-const partes = String(uid || '').split('-');
-const numeroStr = partes[partes.length - 1];
-const numero = parseInt(numeroStr, 10);
-if (!tipo || isNaN(numero)) return;
 let liberados = getData(SK.uidsLiberados);
 if (!liberados || Array.isArray(liberados)) liberados = {};
-if (!Array.isArray(liberados[tipo])) liberados[tipo] = [];
-if (liberados[tipo].indexOf(numero) === -1) liberados[tipo].push(numero);
+liberados = window.UidDomain.liberarUid(liberados, uid, tipo);
 saveData(SK.uidsLiberados, liberados);
 }
 // Função para obter todos os tipos de ativo (padrão + customizados)
