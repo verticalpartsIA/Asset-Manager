@@ -30,7 +30,7 @@
     assets: 'am_assets', employees: 'am_employees', allocations: 'am_allocations',
     departamentos: 'am_departamentos', cargos: 'am_cargos', usuarios: 'am_usuarios',
     tema: 'am_tema', sessao: 'am_sessao', systemLog: 'am_system_log',
-    sequenciaAtivos: 'am_sequencia_ativos', tickets: 'am_tickets',
+    sequenciaAtivos: 'am_sequencia_ativos', uidsLiberados: 'am_uids_liberados', tickets: 'am_tickets',
     ticketsTrash: 'am_tickets_trash', comments: 'am_comments', articles: 'am_articles',
     assetHistory: 'am_asset_history', checklists: 'am_checklists', supplies: 'am_supplies',
     tiposAtivo: 'am_tipos_ativo', notifications: 'am_notifications',
@@ -42,7 +42,8 @@
   var SYNCED = {
     assets: SK.assets, employees: SK.employees, allocations: SK.allocations,
     departamentos: SK.departamentos, cargos: SK.cargos, usuarios: SK.usuarios,
-    systemLog: SK.systemLog, sequenciaAtivos: SK.sequenciaAtivos, tickets: SK.tickets,
+    systemLog: SK.systemLog, sequenciaAtivos: SK.sequenciaAtivos, uidsLiberados: SK.uidsLiberados,
+    tickets: SK.tickets,
     ticketsTrash: SK.ticketsTrash, comments: SK.comments, articles: SK.articles,
     assetHistory: SK.assetHistory, checklists: SK.checklists, supplies: SK.supplies,
     tiposAtivo: SK.tiposAtivo, notifications: SK.notifications, notifDedup: SK.notifDedup,

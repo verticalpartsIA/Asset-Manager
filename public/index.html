@@ -18,6 +18,10 @@
 <!-- SSO (token do vpsistema) + persistência no Supabase (schema asset_manager) -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/vp-integration.js"></script>
+<!-- Regras puras de UID (issue #40 / #13), testadas em tests/domain/uid.test.mjs -->
+<script type="module" src="./js/domain/uid.js"></script>
+<!-- Classificação de SLA (issue #13), testada em tests/domain/sla.test.mjs -->
+<script type="module" src="./js/domain/sla.js"></script>
 <style id="vp-a11y">
   /* #23 — color-scheme acompanha o tema do app (controles/scrollbars nativos) */
   :root[data-theme="dark"]  { color-scheme: dark; }
@@ -915,12 +919,12 @@ tbody tr:hover { background: #FAFAF8; }
 Atualizar
 </button>
 <div class="notif-wrapper">
-<button class="notif-bell-btn user-icon-btn" onclick="toggleNotifDropdown(event)" title="Notificações" id="notif-bell-btn">
-<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<button class="notif-bell-btn user-icon-btn" onclick="toggleNotifDropdown(event)" title="Notificações" id="notif-bell-btn" aria-label="Notificações" aria-haspopup="true">
+<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
 </svg>
-<span class="notif-badge show" id="notif-badge">3</span>
+<span class="notif-badge show" id="notif-badge" aria-live="polite">3</span>
 </button>
 <div class="notif-dropdown" id="notif-dropdown">
 <div class="notif-dropdown-header">
@@ -930,11 +934,11 @@ Atualizar
 <button onclick="limparNotificacoes()">Limpar</button>
 </div>
 </div>
-<div class="notif-list" id="notif-list"></div>
+<div class="notif-list" id="notif-list" role="log" aria-live="polite" aria-label="Lista de notificações"></div>
 </div>
 </div>
-<button class="user-icon-btn" onclick="toggleTheme()" title="Alternar tema" id="theme-btn">
-<span id="theme-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
+<button class="user-icon-btn" onclick="toggleTheme()" title="Alternar tema" id="theme-btn" aria-label="Alternar tema claro/escuro">
+<span id="theme-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
 </button>
 </div>
 </div>
@@ -1196,6 +1200,13 @@ Atualizar
 <tbody id="alloc-table-body"></tbody>
 </table>
 </div>
+<div class="table-card">
+<div class="table-header-bar"><div class="table-title">Alocações Inativas (devolvidas)</div></div>
+<table>
+<thead><tr><th>Colaborador</th><th>Departamento</th><th>Ativo</th><th>Data da Alocação</th><th>Status</th></tr></thead>
+<tbody id="alloc-inactive-table-body"></tbody>
+</table>
+</div>
 </div>
 <!-- SUPORTE -->
 <div id="page-suporte" class="page">
@@ -1294,27 +1305,27 @@ Atualizar
 <button class="btn btn-primary" id="btn-novo-artigo" style="display: inline-block;" onclick="abrirModalNovoArtigo()">+ Novo Artigo</button>
 </div>
 </div>
-<div id="kb-articles-list"><div class="article-card" onclick="verArtigo(&#39;ART-001&#39;)"><div class="article-title">Como configurar a impressora de rede</div><div class="article-excerpt">Para configurar a impressora de rede no Windows:
+<div id="kb-articles-list"><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-001&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Como configurar a impressora de rede</div><div class="article-excerpt">Para configurar a impressora de rede no Windows:
 1. Acesse Painel de Controle
 2. Clique em Adicionar impressora
 3. Selecione a impressora de rede
-4. I...</div><div class="article-tags"><span class="tag">impressora</span><span class="tag">rede</span><span class="tag">windows</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 46 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-001&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-001&#39;)">🗑️ Excluir</button></div></div><div class="article-card" onclick="verArtigo(&#39;ART-002&#39;)"><div class="article-title">Reset de senha do e-mail corporativo</div><div class="article-excerpt">Para resetar sua senha:
+4. I...</div><div class="article-tags"><span class="tag">impressora</span><span class="tag">rede</span><span class="tag">windows</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 46 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-001&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-001&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-002&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Reset de senha do e-mail corporativo</div><div class="article-excerpt">Para resetar sua senha:
 1. Acesse o portal
 2. Clique em Esqueci minha senha
 3. Insira seu e-mail
 4. Verifique o link de reset
-5. Crie uma nova senha...</div><div class="article-tags"><span class="tag">email</span><span class="tag">senha</span><span class="tag">reset</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 128 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-002&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-002&#39;)">🗑️ Excluir</button></div></div><div class="article-card" onclick="verArtigo(&#39;ART-003&#39;)"><div class="article-title">Como solicitar a alteração da minha senha de acesso</div><div class="article-excerpt">No momento, a alteração de senha não pode ser feita pelo próprio usuário dentro da plataforma — apenas por um Administrador.
+5. Crie uma nova senha...</div><div class="article-tags"><span class="tag">email</span><span class="tag">senha</span><span class="tag">reset</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 128 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-002&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-002&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-003&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Como solicitar a alteração da minha senha de acesso</div><div class="article-excerpt">No momento, a alteração de senha não pode ser feita pelo próprio usuário dentro da plataforma — apenas por um Administrador.
 
-Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">senha</span><span class="tag">acesso</span><span class="tag">login</span><span class="tag">esqueci minha senha</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-003&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-003&#39;)">🗑️ Excluir</button></div></div><div class="article-card" onclick="verArtigo(&#39;ART-004&#39;)"><div class="article-title">Primeiros passos: como abrir um chamado de suporte</div><div class="article-excerpt">Siga este passo a passo para registrar uma solicitação de suporte:
+Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">senha</span><span class="tag">acesso</span><span class="tag">login</span><span class="tag">esqueci minha senha</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-003&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-003&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-004&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Primeiros passos: como abrir um chamado de suporte</div><div class="article-excerpt">Siga este passo a passo para registrar uma solicitação de suporte:
 1. No menu lateral, acesse Suporte.
 2. Clique na aba Novo Chamado.
-3. Selecione o c...</div><div class="article-tags"><span class="tag">chamado</span><span class="tag">suporte</span><span class="tag">abrir chamado</span><span class="tag">primeiros passos</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-004&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-004&#39;)">🗑️ Excluir</button></div></div><div class="article-card" onclick="verArtigo(&#39;ART-005&#39;)"><div class="article-title">Como acompanhar o andamento do meu chamado</div><div class="article-excerpt">Para saber o status de uma solicitação já aberta:
+3. Selecione o c...</div><div class="article-tags"><span class="tag">chamado</span><span class="tag">suporte</span><span class="tag">abrir chamado</span><span class="tag">primeiros passos</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-004&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-004&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-005&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Como acompanhar o andamento do meu chamado</div><div class="article-excerpt">Para saber o status de uma solicitação já aberta:
 1. Acesse Suporte e clique na aba Meus Chamados.
-2. Use os filtros Todos, Abertos ou Resolvidos para...</div><div class="article-tags"><span class="tag">chamado</span><span class="tag">status</span><span class="tag">acompanhamento</span><span class="tag">SLA</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-005&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-005&#39;)">🗑️ Excluir</button></div></div><div class="article-card" onclick="verArtigo(&#39;ART-006&#39;)"><div class="article-title">Antes de abrir um chamado: primeiros passos para problemas comuns</div><div class="article-excerpt">Muitos problemas simples podem ser resolvidos rapidamente, sem precisar esperar o atendimento técnico:
-1. Reinicie o equipamento ou o aplicativo — iss...</div><div class="article-tags"><span class="tag">primeiros passos</span><span class="tag">solução de problemas</span><span class="tag">dicas</span><span class="tag">autoatendimento</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-006&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-006&#39;)">🗑️ Excluir</button></div></div><div class="article-card" onclick="verArtigo(&#39;ART-007&#39;)"><div class="article-title">Entendendo a prioridade e o prazo de atendimento (SLA)</div><div class="article-excerpt">Ao abrir um chamado, você escolhe uma prioridade, que define o prazo (SLA) para o atendimento:
+2. Use os filtros Todos, Abertos ou Resolvidos para...</div><div class="article-tags"><span class="tag">chamado</span><span class="tag">status</span><span class="tag">acompanhamento</span><span class="tag">SLA</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-005&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-005&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-006&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Antes de abrir um chamado: primeiros passos para problemas comuns</div><div class="article-excerpt">Muitos problemas simples podem ser resolvidos rapidamente, sem precisar esperar o atendimento técnico:
+1. Reinicie o equipamento ou o aplicativo — iss...</div><div class="article-tags"><span class="tag">primeiros passos</span><span class="tag">solução de problemas</span><span class="tag">dicas</span><span class="tag">autoatendimento</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-006&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-006&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-007&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Entendendo a prioridade e o prazo de atendimento (SLA)</div><div class="article-excerpt">Ao abrir um chamado, você escolhe uma prioridade, que define o prazo (SLA) para o atendimento:
 - Baixa: até 72 horas
 - Média: até 48 horas
-- Alta: até...</div><div class="article-tags"><span class="tag">prioridade</span><span class="tag">SLA</span><span class="tag">prazo</span><span class="tag">chamado</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-007&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-007&#39;)">🗑️ Excluir</button></div></div><div class="article-card" onclick="verArtigo(&#39;ART-008&#39;)"><div class="article-title">Como confirmar a ciência no Checklist</div><div class="article-excerpt">O checklist semestral de conservação de equipamentos ("Cuida que Dura") precisa da confirmação de ciência de até 3 responsáveis: o colaborador dono do...</div><div class="article-tags"><span class="tag">checklist</span><span class="tag">ciência</span><span class="tag">assinatura</span><span class="tag">confirmação</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-008&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-008&#39;)">🗑️ Excluir</button></div></div></div>
+- Alta: até...</div><div class="article-tags"><span class="tag">prioridade</span><span class="tag">SLA</span><span class="tag">prazo</span><span class="tag">chamado</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-007&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-007&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-008&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Como confirmar a ciência no Checklist</div><div class="article-excerpt">O checklist semestral de conservação de equipamentos ("Cuida que Dura") precisa da confirmação de ciência de até 3 responsáveis: o colaborador dono do...</div><div class="article-tags"><span class="tag">checklist</span><span class="tag">ciência</span><span class="tag">assinatura</span><span class="tag">confirmação</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-008&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-008&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div></div>
 </div>
 <div id="view-dashboard-suporte" class="suporte-view" style="display: none;">
 <div class="dashboard-grid" style="margin-bottom: 24px;">
@@ -1625,7 +1636,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 </div>
 <div id="view-pendencias-checklist" class="checklist-view" style="display: none;">
 <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 16px;">Checklists aguardando sua confirmação de ciência. A confirmação é feita com base no seu login atual — apenas você pode confirmar as pendências vinculadas ao seu nome.</p>
-<div id="pendencias-checklist-list"></div>
+<div id="pendencias-checklist-list" role="status" aria-live="polite"></div>
 </div>
 <div id="view-visualizar-checklists" class="checklist-view" style="display: block;">
 <div id="checklists-organized-list"></div>
@@ -1748,7 +1759,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL QR -->
 <div id="modal-qr" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-qr&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-qr&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">QR Code do Ativo</div>
 <div class="modal-subtitle" id="modal-qr-uid"></div>
 <div class="qr-display" id="qr-container"></div>
@@ -1762,7 +1773,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL PUBLICO QR (DINAMICO) -->
 <div id="modal-public-asset" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-public-asset&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-public-asset&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title" id="public-asset-title">Informações do Ativo</div>
 <div id="public-asset-content" style="margin-top: 20px;"></div>
 </div>
@@ -1770,7 +1781,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL DEVOLUÇÃO (NOVO) -->
 <div id="modal-devolucao" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-devolucao&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-devolucao&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Registrar Devolução</div>
 <div class="modal-subtitle">Informe a condição do equipamento no momento da devolução.</div>
 <div class="form-field" style="margin-bottom: 16px;">
@@ -1797,7 +1808,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL STATUS -->
 <div id="modal-status" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-status&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-status&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Alterar Status do Ativo</div>
 <div class="modal-subtitle" id="modal-status-uid"></div>
 <div class="form-field">
@@ -1818,7 +1829,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL DESCARTAR -->
 <div id="modal-descartar" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-descartar&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-descartar&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Descartar Ativo</div>
 <div class="modal-subtitle">Informe o motivo do descarte.</div>
 <div class="form-field" style="margin-bottom: 16px;">
@@ -1835,10 +1846,26 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 </div>
 </div>
 </div>
+<!-- MODAL EXCLUIR ATIVO DEFINITIVAMENTE -->
+<div id="modal-excluir-ativo" class="modal-overlay">
+<div class="modal">
+<button class="modal-close" onclick="fecharModal(&#39;modal-excluir-ativo&#39;)" aria-label="Fechar">×</button>
+<div class="modal-title">Excluir Ativo Definitivamente</div>
+<div class="modal-subtitle">Esta ação remove o ativo permanentemente do sistema e libera o UID para reutilização em um novo cadastro. Não pode ser desfeita.</div>
+<div class="form-field" style="margin-bottom: 16px;">
+<label>Ativo <span class="required-mark">*</span></label>
+<input type="text" id="excluir-ativo-uid" readonly="" style="opacity: 0.7;">
+</div>
+<div class="modal-actions">
+<button class="btn btn-secondary" onclick="fecharModal(&#39;modal-excluir-ativo&#39;)">Cancelar</button>
+<button class="btn btn-danger-outline" onclick="confirmarExcluirAtivoDefinitivo()">Excluir Definitivamente</button>
+</div>
+</div>
+</div>
 <!-- MODAL INATIVAR COLABORADOR -->
 <div id="modal-inativar-colab" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-inativar-colab&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-inativar-colab&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Inativar Colaborador</div>
 <div class="modal-subtitle">Informe o motivo da inativação.</div>
 <div class="form-field" style="margin-bottom: 16px;"><label>Colaborador <span class="required-mark">*</span></label><input type="text" id="inativar-colab-nome" readonly="" style="opacity: 0.7;"></div>
@@ -1852,7 +1879,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL EDITAR COLABORADOR -->
 <div id="modal-editar-colab" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-editar-colab&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-editar-colab&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Editar Colaborador</div>
 <div class="modal-subtitle">Atualize as informações do colaborador</div>
 <div class="form-field" style="margin-bottom: 16px;">
@@ -1888,7 +1915,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL EDITAR USUÁRIO -->
 <div id="modal-editar-usuario" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-editar-usuario&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-editar-usuario&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Editar Usuário</div>
 <div class="modal-subtitle">Atualize as informações do usuário</div>
 <div class="form-field" style="margin-bottom: 16px;">
@@ -1919,21 +1946,21 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL DETALHES CHAMADO -->
 <div id="modal-chamado-detalhes" class="modal-overlay">
 <div class="modal" style="max-width: 800px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-chamado-detalhes&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-chamado-detalhes&#39;)" aria-label="Fechar">×</button>
 <div id="chamado-detalhes-content"></div>
 </div>
 </div>
 <!-- MODAL ARTIGO KB -->
 <div id="modal-artigo-detalhes" class="modal-overlay">
 <div class="modal" style="max-width: 700px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-artigo-detalhes&#39;)">×</button>
-<div id="artigo-detalhes-content"><div class="modal-title">Como configurar a impressora de rede</div><div style="margin: 16px 0; padding: 20px; background: var(--black-secondary); border-radius: 8px; line-height: 1.6;">Para configurar a impressora de rede no Windows:<br>1. Acesse Painel de Controle<br>2. Clique em Adicionar impressora<br>3. Selecione a impressora de rede<br>4. Instale os drivers<br>5. Teste a impressão</div><div class="article-tags" style="margin-top: 16px;"><span class="tag">impressora</span><span class="tag">rede</span><span class="tag">windows</span></div><div class="modal-actions" style="margin-top: 20px;"><button class="btn btn-outline" onclick="fecharModal(&#39;modal-artigo-detalhes&#39;); abrirModalEditarArtigo(&#39;ART-001&#39;)">✏️ Editar Artigo</button><button class="btn btn-danger-outline" onclick="excluirArtigoKB(&#39;ART-001&#39;)">🗑️ Excluir Artigo</button></div></div>
+<button class="modal-close" onclick="fecharModal(&#39;modal-artigo-detalhes&#39;)" aria-label="Fechar">×</button>
+<div id="artigo-detalhes-content"><div class="modal-title">Como configurar a impressora de rede</div><div style="margin: 16px 0; padding: 20px; background: var(--black-secondary); border-radius: 8px; line-height: 1.6;">Para configurar a impressora de rede no Windows:<br>1. Acesse Painel de Controle<br>2. Clique em Adicionar impressora<br>3. Selecione a impressora de rede<br>4. Instale os drivers<br>5. Teste a impressão</div><div class="article-tags" style="margin-top: 16px;"><span class="tag">impressora</span><span class="tag">rede</span><span class="tag">windows</span></div><div class="modal-actions" style="margin-top: 20px;"><button class="btn btn-outline" onclick="fecharModal(&#39;modal-artigo-detalhes&#39;); abrirModalEditarArtigo(&#39;ART-001&#39;)"><span aria-hidden="true">✏️</span> Editar Artigo</button><button class="btn btn-danger-outline" onclick="excluirArtigoKB(&#39;ART-001&#39;)"><span aria-hidden="true">🗑️</span> Excluir Artigo</button></div></div>
 </div>
 </div>
 <!-- MODAL NOVO/EDITAR ARTIGO KB -->
 <div id="modal-editar-artigo" class="modal-overlay">
 <div class="modal" style="max-width: 700px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-editar-artigo&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-editar-artigo&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title" id="modal-editar-artigo-titulo">Novo Artigo</div>
 <div class="modal-subtitle">Disponível para Administradores e Técnicos.</div>
 <div class="form-field" style="margin-bottom: 16px;">
@@ -1969,14 +1996,14 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL DETALHES CHECKLIST -->
 <div id="modal-checklist-detalhes" class="modal-overlay">
 <div class="modal" style="max-width: 900px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-checklist-detalhes&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-checklist-detalhes&#39;)" aria-label="Fechar">×</button>
 <div id="checklist-detalhes-content"></div>
 </div>
 </div>
 <!-- MODAL PRÉVIA OBRIGATÓRIA DO CHECKLIST (ciência) -->
 <div id="modal-checklist-preview" class="modal-overlay">
 <div class="modal" style="max-width: 640px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-checklist-preview&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-checklist-preview&#39;)" aria-label="Fechar">×</button>
 <div id="checklist-preview-content"></div>
 <div class="modal-actions">
 <button class="btn btn-secondary" onclick="fecharModal(&#39;modal-checklist-preview&#39;)">Cancelar</button>
@@ -1987,7 +2014,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL DETALHES HARDWARE ATIVO -->
 <div id="modal-asset-details" class="modal-overlay">
 <div class="modal" style="max-width: 800px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-asset-details&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-asset-details&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Detalhes do Hardware</div>
 <div class="modal-subtitle" id="modal-asset-details-uid"></div>
 <div id="modal-asset-details-content" style="margin-top: 20px;"></div>
@@ -1999,7 +2026,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL EDITAR ATIVO -->
 <div id="modal-editar-ativo" class="modal-overlay">
 <div class="modal" style="max-width: 800px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-editar-ativo&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-editar-ativo&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Editar Ativo</div>
 <div class="modal-subtitle" id="modal-editar-ativo-uid"></div>
 <div class="form-grid" style="margin-top: 20px;">
@@ -2018,7 +2045,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL EDITAR ITEM DE ESTOQUE -->
 <div id="modal-editar-suprimento" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-editar-suprimento&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-editar-suprimento&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Editar Item de Estoque</div>
 <div class="form-field" style="margin-bottom: 16px;">
 <label id="edit-suprimento-label-model">Modelo</label>
@@ -2050,7 +2077,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL USAR ITEM DE ESTOQUE -->
 <div id="modal-usar-suprimento" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-usar-suprimento&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-usar-suprimento&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Usar Item do Estoque</div>
 <div class="modal-subtitle" id="usar-suprimento-nome"></div>
 <div class="form-field" style="margin-bottom: 16px;">
@@ -2083,6 +2110,7 @@ tema: 'am_tema',
 sessao: 'am_sessao',
 systemLog: 'am_system_log',
 sequenciaAtivos: 'am_sequencia_ativos',
+uidsLiberados: 'am_uids_liberados',
 tickets: 'am_tickets',
 ticketsTrash: 'am_tickets_trash',
 comments: 'am_comments',
@@ -2191,6 +2219,7 @@ let charts = {};
 let currentFilters = { search: '', tipo: 'todos', status: 'todos', depto: 'todos', colab: 'todos' };
 let assetParaAlterarStatus = null;
 let assetParaDescartar = null;
+let assetParaExcluir = null;
 let ativoParaEditar = null;
 let suprimentoParaEditar = null;
 let suprimentoParaUsar = null;
@@ -2284,12 +2313,33 @@ logs.unshift(logEntry);
 if (logs.length > 100) logs.pop();
 localStorage.setItem(SK.systemLog, JSON.stringify(logs));
 }
+// Regras de geração/reaproveitamento em public/js/domain/uid.js (puras,
+// testadas em tests/domain/uid.test.mjs — issue #13). Estas duas funções só
+// leem/gravam o estado (getData/saveData) e delegam a decisão ao módulo.
 function gerarNumeroSequencial(tipo) {
-let sequencia = JSON.parse(localStorage.getItem(SK.sequenciaAtivos) || '{}');
-if (!sequencia[tipo]) { sequencia[tipo] = 0; }
-sequencia[tipo]++;
-localStorage.setItem(SK.sequenciaAtivos, JSON.stringify(sequencia));
-return String(sequencia[tipo]).padStart(3, '0');
+// Prioriza reaproveitar o menor UID liberado por uma exclusão definitiva
+// (ver issue #40). UIDs de ativos apenas inativados nunca entram nesta lista.
+let liberados = getData(SK.uidsLiberados);
+if (!liberados || Array.isArray(liberados)) liberados = {};
+const reaproveitado = window.UidDomain.reaproveitarUidLiberado(liberados, tipo);
+if (reaproveitado) {
+saveData(SK.uidsLiberados, reaproveitado.liberados);
+return window.UidDomain.formatarUid(reaproveitado.numero);
+}
+let sequencia = getData(SK.sequenciaAtivos);
+if (!sequencia || Array.isArray(sequencia)) sequencia = {};
+const proximo = window.UidDomain.proximoSequencial(sequencia, tipo);
+saveData(SK.sequenciaAtivos, proximo.sequencia);
+return window.UidDomain.formatarUid(proximo.numero);
+}
+// Devolve o UID de um ativo excluído definitivamente à lista de números
+// disponíveis para reuso, indexada por tipo. Chamada apenas em exclusão
+// definitiva — nunca em inativação (issue #40).
+function liberarUidPorExclusao(uid, tipo) {
+let liberados = getData(SK.uidsLiberados);
+if (!liberados || Array.isArray(liberados)) liberados = {};
+liberados = window.UidDomain.liberarUid(liberados, uid, tipo);
+saveData(SK.uidsLiberados, liberados);
 }
 // Função para obter todos os tipos de ativo (padrão + customizados)
 function getTiposAtivo() {
@@ -2906,6 +2956,19 @@ function getData(key) { return JSON.parse(localStorage.getItem(key) || '[]'); }
 function saveData(key, data) {
 localStorage.setItem(key, JSON.stringify(data));
 }
+// Ativação por teclado (Enter/Espaço) para elementos "clicáveis" que precisam
+// ser um bloco (card) em vez de um <button> — usar junto de role="button" e
+// tabindex="0". Dispara o próprio onclick do elemento via .click() (issue #19).
+function onCardKeydown(e) {
+// Ignora eventos originados em controles aninhados (ex: botão Editar/Excluir
+// dentro do card) — senão o Enter/Espaço deles também aciona o clique do
+// card, sobrepondo a ação nativa do controle. Ver revisão do PR #42.
+if (e.target !== e.currentTarget) return;
+if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+e.preventDefault();
+e.currentTarget.click();
+}
+}
 function renderDashboard() {
 const assets = getData(SK.assets);
 const employees = getData(SK.employees);
@@ -3086,9 +3149,10 @@ infoExtra = '<span style="font-size: 11px;">Tel: ' + (a.telefone || '—') + '<b
 infoExtra = '<span style="font-size: 11px; font-family: monospace;">ST: ' + (a.serviceTag || '—') + '</span>';
 }
 let actions = '<button class="btn btn-outline btn-sm" onclick="mostrarDetalhesAtivo(\'' + a.uid + '\')">Detalhes</button> <button class="btn btn-outline btn-sm" onclick="mostrarQR(\'' + a.uid + '\')">QR</button>';
-if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-outline btn-sm" onclick="abrirModalEditarAtivo(\'' + a.id + '\')">✏️ Editar</button>'; }
-if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-status btn-sm" onclick="abrirModalStatus(\'' + a.id + '\')">⚙️ Status</button>'; }
+if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-outline btn-sm" onclick="abrirModalEditarAtivo(\'' + a.id + '\')"><span aria-hidden="true">✏️</span> Editar</button>'; }
+if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-status btn-sm" onclick="abrirModalStatus(\'' + a.id + '\')"><span aria-hidden="true">⚙️</span> Status</button>'; }
 if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-discarded btn-sm" onclick="abrirModalDescartar(\'' + a.id + '\')">🗑️ Descartar</button>'; }
+if (isAdminUser() && (a.status === 'inactive' || a.status === 'discarded')) { actions += ' <button class="btn btn-danger-outline btn-sm" onclick="abrirModalExcluirAtivo(\'' + a.id + '\')"><span aria-hidden="true">❌</span> Excluir Definitivamente</button>'; }
 return '<tr><td class="uid-cell">' + a.uid + '</td><td>' + typeLabel(a.type) + '</td><td>' + a.brand + ' ' + a.model + '</td><td style="font-family: monospace; font-size: 12px;">' + a.serial + '</td><td>' + infoExtra + '</td><td><span class="badge badge-' + a.status + '">' + STATUS_LABELS[a.status] + '</span></td><td style="font-size: 11px; color: var(--text-secondary);">' + observacao + '</td><td><div class="btn-group">' + actions + '</div></td></tr>';
 }).join('') || '<tr><td colspan="8" style="text-align:center; padding:30px; color: var(--text-muted);">' + (userScoped ? 'Nenhum equipamento está atualmente sob sua tutela.' : 'Nenhum ativo encontrado') + '</td></tr>';
 }
@@ -3177,7 +3241,7 @@ document.getElementById('modal-descartar').classList.add('active');
 function confirmarDescartarAtivo() {
 if (bloquearSeNaoAdmin()) return;
 const motivo = document.getElementById('descartar-motivo').value.trim();
-if (!motivo) { alert('Por favor, informe o motivo do descarte.'); return; }
+if (!motivo) { showToast('Por favor, informe o motivo do descarte.'); return; }
 const assets = getData(SK.assets);
 const asset = assets.find(function(a) { return a.id === assetParaDescartar; });
 if (asset) {
@@ -3189,6 +3253,40 @@ showToast('Ativo descartado com sucesso!');
 fecharModal('modal-descartar');
 renderAtivos();
 }
+}
+function abrirModalExcluirAtivo(assetId) {
+if (bloquearSeNaoAdmin()) return;
+assetParaExcluir = assetId;
+const assets = getData(SK.assets);
+const asset = assets.find(function(a) { return a.id === assetId; });
+if (!asset) return;
+document.getElementById('excluir-ativo-uid').value = asset.uid + ' - ' + asset.brand + ' ' + asset.model;
+document.getElementById('modal-excluir-ativo').classList.add('active');
+}
+function confirmarExcluirAtivoDefinitivo() {
+if (bloquearSeNaoAdmin()) return;
+if (!assetParaExcluir) return;
+const assets = getData(SK.assets);
+const asset = assets.find(function(a) { return a.id === assetParaExcluir; });
+if (!asset) return;
+// Antes de liberar o UID, remove todo registro vinculado a ele
+// (alocações, histórico, chamados) — senão, ao reaproveitar o UID num
+// ativo novo, esses registros antigos passam a ser atribuídos ao
+// substituto (ex: incidentes e alocações do equipamento descartado
+// aparecem como se fossem do novo). Ver revisão do PR #42.
+saveData(SK.allocations, getData(SK.allocations).filter(function(a) { return a.asset_uid !== asset.uid; }));
+saveData(SK.assetHistory, getData(SK.assetHistory).filter(function(h) { return h.asset_uid !== asset.uid; }));
+saveData(SK.tickets, getData(SK.tickets).filter(function(t) { return t.asset_uid !== asset.uid; }));
+saveData(SK.ticketsTrash, getData(SK.ticketsTrash).filter(function(t) { return t.asset_uid !== asset.uid; }));
+// Exclusão definitiva libera o UID para reuso (issue #40). Isso é
+// deliberadamente diferente de inativar, que nunca libera o UID.
+liberarUidPorExclusao(asset.uid, asset.type);
+saveData(SK.assets, assets.filter(function(a) { return a.id !== assetParaExcluir; }));
+addLog('Ativo Excluído', 'Ativo ' + asset.uid + ' (' + asset.brand + ' ' + asset.model + ') foi excluído definitivamente, junto com alocações/histórico/chamados vinculados. UID liberado para reutilização.', 'exclusao');
+showToast('Ativo ' + asset.uid + ' excluído definitivamente. UID liberado para reutilização.');
+fecharModal('modal-excluir-ativo');
+assetParaExcluir = null;
+renderAtivos();
 }
 // Função atualizada para popular dropdown de tipos dinamicamente
 function popularDropdownTipos() {
@@ -3437,7 +3535,7 @@ Object.keys(checklists[ano]).forEach(function(sem) {
 (checklists[ano][sem] || []).forEach(function(item) { if (String(item.colaboradorId) === String(idAtual)) { item.colaboradorId = String(alvo.id); } });
 });
 });
-localStorage.setItem(SK.checklists, JSON.stringify(checklists));
+saveData(SK.checklists, checklists);
 const tickets = JSON.parse(localStorage.getItem(SK.tickets) || '[]');
 tickets.forEach(function(t) { if (t.requester_id == idAtual) { t.requester_id = alvo.id; } });
 localStorage.setItem(SK.tickets, JSON.stringify(tickets));
@@ -3514,10 +3612,9 @@ usuarios.push({ username: usernameGerado, password: senhaGerada, role: 'user', n
 saveData(SK.usuarios, usuarios);
 addLog('Usuário Cadastrado', 'Acesso ao sistema criado automaticamente para o colaborador "' + name + '" (login: ' + usernameGerado + ')', 'cadastro');
 enviarConviteAcesso(name, usernameGerado, email, senhaGerada);
-showToast('Colaborador cadastrado com sucesso! Convite de acesso enviado por e-mail (simulado).');
+showToast('Colaborador ' + name + ' cadastrado! Login ' + usernameGerado + ' criado e convite com a senha provisória enviado por e-mail (veja em Configurações → Fila de E-mails).');
 document.getElementById('form-colab').reset();
 renderColaboradores();
-alert('Colaborador cadastrado e acesso ao sistema criado automaticamente!\nLogin: ' + usernameGerado + '\nSenha provisória: ' + senhaGerada + '\nAnote e repasse essas informações ao colaborador. A senha não será exibida novamente.');
 } catch (error) { console.error('Erro ao cadastrar colaborador:', error); showToast('Erro ao cadastrar colaborador. Tente novamente.'); }
 }
 function garantirOpcaoSelecionada(select, valor, rotulo) {
@@ -3605,7 +3702,7 @@ function confirmarInativarColab() {
 showToast('Colaboradores são inativados no portal vpsistema.com.');
 return;
 const motivo = document.getElementById('inativar-colab-motivo').value.trim();
-if (!motivo) { alert('Por favor, informe o motivo da inativação.'); return; }
+if (!motivo) { showToast('Por favor, informe o motivo da inativação.'); return; }
 const id = parseInt(document.getElementById('modal-inativar-colab').dataset.colabId);
 const employees = getData(SK.employees);
 const emp = employees.find(function(e) { return e.id === id; });
@@ -3641,7 +3738,7 @@ function excluirColaborador(id) {
 if (bloquearSeNaoAdmin()) return;
 if (!confirm('Confirmar exclusão do colaborador?')) return;
 const allocations = getData(SK.allocations).filter(function(al) { return al.employee_id === id && al.status === 'active'; });
-if (allocations.length > 0) { alert('Este colaborador possui alocações ativas. Desaloque os ativos antes de excluir.'); return; }
+if (allocations.length > 0) { showToast('Este colaborador possui alocações ativas. Desaloque os ativos antes de excluir.'); return; }
 const employees = getData(SK.employees);
 const emp = employees.find(function(e) { return e.id === id; });
 saveData(SK.employees, employees.filter(function(e) { return e.id !== id; }));
@@ -3652,16 +3749,26 @@ showToast('Colaborador excluído');
 renderColaboradores();
 }
 function renderAlocacoes() {
-const employees = getData(SK.employees).filter(function(e) { return e.status === 'active'; });
+const allEmployees = getData(SK.employees);
+const employees = allEmployees.filter(function(e) { return e.status === 'active'; });
 const assets = getData(SK.assets).filter(function(a) { return a.status === 'available'; });
-const allocations = getData(SK.allocations).filter(function(al) { return al.status === 'active'; });
+const allAllocations = getData(SK.allocations);
+const allocations = allAllocations.filter(function(al) { return al.status === 'active'; });
+const allocationsInativas = allAllocations.filter(function(al) { return al.status === 'inactive'; });
 document.getElementById('alloc-emp').innerHTML = '<option value="">Selecione...</option>' + employees.map(function(e) { return '<option value="' + e.id + '">' + e.name + ' - ' + e.depto + ' (' + e.email + ')' + '</option>'; }).join('');
 document.getElementById('alloc-asset').innerHTML = '<option value="">Selecione...</option>' + assets.map(function(a) { return '<option value="' + a.uid + '">' + a.uid + ' - ' + a.brand + ' ' + a.model + '</option>'; }).join('');
 const tbody = document.getElementById('alloc-table-body');
 tbody.innerHTML = allocations.map(function(al) {
-const emp = employees.find(function(e) { return e.id == al.employee_id; });
+const emp = allEmployees.find(function(e) { return e.id == al.employee_id; });
 return '<tr><td><strong>' + (emp ? emp.name : 'N/A') + '</strong></td><td>' + (emp ? emp.depto : 'N/A') + '</td><td class="uid-cell">' + al.asset_uid + '</td><td>' + new Date(al.date).toLocaleDateString('pt-BR') + '</td><td><span class="badge badge-assigned">Alocado</span></td><td>' + (isAdminUser() ? '<button class="btn btn-warning-outline btn-sm" onclick="desalocarAtivo(\'' + al.id + '\')">Desalocar</button>' : '<span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span>') + '</td></tr>';
 }).join('') || '<tr><td colspan="6" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhuma alocação ativa</td></tr>';
+const tbodyInativas = document.getElementById('alloc-inactive-table-body');
+if (tbodyInativas) {
+tbodyInativas.innerHTML = allocationsInativas.map(function(al) {
+const emp = allEmployees.find(function(e) { return e.id == al.employee_id; });
+return '<tr><td><strong>' + (emp ? emp.name : 'N/A') + '</strong></td><td>' + (emp ? emp.depto : 'N/A') + '</td><td class="uid-cell">' + al.asset_uid + '</td><td>' + new Date(al.date).toLocaleDateString('pt-BR') + '</td><td><span class="badge badge-inactive">Devolvido</span></td></tr>';
+}).join('') || '<tr><td colspan="5" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhuma alocação inativa</td></tr>';
+}
 }
 function alocarAtivo() {
 if (bloquearSeNaoAdmin()) return;
@@ -3807,6 +3914,8 @@ const existing = document.querySelector('.toast');
 if (existing) existing.remove();
 const toast = document.createElement('div');
 toast.className = 'toast';
+toast.setAttribute('role', 'status');
+toast.setAttribute('aria-live', 'polite');
 toast.textContent = msg;
 document.body.appendChild(toast);
 setTimeout(function() { toast.style.animation = 'slideOut 0.3s ease forwards'; setTimeout(function() { toast.remove(); }, 300); }, 3000);
@@ -3872,7 +3981,7 @@ tbody.innerHTML = supplies.map(s => {
 let statusClass = 'badge-available';
 if(s.status === 'Baixo') statusClass = 'badge-maintenance';
 if(s.status === 'Esgotado') statusClass = 'badge-discarded';
-const acoes = isAdminUser() ? '<div class="btn-group"><button class="btn btn-outline btn-sm" onclick="abrirModalUsarSuprimento(\'' + s.id + '\')">📦 Usar</button> <button class="btn btn-outline btn-sm" onclick="abrirModalEditarSuprimento(\'' + s.id + '\')">✏️ Editar</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirSuprimento(\'' + s.id + '\', \'' + tipo + '\')">🗑️ Excluir</button></div>' : '<span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span>';
+const acoes = isAdminUser() ? '<div class="btn-group"><button class="btn btn-outline btn-sm" onclick="abrirModalUsarSuprimento(\'' + s.id + '\')"><span aria-hidden="true">📦</span> Usar</button> <button class="btn btn-outline btn-sm" onclick="abrirModalEditarSuprimento(\'' + s.id + '\')"><span aria-hidden="true">✏️</span> Editar</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirSuprimento(\'' + s.id + '\', \'' + tipo + '\')"><span aria-hidden="true">🗑️</span> Excluir</button></div>' : '<span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span>';
 if (tipo === 'tinta') {
 let nivelCell = '-';
 if (s.level) {
@@ -4102,17 +4211,17 @@ container.innerHTML = ticketsFiltrados.map(function(ticket) {
 const prioridade = PRIORIDADES_CHAMADO[ticket.priority];
 const status = STATUS_CHAMADO[ticket.status];
 const dataCriacao = new Date(ticket.created_at).toLocaleString('pt-BR');
-return '<div class="ticket-card" onclick="verDetalhesChamado(\'' + ticket.id + '\')"><div class="ticket-header"><div><div class="ticket-id">' + ticket.id + '</div><div class="ticket-subject">' + ticket.subject + '</div></div><div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;"><span class="badge ' + status.class + '">' + status.label + '</span><span class="badge" style="background: rgba(255, 206, 5, 0.1); color: var(--gold-primary); border: 1px solid var(--border-gold);">' + prioridade.label + '</span></div></div><div class="ticket-meta"><div class="ticket-meta-item">📅 ' + dataCriacao + '</div>' + getSlaIndicator(ticket) + '</div></div>';
+return '<div class="ticket-card" role="button" tabindex="0" onclick="verDetalhesChamado(\'' + ticket.id + '\')" onkeydown="onCardKeydown(event)"><div class="ticket-header"><div><div class="ticket-id">' + ticket.id + '</div><div class="ticket-subject">' + ticket.subject + '</div></div><div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;"><span class="badge ' + status.class + '">' + status.label + '</span><span class="badge" style="background: rgba(255, 206, 5, 0.1); color: var(--gold-primary); border: 1px solid var(--border-gold);">' + prioridade.label + '</span></div></div><div class="ticket-meta"><div class="ticket-meta-item">📅 ' + dataCriacao + '</div>' + getSlaIndicator(ticket) + '</div></div>';
 }).join('');
 }
 function getSlaIndicator(ticket) {
-const slaDate = new Date(ticket.sla_due_at);
-const now = new Date();
-const diffHours = (slaDate - now) / (1000 * 60 * 60);
-if (['resolvido', 'fechado'].includes(ticket.status)) { return '<span style="color: #10b981; font-size: 11px;">✓ Concluído</span>'; }
-if (diffHours <= 0) { return '<span style="color: #dc2626; font-size: 11px;">⚠️ SLA Expirado</span>'; }
-else if (diffHours <= 4) { return '<span style="color: #f59e0b; font-size: 11px;">⏰ ' + Math.round(diffHours) + 'h restantes</span>'; }
-else { return '<span style="color: #10b981; font-size: 11px;">✓ ' + Math.round(diffHours) + 'h restantes</span>'; }
+// Classificação em public/js/domain/sla.js (pura, testada em
+// tests/domain/sla.test.mjs) — esta função só decide o HTML/cor por situação.
+const sla = window.SlaDomain.classificarSla(ticket.status, ticket.sla_due_at, Date.now());
+if (sla.situacao === 'concluido') { return '<span style="color: #10b981; font-size: 11px;">✓ Concluído</span>'; }
+if (sla.situacao === 'expirado') { return '<span style="color: #dc2626; font-size: 11px;">⚠️ SLA Expirado</span>'; }
+if (sla.situacao === 'proximo') { return '<span style="color: #f59e0b; font-size: 11px;">⏰ ' + Math.round(sla.horasRestantes) + 'h restantes</span>'; }
+return '<span style="color: #10b981; font-size: 11px;">✓ ' + Math.round(sla.horasRestantes) + 'h restantes</span>';
 }
 function filtrarMeusChamados(filter) { filtroMeusChamados = filter; renderMeusChamados(); }
 function renderMeusAtendimentos() {
@@ -4129,7 +4238,7 @@ container.innerHTML = ticketsFiltrados.map(function(ticket) {
 const prioridade = PRIORIDADES_CHAMADO[ticket.priority];
 const status = STATUS_CHAMADO[ticket.status];
 const atendente = ticket.atendido_por_nome ? '<div class="ticket-meta-item">🔧 Atendido por: ' + ticket.atendido_por_nome + '</div>' : '<div class="ticket-meta-item">🔧 Aguardando atendimento</div>';
-return '<div class="ticket-card" onclick="verDetalhesChamado(\'' + ticket.id + '\')"><div class="ticket-header"><div><div class="ticket-id">' + ticket.id + '</div><div class="ticket-subject">' + ticket.subject + '</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Solicitante: ' + ticket.requester_name + '</div></div><div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;"><span class="badge ' + status.class + '">' + status.label + '</span><span class="badge" style="background: rgba(255, 206, 5, 0.1); color: var(--gold-primary); border: 1px solid var(--border-gold);">' + prioridade.label + '</span></div></div><div class="ticket-meta"><div class="ticket-meta-item">📅 ' + new Date(ticket.created_at).toLocaleString('pt-BR') + '</div>' + atendente + '</div></div>';
+return '<div class="ticket-card" role="button" tabindex="0" onclick="verDetalhesChamado(\'' + ticket.id + '\')" onkeydown="onCardKeydown(event)"><div class="ticket-header"><div><div class="ticket-id">' + ticket.id + '</div><div class="ticket-subject">' + ticket.subject + '</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Solicitante: ' + ticket.requester_name + '</div></div><div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;"><span class="badge ' + status.class + '">' + status.label + '</span><span class="badge" style="background: rgba(255, 206, 5, 0.1); color: var(--gold-primary); border: 1px solid var(--border-gold);">' + prioridade.label + '</span></div></div><div class="ticket-meta"><div class="ticket-meta-item">📅 ' + new Date(ticket.created_at).toLocaleString('pt-BR') + '</div>' + atendente + '</div></div>';
 }).join('');
 }
 function filtrarMeusAtendimentos(filter) { filtroMeusAtendimentos = filter; renderMeusAtendimentos(); }
@@ -4197,7 +4306,7 @@ let atendidoHtml = '';
 if (ticket.atendido_por_nome) { atendidoHtml = '<div style="margin-top: 16px;"><div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">ATENDIDO POR</div><div style="font-size: 13px; padding: 12px; background: var(--black-secondary); border-radius: 8px;">' + ticket.atendido_por_nome + '</div></div>'; }
 let excluirPanel = '';
 if (isAdmin || isTecnico) {
-excluirPanel = '<div style="margin-top: 20px; padding: 16px; background: var(--black-secondary); border-radius: 8px; border: 1px solid rgba(220, 38, 38, 0.3);"><div style="font-size: 13px; font-weight: 700; margin-bottom: 12px; color: #dc2626;">Zona de Risco</div><button class="btn btn-discarded btn-sm" onclick="excluirChamado(\'' + ticket.id + '\')">🗑️ Excluir Chamado</button><div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">O chamado será movido para a Lixeira e removido definitivamente em até 90 dias.</div></div>';
+excluirPanel = '<div style="margin-top: 20px; padding: 16px; background: var(--black-secondary); border-radius: 8px; border: 1px solid rgba(220, 38, 38, 0.3);"><div style="font-size: 13px; font-weight: 700; margin-bottom: 12px; color: #dc2626;">Zona de Risco</div><button class="btn btn-discarded btn-sm" onclick="excluirChamado(\'' + ticket.id + '\')"><span aria-hidden="true">🗑️</span> Excluir Chamado</button><div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">O chamado será movido para a Lixeira e removido definitivamente em até 90 dias.</div></div>';
 }
 let tecnicoPanel = '';
 if (isTecnico) {
@@ -4258,11 +4367,11 @@ container.innerHTML = articlesFiltrados.map(function(article) {
 let acoes = '';
 if (podeEditar) {
 acoes = '<div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();">' +
-'<button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(\'' + article.id + '\')">✏️ Editar</button>' +
-'<button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(\'' + article.id + '\')">🗑️ Excluir</button>' +
+'<button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(\'' + article.id + '\')"><span aria-hidden="true">✏️</span> Editar</button>' +
+'<button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(\'' + article.id + '\')"><span aria-hidden="true">🗑️</span> Excluir</button>' +
 '</div>';
 }
-return '<div class="article-card" onclick="verArtigo(\'' + article.id + '\')"><div class="article-title">' + article.title + '</div><div class="article-excerpt">' + article.content.substring(0, 150) + '...</div><div class="article-tags">' + article.tags.map(function(tag) { return '<span class="tag">' + tag + '</span>'; }).join('') + '</div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ ' + article.views + ' visualizações</div>' + acoes + '</div>';
+return '<div class="article-card" role="button" tabindex="0" onclick="verArtigo(\'' + article.id + '\')" onkeydown="onCardKeydown(event)"><div class="article-title">' + article.title + '</div><div class="article-excerpt">' + article.content.substring(0, 150) + '...</div><div class="article-tags">' + article.tags.map(function(tag) { return '<span class="tag">' + tag + '</span>'; }).join('') + '</div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ ' + article.views + ' visualizações</div>' + acoes + '</div>';
 }).join('');
 }
 function filtrarArtigos() { renderBaseConhecimento(); }
@@ -4273,7 +4382,7 @@ if (!article) return;
 article.views++;
 localStorage.setItem(SK.articles, JSON.stringify(articles));
 const podeEditar = currentUser && (currentUser.role === 'admin' || currentUser.role === 'tecnico');
-const acoes = podeEditar ? '<div class="modal-actions" style="margin-top: 20px;"><button class="btn btn-outline" onclick="fecharModal(\'modal-artigo-detalhes\'); abrirModalEditarArtigo(\'' + article.id + '\')">✏️ Editar Artigo</button><button class="btn btn-danger-outline" onclick="excluirArtigoKB(\'' + article.id + '\')">🗑️ Excluir Artigo</button></div>' : '';
+const acoes = podeEditar ? '<div class="modal-actions" style="margin-top: 20px;"><button class="btn btn-outline" onclick="fecharModal(\'modal-artigo-detalhes\'); abrirModalEditarArtigo(\'' + article.id + '\')"><span aria-hidden="true">✏️</span> Editar Artigo</button><button class="btn btn-danger-outline" onclick="excluirArtigoKB(\'' + article.id + '\')"><span aria-hidden="true">🗑️</span> Excluir Artigo</button></div>' : '';
 const content = document.getElementById('artigo-detalhes-content');
 content.innerHTML = '<div class="modal-title">' + article.title + '</div><div style="margin: 16px 0; padding: 20px; background: var(--black-secondary); border-radius: 8px; line-height: 1.6;">' + article.content.replace(/\n/g, '<br>') + '</div><div class="article-tags" style="margin-top: 16px;">' + article.tags.map(function(tag) { return '<span class="tag">' + tag + '</span>'; }).join('') + '</div>' + acoes;
 document.getElementById('modal-artigo-detalhes').classList.add('active');
@@ -4447,7 +4556,7 @@ if (ticketsFiltrados.length === 0) { container.innerHTML = '<div style="text-ali
 container.innerHTML = ticketsFiltrados.map(function(ticket) {
 const prioridade = PRIORIDADES_CHAMADO[ticket.priority];
 const status = STATUS_CHAMADO[ticket.status];
-return '<div class="ticket-card" onclick="verDetalhesChamado(\'' + ticket.id + '\')"><div class="ticket-header"><div><div class="ticket-id">' + ticket.id + '</div><div class="ticket-subject">' + ticket.subject + '</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Solicitante: ' + ticket.requester_name + '</div></div><div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;"><span class="badge ' + status.class + '">' + status.label + '</span><span class="badge" style="background: rgba(255, 206, 5, 0.1); color: var(--gold-primary); border: 1px solid var(--border-gold);">' + prioridade.label + '</span></div></div><div class="ticket-meta"><div class="ticket-meta-item">📅 ' + new Date(ticket.created_at).toLocaleString('pt-BR') + '</div>' + getSlaIndicator(ticket) + '</div></div>';
+return '<div class="ticket-card" role="button" tabindex="0" onclick="verDetalhesChamado(\'' + ticket.id + '\')" onkeydown="onCardKeydown(event)"><div class="ticket-header"><div><div class="ticket-id">' + ticket.id + '</div><div class="ticket-subject">' + ticket.subject + '</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Solicitante: ' + ticket.requester_name + '</div></div><div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end;"><span class="badge ' + status.class + '">' + status.label + '</span><span class="badge" style="background: rgba(255, 206, 5, 0.1); color: var(--gold-primary); border: 1px solid var(--border-gold);">' + prioridade.label + '</span></div></div><div class="ticket-meta"><div class="ticket-meta-item">📅 ' + new Date(ticket.created_at).toLocaleString('pt-BR') + '</div>' + getSlaIndicator(ticket) + '</div></div>';
 }).join('');
 }
 function filtrarChamadosAdmin(filter) { filtroChamadosAdmin = filter; renderFilaChamados(); }
@@ -4492,7 +4601,7 @@ container.innerHTML = trash.map(function(t) {
 const diasRestantes = diasRestantesLixeira(t.deleted_at);
 const diasTexto = diasRestantes > 0 ? diasRestantes + ' dia(s) até a exclusão definitiva' : 'Expira na próxima limpeza automática';
 const motivoHtml = t.deleted_reason ? '<div style="margin-top: 10px; padding: 10px 12px; background: rgba(220, 38, 38, 0.06); border: 1px solid rgba(220, 38, 38, 0.2); border-radius: 6px; font-size: 12.5px;"><strong style="color: #dc2626;">Motivo da exclusão:</strong> ' + t.deleted_reason + '</div>' : '';
-return '<div class="ticket-card" style="cursor: default;"><div class="ticket-header"><div><div class="ticket-id">' + t.id + '</div><div class="ticket-subject">' + t.subject + '</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Solicitante: ' + t.requester_name + '</div></div></div><div class="ticket-meta"><div class="ticket-meta-item">🗑️ Excluído por: ' + t.deleted_by + ' (' + roleLabel(t.deleted_by_role) + ')</div><div class="ticket-meta-item">📅 Excluído em: ' + new Date(t.deleted_at).toLocaleString('pt-BR') + '</div><div class="ticket-meta-item">⏳ ' + diasTexto + '</div></div>' + motivoHtml + '<div class="btn-group" style="margin-top: 12px; justify-content: flex-start;"><button class="btn btn-success-outline btn-sm" onclick="restaurarChamado(\'' + t.id + '\')">↩️ Restaurar</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirChamadoDefinitivo(\'' + t.id + '\')">🗑️ Excluir Definitivamente</button></div></div>';
+return '<div class="ticket-card" style="cursor: default;"><div class="ticket-header"><div><div class="ticket-id">' + t.id + '</div><div class="ticket-subject">' + t.subject + '</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Solicitante: ' + t.requester_name + '</div></div></div><div class="ticket-meta"><div class="ticket-meta-item">🗑️ Excluído por: ' + t.deleted_by + ' (' + roleLabel(t.deleted_by_role) + ')</div><div class="ticket-meta-item">📅 Excluído em: ' + new Date(t.deleted_at).toLocaleString('pt-BR') + '</div><div class="ticket-meta-item">⏳ ' + diasTexto + '</div></div>' + motivoHtml + '<div class="btn-group" style="margin-top: 12px; justify-content: flex-start;"><button class="btn btn-success-outline btn-sm" onclick="restaurarChamado(\'' + t.id + '\')">↩️ Restaurar</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirChamadoDefinitivo(\'' + t.id + '\')"><span aria-hidden="true">🗑️</span> Excluir Definitivamente</button></div></div>';
 }).join('');
 }
 function restaurarChamado(ticketId) {
@@ -4822,11 +4931,11 @@ const isSistema = h.origem === 'sistema';
 const origemBadge = isSistema ? '<span class="badge badge-inactive" style="margin-left: 6px;">Gerado pelo Sistema</span>' : '<span class="badge badge-assigned" style="margin-left: 6px;">Manual</span>';
 let acoes = '';
 if (isAdmin && !isSistema) {
-acoes = '<div class="btn-group" style="margin-top: 12px; justify-content: flex-start;"><button class="btn btn-outline btn-sm" onclick="editarHistorico(\'' + h.id + '\')">✏️ Editar Parecer</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirHistorico(\'' + h.id + '\')">🗑️ Excluir</button></div>';
+acoes = '<div class="btn-group" style="margin-top: 12px; justify-content: flex-start;"><button class="btn btn-outline btn-sm" onclick="editarHistorico(\'' + h.id + '\')"><span aria-hidden="true">✏️</span> Editar Parecer</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirHistorico(\'' + h.id + '\')"><span aria-hidden="true">🗑️</span> Excluir</button></div>';
 }
 const fotosArr = (h.fotos && h.fotos.length) ? h.fotos : (h.foto ? [h.foto] : []);
 const fotoHtml = fotosArr.length ? '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">' + fotosArr.map(function(f) {
-return '<div style="width: 100px; height: 100px; border-radius: 8px; overflow: hidden; cursor: zoom-in;" onclick="abrirFotoHistoricoLightbox(this)"><img src="' + f + '" alt="Foto do equipamento" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>';
+return '<div style="width: 100px; height: 100px; border-radius: 8px; overflow: hidden; cursor: zoom-in;" role="button" tabindex="0" aria-label="Ampliar foto do equipamento" onclick="abrirFotoHistoricoLightbox(this)" onkeydown="onCardKeydown(event)"><img src="' + f + '" alt="Foto do equipamento" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>';
 }).join('') + '</div>' : '';
 const usuarioAnteriorHtml = '<span style="background: rgba(245, 197, 24, 0.15); color: var(--text-primary); padding: 2px 8px; border-radius: 6px; font-weight: 700; border: 1px solid rgba(245, 197, 24, 0.45);">' + h.usuario_anterior + '</span>';
 return '<div class="ticket-card" style="cursor: default;"><div class="ticket-header"><div><div class="ticket-id">' + h.asset_uid + (h.asset_desc ? ' — ' + h.asset_desc : '') + '</div><div class="ticket-subject" style="font-size: 13px;">' + tipoLabels[h.tipo] + origemBadge + '</div></div>' + condicaoBadge + '</div><div style="font-size: 13px; line-height: 1.5; margin: 8px 0; color: var(--text-primary); white-space: pre-wrap;">' + h.parecer + '</div><div class="ticket-meta"><div class="ticket-meta-item">👤 Usuário anterior: ' + usuarioAnteriorHtml + (h.usuario_novo ? ' → Novo usuário: ' + h.usuario_novo : '') + '</div><div class="ticket-meta-item">✍️ Registrado por: ' + h.autor + (h.autor_role === 'sistema' ? '' : ' (' + roleLabel(h.autor_role) + ')') + '</div><div class="ticket-meta-item">📅 ' + new Date(h.created_at).toLocaleString('pt-BR') + '</div></div>' + fotoHtml + acoes + '</div>';
@@ -5113,21 +5222,21 @@ const setor = document.getElementById('chk-setor').value || '—';
 const dataVal = document.getElementById('chk-data').value;
 const semestre = document.getElementById('chk-semestre').value;
 if (!selectColab.value) {
-alert('Por favor, selecione o colaborador responsável pelo equipamento!');
+showToast('Por favor, selecione o colaborador responsável pelo equipamento!');
 return;
 }
 if (!dataVal || !semestre) {
-alert('Por favor, preencha todos os campos obrigatórios!');
+showToast('Por favor, preencha todos os campos obrigatórios!');
 return;
 }
 const dataSelecionada = new Date(dataVal + 'T12:00:00');
 const dataMinima = new Date('2026-06-22T00:00:00');
 if (isNaN(dataSelecionada.getTime())) {
-alert('Data inválida! Por favor, selecione uma data válida.');
+showToast('Data inválida! Por favor, selecione uma data válida.');
 return;
 }
 if (dataSelecionada < dataMinima) {
-alert('A data deve ser igual ou posterior a 22/06/2026 (início da campanha).');
+showToast('A data deve ser igual ou posterior a 22/06/2026 (início da campanha).');
 return;
 }
 const checked = function(name) { return Array.from(document.querySelectorAll('input[name="' + name + '"]:checked')).map(function(cb) { return cb.value; }); };
@@ -5166,7 +5275,7 @@ if (!checklists[ano][semestre]) {
 checklists[ano][semestre] = [];
 }
 checklists[ano][semestre].push(checklistData);
-localStorage.setItem(SK.checklists, JSON.stringify(checklists));
+saveData(SK.checklists, checklists);
 addLog('Checklist Salvo', 'Checklist de ' + colaborador + ' (' + semestre + '° Semestre/' + ano + ') foi salvo no sistema e está pendente de ciência de: ' + colaborador + ', ' + checklistData.assQualidade + ' e ' + checklistData.assTI + '.', 'cadastro');
 pushNotification({ type: 'checklist', level: 'info', title: 'Checklist pendente de assinatura', message: 'Checklist de ' + colaborador + ' (' + setor + ') aguarda a ciência de 3 responsáveis.', page: 'checklists' });
 showToast('Checklist salvo! Agora aguarda a ciência de cada responsável na fila de pendências.');
@@ -5323,7 +5432,7 @@ if (!item) { showToast('Checklist não encontrado.'); return; }
 item[campo] = true;
 item[campoEm] = new Date().toISOString();
 item[campo + 'Por'] = currentUser.name;
-localStorage.setItem(SK.checklists, JSON.stringify(checklists));
+saveData(SK.checklists, checklists);
 addLog('Ciência Confirmada', currentUser.name + ' (' + labelPapel + ') confirmou ciência do checklist de ' + item.colaborador + ' (' + item.setor + ')' + (checklistEstaCompleto(item) ? ' — checklist agora está completo com todas as assinaturas.' : '.'), 'alteracao');
 if (checklistEstaCompleto(item)) {
 pushNotification({ type: 'checklist', level: 'info', title: 'Checklist totalmente assinado', message: 'O checklist de ' + item.colaborador + ' (' + item.setor + ') recebeu a ciência de todos os responsáveis.', page: 'checklists' });
@@ -5353,7 +5462,7 @@ anos.forEach(function(ano) {
 const anoData = checklists[ano];
 const totalChecklists = (anoData['1'] ? anoData['1'].length : 0) + (anoData['2'] ? anoData['2'].length : 0);
 html += '<div class="checklist-year-folder">';
-html += '<div class="checklist-year-header" onclick="toggleYearFolder(\'' + ano + '\')">';
+html += '<div class="checklist-year-header" role="button" tabindex="0" aria-label="Expandir/recolher ano ' + ano + '" onclick="toggleYearFolder(\'' + ano + '\')" onkeydown="onCardKeydown(event)">';
 html += '<div class="checklist-year-title">📁 ' + ano + '</div>';
 html += '<div class="checklist-year-count">' + totalChecklists + ' checklist(s)</div>';
 html += '</div>';
@@ -5361,7 +5470,7 @@ html += '<div class="checklist-year-content" id="year-' + ano + '">';
 ['1', '2'].forEach(function(sem) {
 const semChecklists = anoData[sem] || [];
 html += '<div class="checklist-semester-folder">';
-html += '<div class="checklist-semester-header" onclick="toggleSemesterFolder(\'' + ano + '\', \'' + sem + '\')">';
+html += '<div class="checklist-semester-header" role="button" tabindex="0" aria-label="Expandir/recolher ' + sem + 'º semestre de ' + ano + '" onclick="toggleSemesterFolder(\'' + ano + '\', \'' + sem + '\')" onkeydown="onCardKeydown(event)">';
 html += '<div class="checklist-semester-title">📂 ' + sem + '° Avaliação</div>';
 html += '<div class="checklist-semester-count">' + semChecklists.length + ' checklist(s)</div>';
 html += '</div>';
@@ -5383,7 +5492,7 @@ html += '</div>';
 html += '<div class="checklist-item-actions">';
 html += '<button class="btn btn-outline btn-sm" onclick="verDetalhesChecklist(\'' + chk.id + '\')">Ver Detalhes</button>';
 if (currentUser && currentUser.role === 'admin') {
-html += ' <button class="btn btn-danger-outline btn-sm" onclick="excluirChecklist(\'' + chk.id + '\', \'' + ano + '\', \'' + sem + '\')">🗑️ Excluir</button>';
+html += ' <button class="btn btn-danger-outline btn-sm" onclick="excluirChecklist(\'' + chk.id + '\', \'' + ano + '\', \'' + sem + '\')"><span aria-hidden="true">🗑️</span> Excluir</button>';
 }
 html += '</div>';
 html += '</div>';
@@ -5493,7 +5602,7 @@ const idx = checklists[ano][semestre].findIndex(function(c) { return c.id === ch
 if (idx !== -1) {
 const checklist = checklists[ano][semestre][idx];
 checklists[ano][semestre].splice(idx, 1);
-localStorage.setItem(SK.checklists, JSON.stringify(checklists));
+saveData(SK.checklists, checklists);
 addLog('Checklist Excluído', 'Checklist de ' + checklist.colaborador + ' (' + semestre + '° Semestre/' + ano + ') foi excluído permanentemente por ' + currentUser.name + '. Motivo: ' + motivoLimpo, 'exclusao');
 showToast('Checklist excluído permanentemente!');
 renderChecklistsOrganizados();
@@ -5605,8 +5714,8 @@ const list = getData(SK.notifications);
 if (list.length === 0) { container.innerHTML = '<div class="notif-empty">Nenhuma notificação no momento</div>'; return; }
 container.innerHTML = list.map(function(n) {
 const icon = n.level === 'danger' ? '🔴' : (n.level === 'warning' ? '🟡' : '🔔');
-return '<div class="notif-item level-' + n.level + (n.read ? '' : ' unread') + '" onclick="abrirNotificacao(\'' + n.id + '\')">' +
-'<div class="notif-icon">' + icon + '</div>' +
+return '<div class="notif-item level-' + n.level + (n.read ? '' : ' unread') + '" role="button" tabindex="0" aria-label="' + (n.title || 'Notificação').replace(/"/g, '&quot;') + '" onclick="abrirNotificacao(\'' + n.id + '\')" onkeydown="onCardKeydown(event)">' +
+'<div class="notif-icon" aria-hidden="true">' + icon + '</div>' +
 '<div class="notif-body"><div class="notif-title">' + n.title + '</div><div class="notif-msg">' + n.message + '</div><div class="notif-time">' + formatarTempoRelativo(n.created_at) + '</div></div>' +
 (n.read ? '' : '<div class="notif-dot"></div>') +
 '</div>';
@@ -5670,13 +5779,13 @@ if (!currentUser || currentUser.role === 'user') return;
 const tickets = getData(SK.tickets);
 const now = Date.now();
 tickets.forEach(function(t) {
-if (['resolvido', 'fechado'].includes(t.status)) return;
-const dueMs = new Date(t.sla_due_at).getTime();
-const diffH = (dueMs - now) / 3600000;
-if (diffH <= 0) {
+// Mesma classificação de public/js/domain/sla.js usada em getSlaIndicator
+// (antes os dois lugares recalculavam o limiar de "próximo" cada um por si).
+const sla = window.SlaDomain.classificarSla(t.status, t.sla_due_at, now);
+if (sla.situacao === 'expirado') {
 pushNotification({ dedupKey: 'sla-vencido-' + t.id, dedupMinutes: 180, type: 'sla', level: 'danger', title: 'SLA vencido — ' + t.id, message: 'O chamado "' + t.subject + '" ultrapassou o prazo de SLA.', page: 'suporte' });
-} else if (diffH <= 4) {
-pushNotification({ dedupKey: 'sla-proximo-' + t.id, dedupMinutes: 180, type: 'sla', level: 'warning', title: 'SLA próximo do vencimento — ' + t.id, message: 'O chamado "' + t.subject + '" vence em aproximadamente ' + Math.max(0, Math.round(diffH)) + 'h.', page: 'suporte' });
+} else if (sla.situacao === 'proximo') {
+pushNotification({ dedupKey: 'sla-proximo-' + t.id, dedupMinutes: 180, type: 'sla', level: 'warning', title: 'SLA próximo do vencimento — ' + t.id, message: 'O chamado "' + t.subject + '" vence em aproximadamente ' + Math.max(0, Math.round(sla.horasRestantes)) + 'h.', page: 'suporte' });
 }
 });
 }
