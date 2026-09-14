@@ -3234,7 +3234,7 @@ document.getElementById('modal-descartar').classList.add('active');
 function confirmarDescartarAtivo() {
 if (bloquearSeNaoAdmin()) return;
 const motivo = document.getElementById('descartar-motivo').value.trim();
-if (!motivo) { alert('Por favor, informe o motivo do descarte.'); return; }
+if (!motivo) { showToast('Por favor, informe o motivo do descarte.'); return; }
 const assets = getData(SK.assets);
 const asset = assets.find(function(a) { return a.id === assetParaDescartar; });
 if (asset) {
@@ -3596,10 +3596,9 @@ usuarios.push({ username: usernameGerado, password: senhaGerada, role: 'user', n
 saveData(SK.usuarios, usuarios);
 addLog('Usuário Cadastrado', 'Acesso ao sistema criado automaticamente para o colaborador "' + name + '" (login: ' + usernameGerado + ')', 'cadastro');
 enviarConviteAcesso(name, usernameGerado, email, senhaGerada);
-showToast('Colaborador cadastrado com sucesso! Convite de acesso enviado por e-mail (simulado).');
+showToast('Colaborador ' + name + ' cadastrado! Login ' + usernameGerado + ' criado e convite com a senha provisória enviado por e-mail (veja em Configurações → Fila de E-mails).');
 document.getElementById('form-colab').reset();
 renderColaboradores();
-alert('Colaborador cadastrado e acesso ao sistema criado automaticamente!\nLogin: ' + usernameGerado + '\nSenha provisória: ' + senhaGerada + '\nAnote e repasse essas informações ao colaborador. A senha não será exibida novamente.');
 } catch (error) { console.error('Erro ao cadastrar colaborador:', error); showToast('Erro ao cadastrar colaborador. Tente novamente.'); }
 }
 function garantirOpcaoSelecionada(select, valor, rotulo) {
@@ -3687,7 +3686,7 @@ function confirmarInativarColab() {
 showToast('Colaboradores são inativados no portal vpsistema.com.');
 return;
 const motivo = document.getElementById('inativar-colab-motivo').value.trim();
-if (!motivo) { alert('Por favor, informe o motivo da inativação.'); return; }
+if (!motivo) { showToast('Por favor, informe o motivo da inativação.'); return; }
 const id = parseInt(document.getElementById('modal-inativar-colab').dataset.colabId);
 const employees = getData(SK.employees);
 const emp = employees.find(function(e) { return e.id === id; });
@@ -3723,7 +3722,7 @@ function excluirColaborador(id) {
 if (bloquearSeNaoAdmin()) return;
 if (!confirm('Confirmar exclusão do colaborador?')) return;
 const allocations = getData(SK.allocations).filter(function(al) { return al.employee_id === id && al.status === 'active'; });
-if (allocations.length > 0) { alert('Este colaborador possui alocações ativas. Desaloque os ativos antes de excluir.'); return; }
+if (allocations.length > 0) { showToast('Este colaborador possui alocações ativas. Desaloque os ativos antes de excluir.'); return; }
 const employees = getData(SK.employees);
 const emp = employees.find(function(e) { return e.id === id; });
 saveData(SK.employees, employees.filter(function(e) { return e.id !== id; }));
@@ -5207,21 +5206,21 @@ const setor = document.getElementById('chk-setor').value || '—';
 const dataVal = document.getElementById('chk-data').value;
 const semestre = document.getElementById('chk-semestre').value;
 if (!selectColab.value) {
-alert('Por favor, selecione o colaborador responsável pelo equipamento!');
+showToast('Por favor, selecione o colaborador responsável pelo equipamento!');
 return;
 }
 if (!dataVal || !semestre) {
-alert('Por favor, preencha todos os campos obrigatórios!');
+showToast('Por favor, preencha todos os campos obrigatórios!');
 return;
 }
 const dataSelecionada = new Date(dataVal + 'T12:00:00');
 const dataMinima = new Date('2026-06-22T00:00:00');
 if (isNaN(dataSelecionada.getTime())) {
-alert('Data inválida! Por favor, selecione uma data válida.');
+showToast('Data inválida! Por favor, selecione uma data válida.');
 return;
 }
 if (dataSelecionada < dataMinima) {
-alert('A data deve ser igual ou posterior a 22/06/2026 (início da campanha).');
+showToast('A data deve ser igual ou posterior a 22/06/2026 (início da campanha).');
 return;
 }
 const checked = function(name) { return Array.from(document.querySelectorAll('input[name="' + name + '"]:checked')).map(function(cb) { return cb.value; }); };
