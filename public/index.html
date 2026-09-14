@@ -3510,7 +3510,7 @@ Object.keys(checklists[ano]).forEach(function(sem) {
 (checklists[ano][sem] || []).forEach(function(item) { if (String(item.colaboradorId) === String(idAtual)) { item.colaboradorId = String(alvo.id); } });
 });
 });
-localStorage.setItem(SK.checklists, JSON.stringify(checklists));
+saveData(SK.checklists, checklists);
 const tickets = JSON.parse(localStorage.getItem(SK.tickets) || '[]');
 tickets.forEach(function(t) { if (t.requester_id == idAtual) { t.requester_id = alvo.id; } });
 localStorage.setItem(SK.tickets, JSON.stringify(tickets));
@@ -5249,7 +5249,7 @@ if (!checklists[ano][semestre]) {
 checklists[ano][semestre] = [];
 }
 checklists[ano][semestre].push(checklistData);
-localStorage.setItem(SK.checklists, JSON.stringify(checklists));
+saveData(SK.checklists, checklists);
 addLog('Checklist Salvo', 'Checklist de ' + colaborador + ' (' + semestre + '° Semestre/' + ano + ') foi salvo no sistema e está pendente de ciência de: ' + colaborador + ', ' + checklistData.assQualidade + ' e ' + checklistData.assTI + '.', 'cadastro');
 pushNotification({ type: 'checklist', level: 'info', title: 'Checklist pendente de assinatura', message: 'Checklist de ' + colaborador + ' (' + setor + ') aguarda a ciência de 3 responsáveis.', page: 'checklists' });
 showToast('Checklist salvo! Agora aguarda a ciência de cada responsável na fila de pendências.');
@@ -5406,7 +5406,7 @@ if (!item) { showToast('Checklist não encontrado.'); return; }
 item[campo] = true;
 item[campoEm] = new Date().toISOString();
 item[campo + 'Por'] = currentUser.name;
-localStorage.setItem(SK.checklists, JSON.stringify(checklists));
+saveData(SK.checklists, checklists);
 addLog('Ciência Confirmada', currentUser.name + ' (' + labelPapel + ') confirmou ciência do checklist de ' + item.colaborador + ' (' + item.setor + ')' + (checklistEstaCompleto(item) ? ' — checklist agora está completo com todas as assinaturas.' : '.'), 'alteracao');
 if (checklistEstaCompleto(item)) {
 pushNotification({ type: 'checklist', level: 'info', title: 'Checklist totalmente assinado', message: 'O checklist de ' + item.colaborador + ' (' + item.setor + ') recebeu a ciência de todos os responsáveis.', page: 'checklists' });
@@ -5576,7 +5576,7 @@ const idx = checklists[ano][semestre].findIndex(function(c) { return c.id === ch
 if (idx !== -1) {
 const checklist = checklists[ano][semestre][idx];
 checklists[ano][semestre].splice(idx, 1);
-localStorage.setItem(SK.checklists, JSON.stringify(checklists));
+saveData(SK.checklists, checklists);
 addLog('Checklist Excluído', 'Checklist de ' + checklist.colaborador + ' (' + semestre + '° Semestre/' + ano + ') foi excluído permanentemente por ' + currentUser.name + '. Motivo: ' + motivoLimpo, 'exclusao');
 showToast('Checklist excluído permanentemente!');
 renderChecklistsOrganizados();
