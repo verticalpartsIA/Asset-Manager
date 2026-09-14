@@ -915,12 +915,12 @@ tbody tr:hover { background: #FAFAF8; }
 Atualizar
 </button>
 <div class="notif-wrapper">
-<button class="notif-bell-btn user-icon-btn" onclick="toggleNotifDropdown(event)" title="Notificações" id="notif-bell-btn">
-<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+<button class="notif-bell-btn user-icon-btn" onclick="toggleNotifDropdown(event)" title="Notificações" id="notif-bell-btn" aria-label="Notificações" aria-haspopup="true">
+<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
 <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
 </svg>
-<span class="notif-badge show" id="notif-badge">3</span>
+<span class="notif-badge show" id="notif-badge" aria-live="polite">3</span>
 </button>
 <div class="notif-dropdown" id="notif-dropdown">
 <div class="notif-dropdown-header">
@@ -930,11 +930,11 @@ Atualizar
 <button onclick="limparNotificacoes()">Limpar</button>
 </div>
 </div>
-<div class="notif-list" id="notif-list"></div>
+<div class="notif-list" id="notif-list" role="log" aria-live="polite" aria-label="Lista de notificações"></div>
 </div>
 </div>
-<button class="user-icon-btn" onclick="toggleTheme()" title="Alternar tema" id="theme-btn">
-<span id="theme-icon"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
+<button class="user-icon-btn" onclick="toggleTheme()" title="Alternar tema" id="theme-btn" aria-label="Alternar tema claro/escuro">
+<span id="theme-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg></span>
 </button>
 </div>
 </div>
@@ -1305,23 +1305,23 @@ Atualizar
 1. Acesse Painel de Controle
 2. Clique em Adicionar impressora
 3. Selecione a impressora de rede
-4. I...</div><div class="article-tags"><span class="tag">impressora</span><span class="tag">rede</span><span class="tag">windows</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 46 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-001&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-001&#39;)">🗑️ Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-002&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Reset de senha do e-mail corporativo</div><div class="article-excerpt">Para resetar sua senha:
+4. I...</div><div class="article-tags"><span class="tag">impressora</span><span class="tag">rede</span><span class="tag">windows</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 46 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-001&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-001&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-002&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Reset de senha do e-mail corporativo</div><div class="article-excerpt">Para resetar sua senha:
 1. Acesse o portal
 2. Clique em Esqueci minha senha
 3. Insira seu e-mail
 4. Verifique o link de reset
-5. Crie uma nova senha...</div><div class="article-tags"><span class="tag">email</span><span class="tag">senha</span><span class="tag">reset</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 128 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-002&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-002&#39;)">🗑️ Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-003&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Como solicitar a alteração da minha senha de acesso</div><div class="article-excerpt">No momento, a alteração de senha não pode ser feita pelo próprio usuário dentro da plataforma — apenas por um Administrador.
+5. Crie uma nova senha...</div><div class="article-tags"><span class="tag">email</span><span class="tag">senha</span><span class="tag">reset</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 128 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-002&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-002&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-003&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Como solicitar a alteração da minha senha de acesso</div><div class="article-excerpt">No momento, a alteração de senha não pode ser feita pelo próprio usuário dentro da plataforma — apenas por um Administrador.
 
-Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">senha</span><span class="tag">acesso</span><span class="tag">login</span><span class="tag">esqueci minha senha</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-003&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-003&#39;)">🗑️ Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-004&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Primeiros passos: como abrir um chamado de suporte</div><div class="article-excerpt">Siga este passo a passo para registrar uma solicitação de suporte:
+Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">senha</span><span class="tag">acesso</span><span class="tag">login</span><span class="tag">esqueci minha senha</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-003&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-003&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-004&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Primeiros passos: como abrir um chamado de suporte</div><div class="article-excerpt">Siga este passo a passo para registrar uma solicitação de suporte:
 1. No menu lateral, acesse Suporte.
 2. Clique na aba Novo Chamado.
-3. Selecione o c...</div><div class="article-tags"><span class="tag">chamado</span><span class="tag">suporte</span><span class="tag">abrir chamado</span><span class="tag">primeiros passos</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-004&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-004&#39;)">🗑️ Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-005&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Como acompanhar o andamento do meu chamado</div><div class="article-excerpt">Para saber o status de uma solicitação já aberta:
+3. Selecione o c...</div><div class="article-tags"><span class="tag">chamado</span><span class="tag">suporte</span><span class="tag">abrir chamado</span><span class="tag">primeiros passos</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-004&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-004&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-005&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Como acompanhar o andamento do meu chamado</div><div class="article-excerpt">Para saber o status de uma solicitação já aberta:
 1. Acesse Suporte e clique na aba Meus Chamados.
-2. Use os filtros Todos, Abertos ou Resolvidos para...</div><div class="article-tags"><span class="tag">chamado</span><span class="tag">status</span><span class="tag">acompanhamento</span><span class="tag">SLA</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-005&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-005&#39;)">🗑️ Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-006&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Antes de abrir um chamado: primeiros passos para problemas comuns</div><div class="article-excerpt">Muitos problemas simples podem ser resolvidos rapidamente, sem precisar esperar o atendimento técnico:
-1. Reinicie o equipamento ou o aplicativo — iss...</div><div class="article-tags"><span class="tag">primeiros passos</span><span class="tag">solução de problemas</span><span class="tag">dicas</span><span class="tag">autoatendimento</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-006&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-006&#39;)">🗑️ Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-007&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Entendendo a prioridade e o prazo de atendimento (SLA)</div><div class="article-excerpt">Ao abrir um chamado, você escolhe uma prioridade, que define o prazo (SLA) para o atendimento:
+2. Use os filtros Todos, Abertos ou Resolvidos para...</div><div class="article-tags"><span class="tag">chamado</span><span class="tag">status</span><span class="tag">acompanhamento</span><span class="tag">SLA</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-005&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-005&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-006&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Antes de abrir um chamado: primeiros passos para problemas comuns</div><div class="article-excerpt">Muitos problemas simples podem ser resolvidos rapidamente, sem precisar esperar o atendimento técnico:
+1. Reinicie o equipamento ou o aplicativo — iss...</div><div class="article-tags"><span class="tag">primeiros passos</span><span class="tag">solução de problemas</span><span class="tag">dicas</span><span class="tag">autoatendimento</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-006&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-006&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-007&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Entendendo a prioridade e o prazo de atendimento (SLA)</div><div class="article-excerpt">Ao abrir um chamado, você escolhe uma prioridade, que define o prazo (SLA) para o atendimento:
 - Baixa: até 72 horas
 - Média: até 48 horas
-- Alta: até...</div><div class="article-tags"><span class="tag">prioridade</span><span class="tag">SLA</span><span class="tag">prazo</span><span class="tag">chamado</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-007&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-007&#39;)">🗑️ Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-008&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Como confirmar a ciência no Checklist</div><div class="article-excerpt">O checklist semestral de conservação de equipamentos ("Cuida que Dura") precisa da confirmação de ciência de até 3 responsáveis: o colaborador dono do...</div><div class="article-tags"><span class="tag">checklist</span><span class="tag">ciência</span><span class="tag">assinatura</span><span class="tag">confirmação</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-008&#39;)">✏️ Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-008&#39;)">🗑️ Excluir</button></div></div></div>
+- Alta: até...</div><div class="article-tags"><span class="tag">prioridade</span><span class="tag">SLA</span><span class="tag">prazo</span><span class="tag">chamado</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-007&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-007&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div><div class="article-card" role="button" tabindex="0" onclick="verArtigo(&#39;ART-008&#39;)" onkeydown="onCardKeydown(event)"><div class="article-title">Como confirmar a ciência no Checklist</div><div class="article-excerpt">O checklist semestral de conservação de equipamentos ("Cuida que Dura") precisa da confirmação de ciência de até 3 responsáveis: o colaborador dono do...</div><div class="article-tags"><span class="tag">checklist</span><span class="tag">ciência</span><span class="tag">assinatura</span><span class="tag">confirmação</span></div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ 0 visualizações</div><div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();"><button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(&#39;ART-008&#39;)"><span aria-hidden="true">✏️</span> Editar</button><button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(&#39;ART-008&#39;)"><span aria-hidden="true">🗑️</span> Excluir</button></div></div></div>
 </div>
 <div id="view-dashboard-suporte" class="suporte-view" style="display: none;">
 <div class="dashboard-grid" style="margin-bottom: 24px;">
@@ -1632,7 +1632,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 </div>
 <div id="view-pendencias-checklist" class="checklist-view" style="display: none;">
 <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 16px;">Checklists aguardando sua confirmação de ciência. A confirmação é feita com base no seu login atual — apenas você pode confirmar as pendências vinculadas ao seu nome.</p>
-<div id="pendencias-checklist-list"></div>
+<div id="pendencias-checklist-list" role="status" aria-live="polite"></div>
 </div>
 <div id="view-visualizar-checklists" class="checklist-view" style="display: block;">
 <div id="checklists-organized-list"></div>
@@ -1755,7 +1755,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL QR -->
 <div id="modal-qr" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-qr&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-qr&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">QR Code do Ativo</div>
 <div class="modal-subtitle" id="modal-qr-uid"></div>
 <div class="qr-display" id="qr-container"></div>
@@ -1769,7 +1769,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL PUBLICO QR (DINAMICO) -->
 <div id="modal-public-asset" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-public-asset&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-public-asset&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title" id="public-asset-title">Informações do Ativo</div>
 <div id="public-asset-content" style="margin-top: 20px;"></div>
 </div>
@@ -1777,7 +1777,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL DEVOLUÇÃO (NOVO) -->
 <div id="modal-devolucao" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-devolucao&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-devolucao&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Registrar Devolução</div>
 <div class="modal-subtitle">Informe a condição do equipamento no momento da devolução.</div>
 <div class="form-field" style="margin-bottom: 16px;">
@@ -1804,7 +1804,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL STATUS -->
 <div id="modal-status" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-status&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-status&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Alterar Status do Ativo</div>
 <div class="modal-subtitle" id="modal-status-uid"></div>
 <div class="form-field">
@@ -1825,7 +1825,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL DESCARTAR -->
 <div id="modal-descartar" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-descartar&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-descartar&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Descartar Ativo</div>
 <div class="modal-subtitle">Informe o motivo do descarte.</div>
 <div class="form-field" style="margin-bottom: 16px;">
@@ -1861,7 +1861,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL INATIVAR COLABORADOR -->
 <div id="modal-inativar-colab" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-inativar-colab&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-inativar-colab&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Inativar Colaborador</div>
 <div class="modal-subtitle">Informe o motivo da inativação.</div>
 <div class="form-field" style="margin-bottom: 16px;"><label>Colaborador <span class="required-mark">*</span></label><input type="text" id="inativar-colab-nome" readonly="" style="opacity: 0.7;"></div>
@@ -1875,7 +1875,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL EDITAR COLABORADOR -->
 <div id="modal-editar-colab" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-editar-colab&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-editar-colab&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Editar Colaborador</div>
 <div class="modal-subtitle">Atualize as informações do colaborador</div>
 <div class="form-field" style="margin-bottom: 16px;">
@@ -1911,7 +1911,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL EDITAR USUÁRIO -->
 <div id="modal-editar-usuario" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-editar-usuario&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-editar-usuario&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Editar Usuário</div>
 <div class="modal-subtitle">Atualize as informações do usuário</div>
 <div class="form-field" style="margin-bottom: 16px;">
@@ -1942,21 +1942,21 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL DETALHES CHAMADO -->
 <div id="modal-chamado-detalhes" class="modal-overlay">
 <div class="modal" style="max-width: 800px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-chamado-detalhes&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-chamado-detalhes&#39;)" aria-label="Fechar">×</button>
 <div id="chamado-detalhes-content"></div>
 </div>
 </div>
 <!-- MODAL ARTIGO KB -->
 <div id="modal-artigo-detalhes" class="modal-overlay">
 <div class="modal" style="max-width: 700px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-artigo-detalhes&#39;)">×</button>
-<div id="artigo-detalhes-content"><div class="modal-title">Como configurar a impressora de rede</div><div style="margin: 16px 0; padding: 20px; background: var(--black-secondary); border-radius: 8px; line-height: 1.6;">Para configurar a impressora de rede no Windows:<br>1. Acesse Painel de Controle<br>2. Clique em Adicionar impressora<br>3. Selecione a impressora de rede<br>4. Instale os drivers<br>5. Teste a impressão</div><div class="article-tags" style="margin-top: 16px;"><span class="tag">impressora</span><span class="tag">rede</span><span class="tag">windows</span></div><div class="modal-actions" style="margin-top: 20px;"><button class="btn btn-outline" onclick="fecharModal(&#39;modal-artigo-detalhes&#39;); abrirModalEditarArtigo(&#39;ART-001&#39;)">✏️ Editar Artigo</button><button class="btn btn-danger-outline" onclick="excluirArtigoKB(&#39;ART-001&#39;)">🗑️ Excluir Artigo</button></div></div>
+<button class="modal-close" onclick="fecharModal(&#39;modal-artigo-detalhes&#39;)" aria-label="Fechar">×</button>
+<div id="artigo-detalhes-content"><div class="modal-title">Como configurar a impressora de rede</div><div style="margin: 16px 0; padding: 20px; background: var(--black-secondary); border-radius: 8px; line-height: 1.6;">Para configurar a impressora de rede no Windows:<br>1. Acesse Painel de Controle<br>2. Clique em Adicionar impressora<br>3. Selecione a impressora de rede<br>4. Instale os drivers<br>5. Teste a impressão</div><div class="article-tags" style="margin-top: 16px;"><span class="tag">impressora</span><span class="tag">rede</span><span class="tag">windows</span></div><div class="modal-actions" style="margin-top: 20px;"><button class="btn btn-outline" onclick="fecharModal(&#39;modal-artigo-detalhes&#39;); abrirModalEditarArtigo(&#39;ART-001&#39;)"><span aria-hidden="true">✏️</span> Editar Artigo</button><button class="btn btn-danger-outline" onclick="excluirArtigoKB(&#39;ART-001&#39;)"><span aria-hidden="true">🗑️</span> Excluir Artigo</button></div></div>
 </div>
 </div>
 <!-- MODAL NOVO/EDITAR ARTIGO KB -->
 <div id="modal-editar-artigo" class="modal-overlay">
 <div class="modal" style="max-width: 700px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-editar-artigo&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-editar-artigo&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title" id="modal-editar-artigo-titulo">Novo Artigo</div>
 <div class="modal-subtitle">Disponível para Administradores e Técnicos.</div>
 <div class="form-field" style="margin-bottom: 16px;">
@@ -1992,14 +1992,14 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL DETALHES CHECKLIST -->
 <div id="modal-checklist-detalhes" class="modal-overlay">
 <div class="modal" style="max-width: 900px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-checklist-detalhes&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-checklist-detalhes&#39;)" aria-label="Fechar">×</button>
 <div id="checklist-detalhes-content"></div>
 </div>
 </div>
 <!-- MODAL PRÉVIA OBRIGATÓRIA DO CHECKLIST (ciência) -->
 <div id="modal-checklist-preview" class="modal-overlay">
 <div class="modal" style="max-width: 640px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-checklist-preview&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-checklist-preview&#39;)" aria-label="Fechar">×</button>
 <div id="checklist-preview-content"></div>
 <div class="modal-actions">
 <button class="btn btn-secondary" onclick="fecharModal(&#39;modal-checklist-preview&#39;)">Cancelar</button>
@@ -2010,7 +2010,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL DETALHES HARDWARE ATIVO -->
 <div id="modal-asset-details" class="modal-overlay">
 <div class="modal" style="max-width: 800px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-asset-details&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-asset-details&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Detalhes do Hardware</div>
 <div class="modal-subtitle" id="modal-asset-details-uid"></div>
 <div id="modal-asset-details-content" style="margin-top: 20px;"></div>
@@ -2022,7 +2022,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL EDITAR ATIVO -->
 <div id="modal-editar-ativo" class="modal-overlay">
 <div class="modal" style="max-width: 800px;">
-<button class="modal-close" onclick="fecharModal(&#39;modal-editar-ativo&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-editar-ativo&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Editar Ativo</div>
 <div class="modal-subtitle" id="modal-editar-ativo-uid"></div>
 <div class="form-grid" style="margin-top: 20px;">
@@ -2041,7 +2041,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL EDITAR ITEM DE ESTOQUE -->
 <div id="modal-editar-suprimento" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-editar-suprimento&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-editar-suprimento&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Editar Item de Estoque</div>
 <div class="form-field" style="margin-bottom: 16px;">
 <label id="edit-suprimento-label-model">Modelo</label>
@@ -2073,7 +2073,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <!-- MODAL USAR ITEM DE ESTOQUE -->
 <div id="modal-usar-suprimento" class="modal-overlay">
 <div class="modal">
-<button class="modal-close" onclick="fecharModal(&#39;modal-usar-suprimento&#39;)">×</button>
+<button class="modal-close" onclick="fecharModal(&#39;modal-usar-suprimento&#39;)" aria-label="Fechar">×</button>
 <div class="modal-title">Usar Item do Estoque</div>
 <div class="modal-subtitle" id="usar-suprimento-nome"></div>
 <div class="form-field" style="margin-bottom: 16px;">
@@ -3142,10 +3142,10 @@ infoExtra = '<span style="font-size: 11px;">Tel: ' + (a.telefone || '—') + '<b
 infoExtra = '<span style="font-size: 11px; font-family: monospace;">ST: ' + (a.serviceTag || '—') + '</span>';
 }
 let actions = '<button class="btn btn-outline btn-sm" onclick="mostrarDetalhesAtivo(\'' + a.uid + '\')">Detalhes</button> <button class="btn btn-outline btn-sm" onclick="mostrarQR(\'' + a.uid + '\')">QR</button>';
-if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-outline btn-sm" onclick="abrirModalEditarAtivo(\'' + a.id + '\')">✏️ Editar</button>'; }
-if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-status btn-sm" onclick="abrirModalStatus(\'' + a.id + '\')">⚙️ Status</button>'; }
+if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-outline btn-sm" onclick="abrirModalEditarAtivo(\'' + a.id + '\')"><span aria-hidden="true">✏️</span> Editar</button>'; }
+if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-status btn-sm" onclick="abrirModalStatus(\'' + a.id + '\')"><span aria-hidden="true">⚙️</span> Status</button>'; }
 if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-discarded btn-sm" onclick="abrirModalDescartar(\'' + a.id + '\')">🗑️ Descartar</button>'; }
-if (isAdminUser() && (a.status === 'inactive' || a.status === 'discarded')) { actions += ' <button class="btn btn-danger-outline btn-sm" onclick="abrirModalExcluirAtivo(\'' + a.id + '\')">❌ Excluir Definitivamente</button>'; }
+if (isAdminUser() && (a.status === 'inactive' || a.status === 'discarded')) { actions += ' <button class="btn btn-danger-outline btn-sm" onclick="abrirModalExcluirAtivo(\'' + a.id + '\')"><span aria-hidden="true">❌</span> Excluir Definitivamente</button>'; }
 return '<tr><td class="uid-cell">' + a.uid + '</td><td>' + typeLabel(a.type) + '</td><td>' + a.brand + ' ' + a.model + '</td><td style="font-family: monospace; font-size: 12px;">' + a.serial + '</td><td>' + infoExtra + '</td><td><span class="badge badge-' + a.status + '">' + STATUS_LABELS[a.status] + '</span></td><td style="font-size: 11px; color: var(--text-secondary);">' + observacao + '</td><td><div class="btn-group">' + actions + '</div></td></tr>';
 }).join('') || '<tr><td colspan="8" style="text-align:center; padding:30px; color: var(--text-muted);">' + (userScoped ? 'Nenhum equipamento está atualmente sob sua tutela.' : 'Nenhum ativo encontrado') + '</td></tr>';
 }
@@ -3899,6 +3899,8 @@ const existing = document.querySelector('.toast');
 if (existing) existing.remove();
 const toast = document.createElement('div');
 toast.className = 'toast';
+toast.setAttribute('role', 'status');
+toast.setAttribute('aria-live', 'polite');
 toast.textContent = msg;
 document.body.appendChild(toast);
 setTimeout(function() { toast.style.animation = 'slideOut 0.3s ease forwards'; setTimeout(function() { toast.remove(); }, 300); }, 3000);
@@ -3964,7 +3966,7 @@ tbody.innerHTML = supplies.map(s => {
 let statusClass = 'badge-available';
 if(s.status === 'Baixo') statusClass = 'badge-maintenance';
 if(s.status === 'Esgotado') statusClass = 'badge-discarded';
-const acoes = isAdminUser() ? '<div class="btn-group"><button class="btn btn-outline btn-sm" onclick="abrirModalUsarSuprimento(\'' + s.id + '\')">📦 Usar</button> <button class="btn btn-outline btn-sm" onclick="abrirModalEditarSuprimento(\'' + s.id + '\')">✏️ Editar</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirSuprimento(\'' + s.id + '\', \'' + tipo + '\')">🗑️ Excluir</button></div>' : '<span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span>';
+const acoes = isAdminUser() ? '<div class="btn-group"><button class="btn btn-outline btn-sm" onclick="abrirModalUsarSuprimento(\'' + s.id + '\')"><span aria-hidden="true">📦</span> Usar</button> <button class="btn btn-outline btn-sm" onclick="abrirModalEditarSuprimento(\'' + s.id + '\')"><span aria-hidden="true">✏️</span> Editar</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirSuprimento(\'' + s.id + '\', \'' + tipo + '\')"><span aria-hidden="true">🗑️</span> Excluir</button></div>' : '<span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span>';
 if (tipo === 'tinta') {
 let nivelCell = '-';
 if (s.level) {
@@ -4289,7 +4291,7 @@ let atendidoHtml = '';
 if (ticket.atendido_por_nome) { atendidoHtml = '<div style="margin-top: 16px;"><div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">ATENDIDO POR</div><div style="font-size: 13px; padding: 12px; background: var(--black-secondary); border-radius: 8px;">' + ticket.atendido_por_nome + '</div></div>'; }
 let excluirPanel = '';
 if (isAdmin || isTecnico) {
-excluirPanel = '<div style="margin-top: 20px; padding: 16px; background: var(--black-secondary); border-radius: 8px; border: 1px solid rgba(220, 38, 38, 0.3);"><div style="font-size: 13px; font-weight: 700; margin-bottom: 12px; color: #dc2626;">Zona de Risco</div><button class="btn btn-discarded btn-sm" onclick="excluirChamado(\'' + ticket.id + '\')">🗑️ Excluir Chamado</button><div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">O chamado será movido para a Lixeira e removido definitivamente em até 90 dias.</div></div>';
+excluirPanel = '<div style="margin-top: 20px; padding: 16px; background: var(--black-secondary); border-radius: 8px; border: 1px solid rgba(220, 38, 38, 0.3);"><div style="font-size: 13px; font-weight: 700; margin-bottom: 12px; color: #dc2626;">Zona de Risco</div><button class="btn btn-discarded btn-sm" onclick="excluirChamado(\'' + ticket.id + '\')"><span aria-hidden="true">🗑️</span> Excluir Chamado</button><div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">O chamado será movido para a Lixeira e removido definitivamente em até 90 dias.</div></div>';
 }
 let tecnicoPanel = '';
 if (isTecnico) {
@@ -4350,8 +4352,8 @@ container.innerHTML = articlesFiltrados.map(function(article) {
 let acoes = '';
 if (podeEditar) {
 acoes = '<div style="margin-top: 12px; display: flex; gap: 8px;" onclick="event.stopPropagation();">' +
-'<button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(\'' + article.id + '\')">✏️ Editar</button>' +
-'<button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(\'' + article.id + '\')">🗑️ Excluir</button>' +
+'<button class="btn btn-outline btn-sm" onclick="abrirModalEditarArtigo(\'' + article.id + '\')"><span aria-hidden="true">✏️</span> Editar</button>' +
+'<button class="btn btn-danger-outline btn-sm" onclick="excluirArtigoKB(\'' + article.id + '\')"><span aria-hidden="true">🗑️</span> Excluir</button>' +
 '</div>';
 }
 return '<div class="article-card" role="button" tabindex="0" onclick="verArtigo(\'' + article.id + '\')" onkeydown="onCardKeydown(event)"><div class="article-title">' + article.title + '</div><div class="article-excerpt">' + article.content.substring(0, 150) + '...</div><div class="article-tags">' + article.tags.map(function(tag) { return '<span class="tag">' + tag + '</span>'; }).join('') + '</div><div style="margin-top: 12px; font-size: 11px; color: var(--text-muted);">👁️ ' + article.views + ' visualizações</div>' + acoes + '</div>';
@@ -4365,7 +4367,7 @@ if (!article) return;
 article.views++;
 localStorage.setItem(SK.articles, JSON.stringify(articles));
 const podeEditar = currentUser && (currentUser.role === 'admin' || currentUser.role === 'tecnico');
-const acoes = podeEditar ? '<div class="modal-actions" style="margin-top: 20px;"><button class="btn btn-outline" onclick="fecharModal(\'modal-artigo-detalhes\'); abrirModalEditarArtigo(\'' + article.id + '\')">✏️ Editar Artigo</button><button class="btn btn-danger-outline" onclick="excluirArtigoKB(\'' + article.id + '\')">🗑️ Excluir Artigo</button></div>' : '';
+const acoes = podeEditar ? '<div class="modal-actions" style="margin-top: 20px;"><button class="btn btn-outline" onclick="fecharModal(\'modal-artigo-detalhes\'); abrirModalEditarArtigo(\'' + article.id + '\')"><span aria-hidden="true">✏️</span> Editar Artigo</button><button class="btn btn-danger-outline" onclick="excluirArtigoKB(\'' + article.id + '\')"><span aria-hidden="true">🗑️</span> Excluir Artigo</button></div>' : '';
 const content = document.getElementById('artigo-detalhes-content');
 content.innerHTML = '<div class="modal-title">' + article.title + '</div><div style="margin: 16px 0; padding: 20px; background: var(--black-secondary); border-radius: 8px; line-height: 1.6;">' + article.content.replace(/\n/g, '<br>') + '</div><div class="article-tags" style="margin-top: 16px;">' + article.tags.map(function(tag) { return '<span class="tag">' + tag + '</span>'; }).join('') + '</div>' + acoes;
 document.getElementById('modal-artigo-detalhes').classList.add('active');
@@ -4584,7 +4586,7 @@ container.innerHTML = trash.map(function(t) {
 const diasRestantes = diasRestantesLixeira(t.deleted_at);
 const diasTexto = diasRestantes > 0 ? diasRestantes + ' dia(s) até a exclusão definitiva' : 'Expira na próxima limpeza automática';
 const motivoHtml = t.deleted_reason ? '<div style="margin-top: 10px; padding: 10px 12px; background: rgba(220, 38, 38, 0.06); border: 1px solid rgba(220, 38, 38, 0.2); border-radius: 6px; font-size: 12.5px;"><strong style="color: #dc2626;">Motivo da exclusão:</strong> ' + t.deleted_reason + '</div>' : '';
-return '<div class="ticket-card" style="cursor: default;"><div class="ticket-header"><div><div class="ticket-id">' + t.id + '</div><div class="ticket-subject">' + t.subject + '</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Solicitante: ' + t.requester_name + '</div></div></div><div class="ticket-meta"><div class="ticket-meta-item">🗑️ Excluído por: ' + t.deleted_by + ' (' + roleLabel(t.deleted_by_role) + ')</div><div class="ticket-meta-item">📅 Excluído em: ' + new Date(t.deleted_at).toLocaleString('pt-BR') + '</div><div class="ticket-meta-item">⏳ ' + diasTexto + '</div></div>' + motivoHtml + '<div class="btn-group" style="margin-top: 12px; justify-content: flex-start;"><button class="btn btn-success-outline btn-sm" onclick="restaurarChamado(\'' + t.id + '\')">↩️ Restaurar</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirChamadoDefinitivo(\'' + t.id + '\')">🗑️ Excluir Definitivamente</button></div></div>';
+return '<div class="ticket-card" style="cursor: default;"><div class="ticket-header"><div><div class="ticket-id">' + t.id + '</div><div class="ticket-subject">' + t.subject + '</div><div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">Solicitante: ' + t.requester_name + '</div></div></div><div class="ticket-meta"><div class="ticket-meta-item">🗑️ Excluído por: ' + t.deleted_by + ' (' + roleLabel(t.deleted_by_role) + ')</div><div class="ticket-meta-item">📅 Excluído em: ' + new Date(t.deleted_at).toLocaleString('pt-BR') + '</div><div class="ticket-meta-item">⏳ ' + diasTexto + '</div></div>' + motivoHtml + '<div class="btn-group" style="margin-top: 12px; justify-content: flex-start;"><button class="btn btn-success-outline btn-sm" onclick="restaurarChamado(\'' + t.id + '\')">↩️ Restaurar</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirChamadoDefinitivo(\'' + t.id + '\')"><span aria-hidden="true">🗑️</span> Excluir Definitivamente</button></div></div>';
 }).join('');
 }
 function restaurarChamado(ticketId) {
@@ -4914,7 +4916,7 @@ const isSistema = h.origem === 'sistema';
 const origemBadge = isSistema ? '<span class="badge badge-inactive" style="margin-left: 6px;">Gerado pelo Sistema</span>' : '<span class="badge badge-assigned" style="margin-left: 6px;">Manual</span>';
 let acoes = '';
 if (isAdmin && !isSistema) {
-acoes = '<div class="btn-group" style="margin-top: 12px; justify-content: flex-start;"><button class="btn btn-outline btn-sm" onclick="editarHistorico(\'' + h.id + '\')">✏️ Editar Parecer</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirHistorico(\'' + h.id + '\')">🗑️ Excluir</button></div>';
+acoes = '<div class="btn-group" style="margin-top: 12px; justify-content: flex-start;"><button class="btn btn-outline btn-sm" onclick="editarHistorico(\'' + h.id + '\')"><span aria-hidden="true">✏️</span> Editar Parecer</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirHistorico(\'' + h.id + '\')"><span aria-hidden="true">🗑️</span> Excluir</button></div>';
 }
 const fotosArr = (h.fotos && h.fotos.length) ? h.fotos : (h.foto ? [h.foto] : []);
 const fotoHtml = fotosArr.length ? '<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">' + fotosArr.map(function(f) {
@@ -5475,7 +5477,7 @@ html += '</div>';
 html += '<div class="checklist-item-actions">';
 html += '<button class="btn btn-outline btn-sm" onclick="verDetalhesChecklist(\'' + chk.id + '\')">Ver Detalhes</button>';
 if (currentUser && currentUser.role === 'admin') {
-html += ' <button class="btn btn-danger-outline btn-sm" onclick="excluirChecklist(\'' + chk.id + '\', \'' + ano + '\', \'' + sem + '\')">🗑️ Excluir</button>';
+html += ' <button class="btn btn-danger-outline btn-sm" onclick="excluirChecklist(\'' + chk.id + '\', \'' + ano + '\', \'' + sem + '\')"><span aria-hidden="true">🗑️</span> Excluir</button>';
 }
 html += '</div>';
 html += '</div>';
@@ -5698,7 +5700,7 @@ if (list.length === 0) { container.innerHTML = '<div class="notif-empty">Nenhuma
 container.innerHTML = list.map(function(n) {
 const icon = n.level === 'danger' ? '🔴' : (n.level === 'warning' ? '🟡' : '🔔');
 return '<div class="notif-item level-' + n.level + (n.read ? '' : ' unread') + '" role="button" tabindex="0" aria-label="' + (n.title || 'Notificação').replace(/"/g, '&quot;') + '" onclick="abrirNotificacao(\'' + n.id + '\')" onkeydown="onCardKeydown(event)">' +
-'<div class="notif-icon">' + icon + '</div>' +
+'<div class="notif-icon" aria-hidden="true">' + icon + '</div>' +
 '<div class="notif-body"><div class="notif-title">' + n.title + '</div><div class="notif-msg">' + n.message + '</div><div class="notif-time">' + formatarTempoRelativo(n.created_at) + '</div></div>' +
 (n.read ? '' : '<div class="notif-dot"></div>') +
 '</div>';
