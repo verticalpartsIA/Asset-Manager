@@ -1196,6 +1196,13 @@ Atualizar
 <tbody id="alloc-table-body"></tbody>
 </table>
 </div>
+<div class="table-card">
+<div class="table-header-bar"><div class="table-title">Alocações Inativas (devolvidas)</div></div>
+<table>
+<thead><tr><th>Colaborador</th><th>Departamento</th><th>Ativo</th><th>Data da Alocação</th><th>Status</th></tr></thead>
+<tbody id="alloc-inactive-table-body"></tbody>
+</table>
+</div>
 </div>
 <!-- SUPORTE -->
 <div id="page-suporte" class="page">
@@ -3652,16 +3659,26 @@ showToast('Colaborador excluído');
 renderColaboradores();
 }
 function renderAlocacoes() {
-const employees = getData(SK.employees).filter(function(e) { return e.status === 'active'; });
+const allEmployees = getData(SK.employees);
+const employees = allEmployees.filter(function(e) { return e.status === 'active'; });
 const assets = getData(SK.assets).filter(function(a) { return a.status === 'available'; });
-const allocations = getData(SK.allocations).filter(function(al) { return al.status === 'active'; });
+const allAllocations = getData(SK.allocations);
+const allocations = allAllocations.filter(function(al) { return al.status === 'active'; });
+const allocationsInativas = allAllocations.filter(function(al) { return al.status === 'inactive'; });
 document.getElementById('alloc-emp').innerHTML = '<option value="">Selecione...</option>' + employees.map(function(e) { return '<option value="' + e.id + '">' + e.name + ' - ' + e.depto + ' (' + e.email + ')' + '</option>'; }).join('');
 document.getElementById('alloc-asset').innerHTML = '<option value="">Selecione...</option>' + assets.map(function(a) { return '<option value="' + a.uid + '">' + a.uid + ' - ' + a.brand + ' ' + a.model + '</option>'; }).join('');
 const tbody = document.getElementById('alloc-table-body');
 tbody.innerHTML = allocations.map(function(al) {
-const emp = employees.find(function(e) { return e.id == al.employee_id; });
+const emp = allEmployees.find(function(e) { return e.id == al.employee_id; });
 return '<tr><td><strong>' + (emp ? emp.name : 'N/A') + '</strong></td><td>' + (emp ? emp.depto : 'N/A') + '</td><td class="uid-cell">' + al.asset_uid + '</td><td>' + new Date(al.date).toLocaleDateString('pt-BR') + '</td><td><span class="badge badge-assigned">Alocado</span></td><td>' + (isAdminUser() ? '<button class="btn btn-warning-outline btn-sm" onclick="desalocarAtivo(\'' + al.id + '\')">Desalocar</button>' : '<span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span>') + '</td></tr>';
 }).join('') || '<tr><td colspan="6" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhuma alocação ativa</td></tr>';
+const tbodyInativas = document.getElementById('alloc-inactive-table-body');
+if (tbodyInativas) {
+tbodyInativas.innerHTML = allocationsInativas.map(function(al) {
+const emp = allEmployees.find(function(e) { return e.id == al.employee_id; });
+return '<tr><td><strong>' + (emp ? emp.name : 'N/A') + '</strong></td><td>' + (emp ? emp.depto : 'N/A') + '</td><td class="uid-cell">' + al.asset_uid + '</td><td>' + new Date(al.date).toLocaleDateString('pt-BR') + '</td><td><span class="badge badge-inactive">Devolvido</span></td></tr>';
+}).join('') || '<tr><td colspan="5" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhuma alocação inativa</td></tr>';
+}
 }
 function alocarAtivo() {
 if (bloquearSeNaoAdmin()) return;
