@@ -8,6 +8,11 @@ app.use(express.static("public"));
 // Apenas para desenvolvimento local (`node server.js`). Em produção o app é
 // servido como site ESTÁTICO na hospedagem compartilhada Hostinger (sem Node),
 // direto do public_html — ver .github/workflows/deploy-hostinger.yml.
+// Página pública de assinatura de termos (/assinar/<token>), sem login.
+app.get("/assinar/:token", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "assinar.html"));
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });

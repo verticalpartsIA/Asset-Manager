@@ -47,6 +47,7 @@ O **Asset Manager** centraliza esse controle e oferece:
 | --- | --- | --- |
 | Dashboard | Admin / Técnico | KPIs de ativos, alocações, colaboradores e estoque |
 | Meus Dispositivos | Usuário | Equipamentos alocados ao colaborador logado |
+| Termos de responsabilidade | Admin / Técnico | Termo único com até 10 equipamentos, fotos, envio por WhatsApp/e-mail e assinatura digital por link (`/assinar/<token>`); alimenta o Histórico de ativos |
 | Relatórios | Admin / Técnico | Filtros avançados e exportação em PDF e Excel |
 | Ativos | Admin / Técnico | Cadastro, edição, status, hardware e QR Code |
 | Estoque | Admin / Técnico | Películas de celular e tintas de impressora |

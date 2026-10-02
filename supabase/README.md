@@ -14,6 +14,7 @@ usuário reusa `public.profiles` — nada em `public` é alterado.
 | `20260810111650_asset_manager_hybrid_bridge.sql` | ✅ | `details` jsonb + tabela `app_state` (ponte JSONB) |
 | `20260810140305_asset_manager_mirror_keys.sql` | ✅ | `app_id`/`details` p/ espelho de employees/allocations (issue #3) |
 | `20260810150000_asset_manager_rls_by_role.sql` | ✅ | RLS por papel (issue #1) — leitura p/ todos, escrita só staff (Administrador via `profiles.level`); `app_state` mantém insert/update abertos, delete só staff |
+| `20261002120000_asset_manager_termos_assinatura.sql` | ⏳ | Termos de responsabilidade (issue #46): `termo_assinaturas`, RPCs públicas `termo_publico_obter`/`termo_publico_assinar` (token com hash, expiração, IP/UA, rate limit). **Aplicar antes de usar o envio para assinatura.** |
 
 ## Como aplicar
 
