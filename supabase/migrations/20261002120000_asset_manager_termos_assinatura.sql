@@ -39,10 +39,14 @@ create index if not exists termo_tentativas_ip_idx on asset_manager.termo_tentat
 alter table asset_manager.termo_assinaturas enable row level security;
 alter table asset_manager.termo_tentativas_invalidas enable row level security;
 
--- Staff autenticado lê e cria/atualiza (cancelar/reenviar). anon NÃO acessa as tabelas.
+-- Somente staff (Administrador/Técnico — asset_manager.is_staff()) lê e escreve; o snapshot
+-- e as evidências (nome, assinatura, IP, user agent) não ficam expostos a usuários comuns.
+-- anon NÃO acessa as tabelas: só as RPCs abaixo.
 drop policy if exists "termo_assinaturas_authenticated" on asset_manager.termo_assinaturas;
-create policy "termo_assinaturas_authenticated" on asset_manager.termo_assinaturas
-  as permissive for all to authenticated using (true) with check (true);
+drop policy if exists "termo_assinaturas_staff" on asset_manager.termo_assinaturas;
+create policy "termo_assinaturas_staff" on asset_manager.termo_assinaturas
+  as permissive for all to authenticated
+  using (asset_manager.is_staff()) with check (asset_manager.is_staff());
 grant select, insert, update on asset_manager.termo_assinaturas to authenticated;
 grant all on asset_manager.termo_assinaturas to service_role;
 grant all on asset_manager.termo_tentativas_invalidas to service_role;
