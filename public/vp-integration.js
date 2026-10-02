@@ -529,12 +529,20 @@
 
   // Envolve getData/saveData do app (definidos no script inline) para
   // escrever também no Supabase. Chamado pelo glue depois que o app carrega.
+  // Gravações remotas em andamento; whenSaved() resolve quando todas terminam
+  // (falhas ficam em VP._saveErr — VP.save não lança).
+  VP._pending = [];
+  VP.whenSaved = function () {
+    var lote = VP._pending.splice(0);
+    return Promise.all(lote);
+  };
+
   VP.wrapDataLayer = function () {
     if (typeof window.saveData === 'function' && !window.saveData.__vpWrapped) {
       var _save = window.saveData;
       window.saveData = function (key, data) {
         _save(key, data);            // mantém o localStorage (cache síncrono)
-        try { VP.save(key, data); } catch (e) {} // write-through async
+        try { VP._pending.push(Promise.resolve(VP.save(key, data)).catch(function () {})); } catch (e) {} // write-through async
       };
       window.saveData.__vpWrapped = true;
     }

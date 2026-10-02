@@ -4063,8 +4063,12 @@ finally { _sincTermosEmAndamento = false; }
 }
 // Devolve (sem avaria) todas as alocações ativas vinculadas ao termo — encadeado em memória, gravado depois de uma vez.
 function reverterAlocacoesDoTermo(est, termo, observacao) {
-let atual = est;
-est.allocations.filter(function(al) { return al.termo_id === termo.id && al.status === 'active'; }).forEach(function(al) {
+// Alocações que já existiam antes do termo (vinculação retroativa) continuam com o colaborador: só desvincula.
+let atual = { assets: est.assets, history: est.history, employees: est.employees, allocations: est.allocations.map(function(al) {
+if (al.termo_id === termo.id && al.termo_retroativo) { const c = Object.assign({}, al); delete c.termo_id; delete c.termo_status; delete c.termo_retroativo; return c; }
+return al;
+}) };
+atual.allocations.filter(function(al) { return al.termo_id === termo.id && al.status === 'active'; }).forEach(function(al) {
 const r = window.MovDomain.devolver(atual, { alocacaoId: al.id, estado: 'integro', observacao: observacao, termoId: termo.id, responsavel: responsavelAtual() });
 atual = { assets: r.assets, allocations: r.allocations, history: r.history, employees: atual.employees };
 });
@@ -4240,7 +4244,8 @@ if (indisponivel) { mostrarErroTermo('O ativo ' + indisponivel.asset_uid + ' nã
 const tpl = termoTemplateVigente();
 const termos = getData(SK.termos);
 const agora = new Date();
-const id = 'T' + agora.getFullYear().toString().slice(2) + String(agora.getMonth() + 1).padStart(2, '0') + String(agora.getDate()).padStart(2, '0') + '-' + String(termos.length + 1).padStart(3, '0');
+const sufixo = Array.from(crypto.getRandomValues(new Uint8Array(4))).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('').toUpperCase();
+const id = 'T' + agora.getFullYear().toString().slice(2) + String(agora.getMonth() + 1).padStart(2, '0') + String(agora.getDate()).padStart(2, '0') + '-' + sufixo; // aleatório: sem colisão entre administradores simultâneos
 const termo = {
 id: id, status: 'rascunho', colaborador_id: emp.id, colaborador_nome: emp.name, colaborador_email: emp.email || '',
 colaborador_cargo: emp.cargo || '', colaborador_departamento: emp.depto || '',
@@ -4255,7 +4260,7 @@ let est = estadoMovimentacao();
 termo.itens.forEach(function(item) {
 const jaEmPosse = est.allocations.find(function(al) { return al.status === 'active' && !al.termo_id && al.asset_uid === item.asset_uid && String(al.employee_id) === String(emp.id); });
 if (jaEmPosse) {
-est.allocations = est.allocations.map(function(al) { return al === jaEmPosse ? Object.assign({}, al, { termo_id: id, termo_status: 'pendente' }) : al; });
+est.allocations = est.allocations.map(function(al) { return al === jaEmPosse ? Object.assign({}, al, { termo_id: id, termo_status: 'pendente', termo_retroativo: true }) : al; });
 } else {
 const r = window.MovDomain.alocar(est, { assetUid: item.asset_uid, employeeId: emp.id, estado: item.estado, observacao: item.observacao, fotos: item.imagens, termoId: id, responsavel: responsavelAtual() });
 r.allocations = r.allocations.map(function(al) { return al.id === r.alocacao.id ? Object.assign({}, al, { termo_status: 'pendente' }) : al; });
@@ -4405,11 +4410,16 @@ doc.save('Termo-' + t.id + '.pdf');
 function estadoMovimentacao() {
 return { assets: getData(SK.assets), allocations: getData(SK.allocations), history: getData(SK.assetHistory), employees: getData(SK.employees) };
 }
+// Atômico no estado local (que alimenta toda a interface). A replicação para o Supabase é
+// write-through assíncrona, como no resto do app: se falhar, avisamos em vez de fingir sucesso.
 function aplicarMovimentacao(r, extras) {
 window.MovDomain.aplicarAtomicamente(
 { get: function(k) { return getData(k); }, set: function(k, v) { saveData(k, v); } },
 [{ chave: SK.assets, valor: r.assets }, { chave: SK.allocations, valor: r.allocations }, { chave: SK.assetHistory, valor: r.history }].concat(extras || [])
 );
+if (window.VP && VP.enabled && VP.ready && VP.whenSaved) {
+VP.whenSaved().then(function() { if (VP._saveErr) showToast('Movimentação salva neste navegador, mas a sincronização com o servidor falhou. Confira o selo de sincronização antes de continuar.'); });
+}
 }
 let alocParaRealocar = null;
 function abrirModalRealocar(allocId) {
