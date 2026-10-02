@@ -32,7 +32,8 @@
     tema: 'am_tema', sessao: 'am_sessao', systemLog: 'am_system_log',
     sequenciaAtivos: 'am_sequencia_ativos', uidsLiberados: 'am_uids_liberados', tickets: 'am_tickets',
     ticketsTrash: 'am_tickets_trash', comments: 'am_comments', articles: 'am_articles',
-    assetHistory: 'am_asset_history', checklists: 'am_checklists', supplies: 'am_supplies',
+    assetHistory: 'am_asset_history', termos: 'am_termos', termoTemplates: 'am_termo_templates',
+    checklists: 'am_checklists', supplies: 'am_supplies',
     tiposAtivo: 'am_tipos_ativo', notifications: 'am_notifications',
     notifDedup: 'am_notif_dedup', emailQueue: 'am_email_queue', dashboardOrder: 'am_dashboard_order'
   };
@@ -45,7 +46,8 @@
     systemLog: SK.systemLog, sequenciaAtivos: SK.sequenciaAtivos, uidsLiberados: SK.uidsLiberados,
     tickets: SK.tickets,
     ticketsTrash: SK.ticketsTrash, comments: SK.comments, articles: SK.articles,
-    assetHistory: SK.assetHistory, checklists: SK.checklists, supplies: SK.supplies,
+    assetHistory: SK.assetHistory, termos: SK.termos, termoTemplates: SK.termoTemplates,
+    checklists: SK.checklists, supplies: SK.supplies,
     tiposAtivo: SK.tiposAtivo, notifications: SK.notifications, notifDedup: SK.notifDedup,
     emailQueue: SK.emailQueue, dashboardOrder: SK.dashboardOrder
   };
@@ -116,7 +118,7 @@
   function idResolver(col) {
     if (col === 'assets') return function (r) { return r && (r.uid != null ? r.uid : r.id); };
     var withId = { employees:1, allocations:1, tickets:1, ticketsTrash:1, comments:1,
-                   articles:1, assetHistory:1, checklists:1, supplies:1, notifications:1 };
+                   articles:1, assetHistory:1, termos:1, termoTemplates:1, checklists:1, supplies:1, notifications:1 };
     if (withId[col]) return function (r) { return r && r.id; };
     return null;
   }
@@ -375,6 +377,31 @@
       console.warn('[VP] espelho de colaboradores do portal falhou:', e && e.message);
     }
   }
+
+  // ---- Termos de responsabilidade (issue #46): assinatura digital por link ----
+  // Tabela asset_manager.termo_assinaturas (migration 20261002120000). Só o HASH
+  // do token é gravado; a página pública /assinar/<token> usa RPCs próprias.
+  VP.termoAssinatura = {
+    criar: async function (row) {
+      var r = await db().from('termo_assinaturas').insert({
+        termo_id: row.termo_id, token_hash: row.token_hash, canal: row.canal,
+        expira_em: row.expira_em, conteudo: row.conteudo,
+        criado_por: (VP.user && VP.user.id) || null
+      });
+      if (r.error) throw r.error;
+    },
+    // Invalida links ainda pendentes do termo (reenvio/cancelamento).
+    cancelarPendentes: async function (termoId) {
+      var r = await db().from('termo_assinaturas').update({ status: 'cancelado' }).eq('termo_id', termoId).eq('status', 'enviado');
+      if (r.error) throw r.error;
+    },
+    buscar: async function (termoIds, comEvidencias) {
+      var cols = 'termo_id,status,expira_em,criado_em,assinado_em,assinante_nome' + (comEvidencias ? ',assinatura_img,ip,user_agent,documento_hash' : '');
+      var r = await db().from('termo_assinaturas').select(cols).in('termo_id', termoIds);
+      if (r.error) throw r.error;
+      return r.data || [];
+    }
+  };
 
   VP.loadPortalEmployees = async function () {
     if (!VP.authed || !client) return false;

@@ -24,6 +24,9 @@ DirectoryIndex index.html index.php
   RewriteCond %{HTTPS} off
   RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
 
+  # Página pública de assinatura de termos (sem login): /assinar/<token>
+  RewriteRule ^assinar/[A-Za-z0-9]+/?$ assinar.html [L]
+
   # Rotas internas do app: /suporte, /ativos, /checklists etc. devem carregar
   # a mesma aplicação estática, que decide a tela ativa no navegador.
   RewriteCond %{REQUEST_FILENAME} !-f
