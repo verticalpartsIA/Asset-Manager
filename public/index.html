@@ -22,6 +22,9 @@
 <script type="module" src="./js/domain/uid.js"></script>
 <!-- Classificação de SLA (issue #13), testada em tests/domain/sla.test.mjs -->
 <script type="module" src="./js/domain/sla.js"></script>
+<!-- Movimentação de ativos (issue #47) e Termos de responsabilidade (issue #46), testados em tests/domain/ -->
+<script type="module" src="./js/domain/movimentacao.js"></script>
+<script type="module" src="./js/domain/termos.js"></script>
 <style id="vp-a11y">
   /* #23 — color-scheme acompanha o tema do app (controles/scrollbars nativos) */
   :root[data-theme="dark"]  { color-scheme: dark; }
@@ -878,6 +881,7 @@ tbody tr:hover { background: #FAFAF8; }
 <a class="nav-item" id="nav-estoque" onclick="showPage(&#39;estoque&#39;, this)" style="display: flex;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8L12 3 3 8l9 5 9-5z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path></svg><span>Estoque</span></a>
 <a class="nav-item" id="nav-colaboradores" onclick="showPage(&#39;colaboradores&#39;, this)" style="display: flex;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg><span>Colaboradores</span></a>
 <a class="nav-item" id="nav-alocacoes" onclick="showPage(&#39;alocacoes&#39;, this)" style="display: flex;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg><span>Alocações</span></a>
+<a class="nav-item" id="nav-termos" onclick="showPage(&#39;termos&#39;, this)" style="display: flex;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="13" y2="17"></line></svg><span>Termos de responsabilidade</span></a>
 <a class="nav-item" id="nav-suporte" onclick="showPage(&#39;suporte&#39;, this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg><span>Suporte</span></a>
 <a class="nav-item" id="nav-historico" onclick="showPage(&#39;historico&#39;, this)" style="display: flex;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15.5 15.5"></polyline></svg><span>Histórico de Ativos</span></a>
 <a class="nav-item" id="nav-checklists" onclick="showPage(&#39;checklists&#39;, this)" style="display: flex;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg><span>Checklists</span></a>
@@ -1193,6 +1197,7 @@ Atualizar
 </div>
 </div>
 </div>
+<div id="alloc-aviso-inativos" role="alert" style="display: none; margin-bottom: 16px; padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(245, 158, 11, 0.55); background: rgba(245, 158, 11, 0.12); font-size: 13px;"></div>
 <div class="table-card">
 <div class="table-header-bar"><div class="table-title">Alocações Ativas</div></div>
 <table>
@@ -1205,6 +1210,23 @@ Atualizar
 <table>
 <thead><tr><th>Colaborador</th><th>Departamento</th><th>Ativo</th><th>Data da Alocação</th><th>Status</th></tr></thead>
 <tbody id="alloc-inactive-table-body"></tbody>
+</table>
+</div>
+</div>
+<!-- TERMOS DE RESPONSABILIDADE -->
+<div id="page-termos" class="page">
+<h1 class="page-heading">Termos de Responsabilidade</h1>
+<p class="page-subtitle">Entrega formal de equipamentos com assinatura digital e registro automático no Histórico de ativos</p>
+<div class="filter-bar" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; align-items: flex-end;">
+<div class="filter-field"><label for="termos-busca">Buscar colaborador</label><input type="text" id="termos-busca" placeholder="Nome do colaborador" oninput="renderTermos()"></div>
+<div class="filter-field"><label for="termos-filtro-status">Status</label><select id="termos-filtro-status" onchange="renderTermos()"><option value="todos">Todos</option><option value="rascunho">Pendente de envio</option><option value="enviado">Enviado</option><option value="assinado">Assinado</option><option value="expirado">Expirado</option><option value="cancelado">Cancelado</option></select></div>
+<div class="filter-field" style="flex: 0 0 auto;"><button class="btn btn-primary" id="btn-novo-termo" onclick="abrirModalNovoTermo()">+ Novo termo</button> <button class="btn btn-outline" id="btn-modelo-termo" onclick="abrirModalModeloTermo()">Modelo do termo</button></div>
+</div>
+<div class="table-card">
+<div class="table-header-bar"><div class="table-title">Termos emitidos</div><div class="table-count" id="termos-count-info"><strong>0</strong> termos</div></div>
+<table>
+<thead><tr><th>Código</th><th>Colaborador</th><th>Data</th><th>Itens</th><th>Status</th><th>Ações</th></tr></thead>
+<tbody id="termos-table-body"></tbody>
 </table>
 </div>
 </div>
@@ -1430,6 +1452,8 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <option value="todos">Todos</option>
 <option value="alocacao">Alocação</option>
 <option value="desalocacao">Desalocação</option>
+<option value="status">Alteração de Status</option>
+<option value="inativacao">Inativação de Colaborador</option>
 <option value="ocorrencia">Ocorrência (Chamado)</option>
 <option value="parecer">Parecer Técnico</option>
 <option value="importado">Importado (ClickUp)</option>
@@ -1469,10 +1493,11 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
         <div class="form-field">
             <label>Ativo <span class="required-mark">*</span></label>
             <select id="hist-ativo" required="" onchange="popularUsuarioAnteriorHistorico()"><option value="">Selecione...</option></select>
+            <div id="hist-ativo-dica" style="display: none; font-size: 11px; color: var(--text-muted); margin-top: 4px;"></div>
         </div>
         <div class="form-field" style="position: relative;">
             <label>Usuário Anterior / Com quem está</label>
-            <input type="text" id="hist-usuario-anterior" list="datalist-colaboradores" placeholder="Nome do colaborador que utilizava o ativo" style="background: rgba(245, 197, 24, 0.10); border: 1.5px solid var(--gold-primary); font-weight: 600;">
+            <input type="text" id="hist-usuario-anterior" list="datalist-colaboradores" oninput="atualizarAtivosPorColaboradorHistorico()" onchange="atualizarAtivosPorColaboradorHistorico()" placeholder="Nome do colaborador que utilizava o ativo" style="background: rgba(245, 197, 24, 0.10); border: 1.5px solid var(--gold-primary); font-weight: 600;">
             <datalist id="datalist-colaboradores"></datalist>
             <label style="position: absolute; bottom: -40px; left: 0; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; color: var(--text-secondary); white-space: nowrap;">
                 <input type="checkbox" id="hist-mesmo-usuario" onchange="toggleMesmoUsuario()" style="width: 16px; height: 16px; min-width: 16px; padding: 0; margin: 0; border: none; background: none; border-radius: 0; accent-color: var(--gold-primary); flex-shrink: 0;">
@@ -1481,7 +1506,7 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
         </div>
 <div class="form-field" id="campo-usuario-novo">
 <label>Novo Usuário / Colaborador Atual</label>
-<input type="text" id="hist-usuario-novo" list="datalist-colaboradores" placeholder="Nome do novo colaborador que receberá o ativo">
+<input type="text" id="hist-usuario-novo" list="datalist-colaboradores" oninput="atualizarAtivosPorColaboradorHistorico()" onchange="atualizarAtivosPorColaboradorHistorico()" placeholder="Nome do novo colaborador que receberá o ativo">
 </div>
 <div class="form-field">
 <label>Condição do Equipamento <span class="required-mark">*</span></label>
@@ -1805,6 +1830,61 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 </div>
 </div>
 </div>
+<!-- MODAL REALOCAR (issue #47) -->
+<div id="modal-realocar" class="modal-overlay">
+<div class="modal">
+<button class="modal-close" onclick="fecharModal(&#39;modal-realocar&#39;)" aria-label="Fechar">×</button>
+<div class="modal-title">Realocar Ativo</div>
+<div class="modal-subtitle">Registra a devolução pelo colaborador atual e a nova alocação, ambas no Histórico de ativos.</div>
+<div class="form-field" style="margin-bottom: 16px;"><label>Ativo</label><input type="text" id="realocar-ativo" readonly="" style="opacity: 0.7;"></div>
+<div class="form-field" style="margin-bottom: 16px;"><label for="realocar-novo-colab">Novo colaborador (ativo) <span class="required-mark">*</span></label><select id="realocar-novo-colab"><option value="">Selecione...</option></select></div>
+<div class="modal-actions"><button class="btn btn-secondary" onclick="fecharModal(&#39;modal-realocar&#39;)">Cancelar</button><button class="btn btn-primary" onclick="confirmarRealocacao()">Confirmar realocação</button></div>
+</div>
+</div>
+<!-- MODAL NOVO TERMO (issue #46) -->
+<div id="modal-termo" class="modal-overlay">
+<div class="modal" style="max-width: 760px; max-height: 90vh; overflow-y: auto;">
+<button class="modal-close" onclick="fecharModal(&#39;modal-termo&#39;)" aria-label="Fechar">×</button>
+<div class="modal-title">Novo Termo de Responsabilidade</div>
+<div class="modal-subtitle">Modelo único para todos os colaboradores. Ao salvar, os equipamentos são alocados e registrados no Histórico (pendente de assinatura).</div>
+<div class="form-field" style="margin-bottom: 12px;"><label for="termo-colab">Colaborador (ativos) <span class="required-mark">*</span></label><select id="termo-colab" onchange="atualizarColaboradorTermo()"><option value="">Selecione...</option></select></div>
+<div id="termo-colab-dados" style="display: none; margin-bottom: 12px; padding: 10px 12px; border-radius: 8px; background: rgba(245, 197, 24, 0.12); border: 1px solid rgba(245, 197, 24, 0.45); font-size: 13px;"></div>
+<div class="form-grid" style="margin-bottom: 12px;">
+<div class="form-field"><label for="termo-doc">Documento (CPF/RG)</label><input type="text" id="termo-doc" placeholder="Documento do colaborador"></div>
+<div class="form-field"><label for="termo-tel">Telefone / WhatsApp</label><input type="text" id="termo-tel" placeholder="(00) 00000-0000"></div>
+</div>
+<div class="form-field" style="margin-bottom: 8px;"><label for="termo-busca-ativo">Equipamentos <span id="termo-contador">(0/10)</span> <span class="required-mark">*</span></label>
+<div style="display: flex; gap: 8px;"><input type="text" id="termo-busca-ativo" placeholder="Buscar ativo disponível (UID, marca, modelo)" oninput="renderSeletorAtivosTermo()" style="flex: 1;"></div></div>
+<div id="termo-ativos-disponiveis" style="max-height: 150px; overflow-y: auto; border: 1px solid var(--border-subtle, #d1d5db); border-radius: 8px; margin-bottom: 12px;"></div>
+<div id="termo-itens" style="margin-bottom: 12px;"></div>
+<div class="form-field" style="margin-bottom: 12px;"><label for="termo-imagens">Imagens do termo (JPG, PNG ou WEBP, até 5 MB cada)</label><input type="file" id="termo-imagens" accept="image/jpeg,image/png,image/webp" multiple onchange="adicionarImagensTermo(this)"><div id="termo-imagens-preview" style="display: none; flex-wrap: wrap; gap: 8px; margin-top: 8px;"></div></div>
+<div id="termo-erro" role="alert" style="display: none; color: #dc2626; font-size: 12px; margin-bottom: 8px;"></div>
+<div class="modal-actions"><button class="btn btn-secondary" onclick="fecharModal(&#39;modal-termo&#39;)">Cancelar</button><button class="btn btn-primary" onclick="salvarNovoTermo()">Salvar termo</button></div>
+</div>
+</div>
+<!-- MODAL ENVIO DO TERMO -->
+<div id="modal-termo-envio" class="modal-overlay">
+<div class="modal">
+<button class="modal-close" onclick="fecharModal(&#39;modal-termo-envio&#39;)" aria-label="Fechar">×</button>
+<div class="modal-title">Enviar para assinatura</div>
+<div class="modal-subtitle" id="termo-envio-sub"></div>
+<div class="form-field" style="margin-bottom: 12px;"><label for="termo-envio-canal">Canal</label><select id="termo-envio-canal" onchange="atualizarCamposEnvioTermo()"><option value="WHATSAPP">WhatsApp</option><option value="EMAIL">E-mail</option></select></div>
+<div class="form-field" style="margin-bottom: 12px;"><label for="termo-envio-destino" id="termo-envio-destino-label">Telefone / WhatsApp</label><input type="text" id="termo-envio-destino"></div>
+<div class="form-field" style="margin-bottom: 12px;"><label for="termo-envio-dias">Validade do link (dias)</label><input type="number" id="termo-envio-dias" min="1" max="30" value="7"></div>
+<div id="termo-envio-aviso" role="alert" style="display: none; color: #b45309; font-size: 12px; margin-bottom: 8px;"></div>
+<div class="modal-actions"><button class="btn btn-secondary" onclick="fecharModal(&#39;modal-termo-envio&#39;)">Cancelar</button><button class="btn btn-primary" onclick="confirmarEnvioTermo()">Gerar link e enviar</button></div>
+</div>
+</div>
+<!-- MODAL MODELO DO TERMO -->
+<div id="modal-termo-modelo" class="modal-overlay">
+<div class="modal" style="max-width: 760px;">
+<button class="modal-close" onclick="fecharModal(&#39;modal-termo-modelo&#39;)" aria-label="Fechar">×</button>
+<div class="modal-title">Modelo do termo (versão <span id="termo-modelo-versao">1</span>)</div>
+<div class="modal-subtitle">Campos variáveis: {{colaborador_nome}}, {{colaborador_documento}}, {{colaborador_cargo}}, {{colaborador_departamento}}, {{data}}, {{equipamentos}}. Ao salvar, é criada uma nova versão; termos já emitidos mantêm a versão usada.</div>
+<div class="form-field" style="margin-bottom: 12px;"><textarea id="termo-modelo-texto" style="min-height: 280px; font-family: inherit;"></textarea></div>
+<div class="modal-actions"><button class="btn btn-secondary" onclick="fecharModal(&#39;modal-termo-modelo&#39;)">Cancelar</button><button class="btn btn-primary" onclick="salvarModeloTermo()">Salvar nova versão</button></div>
+</div>
+</div>
 <!-- MODAL STATUS -->
 <div id="modal-status" class="modal-overlay">
 <div class="modal">
@@ -1813,16 +1893,26 @@ Se você esqueceu sua sen...</div><div class="article-tags"><span class="tag">se
 <div class="modal-subtitle" id="modal-status-uid"></div>
 <div class="form-field">
 <label>Novo Status</label>
-<select id="novo-status">
+<select id="novo-status" onchange="validarFormStatus()">
 <option value="available">Disponível</option>
 <option value="assigned">Alocado</option>
 <option value="maintenance">Manutenção</option>
 <option value="inactive">Inativo</option>
 </select>
 </div>
+<div class="form-field">
+<label for="status-motivo">Motivo da alteração *</label>
+<textarea id="status-motivo" placeholder="Descreva o motivo da mudança de status" style="min-height: 80px;" oninput="validarFormStatus()"></textarea>
+</div>
+<div class="form-field" id="status-foto-field" style="display: none;">
+<label for="status-foto">Anexar foto * (obrigatória para Manutenção)</label>
+<input type="file" id="status-foto" accept="image/*" multiple onchange="previewFotoStatus(this)">
+<div id="status-foto-preview" style="display: none; flex-wrap: wrap; gap: 10px; margin-top: 8px;"></div>
+</div>
+<div id="status-erro" role="alert" style="display: none; color: #dc2626; font-size: 12px; margin-bottom: 8px;"></div>
 <div class="modal-actions">
 <button class="btn btn-secondary" onclick="fecharModal(&#39;modal-status&#39;)">Cancelar</button>
-<button class="btn btn-primary" onclick="confirmarAlteracaoStatus()">Confirmar</button>
+<button class="btn btn-primary" id="btn-confirmar-status" onclick="confirmarAlteracaoStatus()">Confirmar</button>
 </div>
 </div>
 </div>
@@ -2116,6 +2206,8 @@ ticketsTrash: 'am_tickets_trash',
 comments: 'am_comments',
 articles: 'am_articles',
 assetHistory: 'am_asset_history',
+termos: 'am_termos',
+termoTemplates: 'am_termo_templates',
 checklists: 'am_checklists',
 supplies: 'am_supplies',
 tiposAtivo: 'am_tipos_ativo',
@@ -2139,6 +2231,8 @@ const ROUTE_TO_PAGE = {
 '/estoque': 'estoque',
 '/colaboradores': 'colaboradores',
 '/alocacoes': 'alocacoes',
+'/termos': 'termos',
+'/termos-de-responsabilidade': 'termos',
 '/suporte': 'suporte',
 '/historico': 'historico',
 '/historico-de-ativos': 'historico',
@@ -2155,6 +2249,7 @@ ativos: '/ativos',
 estoque: '/estoque',
 colaboradores: '/colaboradores',
 alocacoes: '/alocacoes',
+termos: '/termos',
 suporte: '/suporte',
 historico: '/historico',
 checklists: '/checklists',
@@ -2169,6 +2264,7 @@ ativos: 'nav-ativos',
 estoque: 'nav-estoque',
 colaboradores: 'nav-colaboradores',
 alocacoes: 'nav-alocacoes',
+termos: 'nav-termos',
 suporte: 'nav-suporte',
 historico: 'nav-historico',
 checklists: 'nav-checklists',
@@ -2501,6 +2597,7 @@ document.getElementById('nav-ativos').style.display = 'flex';
 document.getElementById('nav-estoque').style.display = isUser ? 'none' : 'flex';
 document.getElementById('nav-colaboradores').style.display = isUser ? 'none' : 'flex';
 document.getElementById('nav-alocacoes').style.display = isUser ? 'none' : 'flex';
+document.getElementById('nav-termos').style.display = isUser ? 'none' : 'flex';
 document.getElementById('nav-historico').style.display = isUser ? 'none' : 'flex';
 document.getElementById('nav-checklists').style.display = 'flex';
 document.getElementById('btn-tab-meus-chamados').style.display = isTecnico ? 'none' : 'inline-block';
@@ -2594,6 +2691,7 @@ if (pageName === 'colaboradores') renderColaboradores();
 if (pageName === 'alocacoes') renderAlocacoes();
 if (pageName === 'suporte') renderSuporte();
 if (pageName === 'historico') renderHistorico();
+if (pageName === 'termos') renderTermos();
 if (pageName === 'checklists') renderChecklists();
 if (pageName === 'configuracoes') renderConfiguracoes();
 if (pageName === 'log') renderLog();
@@ -2881,6 +2979,8 @@ if (!localStorage.getItem(SK.tickets)) localStorage.setItem(SK.tickets, JSON.str
 if (!localStorage.getItem(SK.ticketsTrash)) localStorage.setItem(SK.ticketsTrash, JSON.stringify([]));
 if (!localStorage.getItem(SK.comments)) localStorage.setItem(SK.comments, JSON.stringify([]));
 if (!localStorage.getItem(SK.assetHistory)) localStorage.setItem(SK.assetHistory, JSON.stringify([]));
+if (!localStorage.getItem(SK.termos)) localStorage.setItem(SK.termos, JSON.stringify([]));
+if (!localStorage.getItem(SK.termoTemplates)) localStorage.setItem(SK.termoTemplates, JSON.stringify([]));
 if (!localStorage.getItem(SK.checklists)) localStorage.setItem(SK.checklists, JSON.stringify({}));
 if (!localStorage.getItem(SK.supplies)) localStorage.setItem(SK.supplies, JSON.stringify([]));
 if (!localStorage.getItem(SK.tiposAtivo)) localStorage.setItem(SK.tiposAtivo, JSON.stringify([]));
@@ -3145,7 +3245,7 @@ const observacao = userScoped ? ('Desde ' + (al && al.date ? new Date(al.date).t
 let infoExtra = '—';
 if (a.type === 'CL') {
 infoExtra = '<span style="font-size: 11px;">Tel: ' + (a.telefone || '—') + '<br>IMEI: ' + (a.imei || a.serial || '—') + '</span>';
-} else if (a.type === 'NB') {
+} else if (a.type === 'NB' || a.type === 'DK') {
 infoExtra = '<span style="font-size: 11px; font-family: monospace;">ST: ' + (a.serviceTag || '—') + '</span>';
 }
 let actions = '<button class="btn btn-outline btn-sm" onclick="mostrarDetalhesAtivo(\'' + a.uid + '\')">Detalhes</button> <button class="btn btn-outline btn-sm" onclick="mostrarQR(\'' + a.uid + '\')">QR</button>';
@@ -3176,7 +3276,7 @@ html += '<div class="form-field"><label>Sistema</label><div style="padding: 10px
 html += '<div class="form-field"><label>Versão</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.versao || '—') + '</div></div>';
 html += '<div class="form-field"><label>Atualizado</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.atualizado || '—') + '</div></div>';
 html += '<div class="form-field"><label>Intune</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.intune || '—') + '</div></div>';
-} else if(a.type === 'NB') {
+} else if(a.type === 'NB' || a.type === 'DK') {
 html += '<div class="form-field"><label>Service Tag</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.serviceTag || '—') + '</div></div>';
 html += '<div class="form-field"><label>Sistema Operacional</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.so || '—') + '</div></div>';
 html += '<div class="form-field"><label>Windows Update</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.winupdate || '—') + '</div></div>';
@@ -3205,6 +3305,7 @@ html += '</div>';
 document.getElementById('modal-asset-details-content').innerHTML = html;
 document.getElementById('modal-asset-details').classList.add('active');
 }
+let statusFotosSelecionadas = [];
 function abrirModalStatus(assetId) {
 if (bloquearSeNaoAdmin()) return;
 assetParaAlterarStatus = assetId;
@@ -3212,19 +3313,88 @@ const assets = getData(SK.assets);
 const asset = assets.find(function(a) { return a.id === assetId; });
 document.getElementById('modal-status-uid').textContent = asset.uid;
 document.getElementById('novo-status').value = asset.status;
+document.getElementById('status-motivo').value = '';
+statusFotosSelecionadas = [];
+renderFotoPreviewStatus();
+validarFormStatus(true);
 document.getElementById('modal-status').classList.add('active');
+}
+function previewFotoStatus(input) {
+if (!input.files || !input.files.length) return;
+const arquivos = Array.from(input.files);
+let pendentes = arquivos.length;
+arquivos.forEach(function(file) {
+const reader = new FileReader();
+reader.onload = function(e) {
+statusFotosSelecionadas.push(e.target.result);
+pendentes--;
+if (pendentes === 0) { input.value = ''; renderFotoPreviewStatus(); validarFormStatus(); }
+};
+reader.readAsDataURL(file);
+});
+}
+function removerFotoStatus(idx) {
+statusFotosSelecionadas.splice(idx, 1);
+renderFotoPreviewStatus();
+validarFormStatus();
+}
+function renderFotoPreviewStatus() {
+const preview = document.getElementById('status-foto-preview');
+if (!statusFotosSelecionadas.length) { preview.style.display = 'none'; preview.innerHTML = ''; return; }
+preview.style.display = 'flex';
+preview.innerHTML = statusFotosSelecionadas.map(function(foto, idx) {
+return '<div style="position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-subtle, #d1d5db);"><img src="' + foto + '" alt="Foto anexada" style="width: 100%; height: 100%; object-fit: cover; display: block;"><button type="button" onclick="removerFotoStatus(' + idx + ')" title="Remover foto" aria-label="Remover foto" style="position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; border-radius: 50%; border: none; background: rgba(0,0,0,0.65); color: #fff; font-size: 12px; line-height: 1; cursor: pointer;">×</button></div>';
+}).join('');
+}
+// Valida motivo (sempre) e foto (somente Manutenção); bloqueia o botão Confirmar.
+function validarFormStatus(silencioso) {
+const novoStatus = document.getElementById('novo-status').value;
+const motivo = document.getElementById('status-motivo').value.trim();
+const exigeFoto = novoStatus === 'maintenance';
+document.getElementById('status-foto-field').style.display = exigeFoto ? '' : 'none';
+let erro = '';
+if (!motivo) erro = 'Informe o motivo da alteração de status.';
+else if (exigeFoto && statusFotosSelecionadas.length === 0) erro = 'Anexe ao menos 1 foto para colocar o ativo em Manutenção.';
+const el = document.getElementById('status-erro');
+el.textContent = erro;
+el.style.display = (erro && !silencioso) ? 'block' : 'none';
+document.getElementById('btn-confirmar-status').disabled = !!erro;
+return !erro;
 }
 function confirmarAlteracaoStatus() {
 if (bloquearSeNaoAdmin()) return;
+if (!validarFormStatus()) return;
 const novoStatus = document.getElementById('novo-status').value;
+const motivo = document.getElementById('status-motivo').value.trim();
 const assets = getData(SK.assets);
 const asset = assets.find(function(a) { return a.id === assetParaAlterarStatus; });
 if (asset) {
 const statusAntigo = asset.status;
 asset.status = novoStatus;
 saveData(SK.assets, assets);
-addLog('Status Alterado', 'Ativo ' + asset.uid + ' teve status alterado de ' + STATUS_LABELS[statusAntigo] + ' para ' + STATUS_LABELS[novoStatus], 'alteracao');
+const historico = getData(SK.assetHistory);
+historico.push({
+id: 'H' + Date.now(),
+asset_uid: asset.uid,
+asset_desc: asset.brand + ' ' + asset.model,
+usuario_anterior: '—',
+condicao: novoStatus === 'maintenance' ? 'avariado' : 'integro',
+tipo: 'status',
+status_anterior: statusAntigo,
+status_novo: novoStatus,
+motivo: motivo,
+parecer: 'Status alterado de ' + STATUS_LABELS[statusAntigo] + ' para ' + STATUS_LABELS[novoStatus] + '. Motivo: ' + motivo,
+fotos: statusFotosSelecionadas.slice(),
+foto: null,
+autor: currentUser.name,
+autor_role: currentUser.role,
+origem: 'sistema',
+created_at: new Date().toISOString()
+});
+saveData(SK.assetHistory, historico);
+addLog('Status Alterado', 'Ativo ' + asset.uid + ' teve status alterado de ' + STATUS_LABELS[statusAntigo] + ' para ' + STATUS_LABELS[novoStatus] + '. Motivo: ' + motivo, 'alteracao');
 showToast('Status alterado para ' + STATUS_LABELS[novoStatus] + '!');
+statusFotosSelecionadas = [];
 fecharModal('modal-status');
 renderAtivos();
 }
@@ -3312,7 +3482,7 @@ html = `
 <div class="form-field"><label>Atualizado?</label><select id="${prefix}atualizado"><option value="Sim"${sel('atualizado','Sim')}>Sim</option><option value="Não"${sel('atualizado','Não')}>Não</option></select></div>
 <div class="form-field"><label>Ingressou no Intune?</label><select id="${prefix}intune"><option value="Sim"${sel('intune','Sim')}>Sim</option><option value="Não"${sel('intune','Não')}>Não</option></select></div>
 `;
-} else if (tipo === 'NB') {
+} else if (tipo === 'NB' || tipo === 'DK') {
 html = `
 <div class="form-field"><label>Service Tag</label><input type="text" id="${prefix}servicetag" placeholder="Service Tag Dell/HP" value="${v('serviceTag')}"></div>
 <div class="form-field"><label>Sistema Operacional</label><input type="text" id="${prefix}so" placeholder="Ex: Windows 11 Pro" value="${v('so')}"></div>
@@ -3373,7 +3543,7 @@ newAsset.sistema = document.getElementById('cad-sistema')?.value || '';
 newAsset.versao = document.getElementById('cad-versao')?.value || '';
 newAsset.atualizado = document.getElementById('cad-atualizado')?.value || '';
 newAsset.intune = document.getElementById('cad-intune')?.value || '';
-} else if(tipo === 'NB') {
+} else if(tipo === 'NB' || tipo === 'DK') {
 newAsset.serviceTag = document.getElementById('cad-servicetag')?.value || '';
 newAsset.so = document.getElementById('cad-so')?.value || '';
 newAsset.winupdate = document.getElementById('cad-winupdate')?.value || '';
@@ -3445,7 +3615,7 @@ a.sistema = document.getElementById('edit-sistema')?.value || '';
 a.versao = document.getElementById('edit-versao')?.value || '';
 a.atualizado = document.getElementById('edit-atualizado')?.value || '';
 a.intune = document.getElementById('edit-intune')?.value || '';
-} else if (a.type === 'NB') {
+} else if (a.type === 'NB' || a.type === 'DK') {
 a.serviceTag = document.getElementById('edit-servicetag')?.value || '';
 a.so = document.getElementById('edit-so')?.value || '';
 a.winupdate = document.getElementById('edit-winupdate')?.value || '';
@@ -3749,18 +3919,40 @@ showToast('Colaborador excluído');
 renderColaboradores();
 }
 function renderAlocacoes() {
+sincronizarInativacoesPendentes();
 const allEmployees = getData(SK.employees);
 const employees = allEmployees.filter(function(e) { return e.status === 'active'; });
 const assets = getData(SK.assets).filter(function(a) { return a.status === 'available'; });
 const allAllocations = getData(SK.allocations);
 const allocations = allAllocations.filter(function(al) { return al.status === 'active'; });
 const allocationsInativas = allAllocations.filter(function(al) { return al.status === 'inactive'; });
+const termos = getData(SK.termos);
 document.getElementById('alloc-emp').innerHTML = '<option value="">Selecione...</option>' + employees.map(function(e) { return '<option value="' + e.id + '">' + e.name + ' - ' + e.depto + ' (' + e.email + ')' + '</option>'; }).join('');
 document.getElementById('alloc-asset').innerHTML = '<option value="">Selecione...</option>' + assets.map(function(a) { return '<option value="' + a.uid + '">' + a.uid + ' - ' + a.brand + ' ' + a.model + '</option>'; }).join('');
 const tbody = document.getElementById('alloc-table-body');
+// Lista = alocações ativas de colaboradores ativos + de inativos que ainda têm ativos em posse (issue #47).
+const naLista = window.MovDomain.colaboradoresNaListaDeAlocacao(allEmployees, allAllocations);
+const idsNaLista = {};
+naLista.forEach(function(x) { idsNaLista[String(x.employee.id)] = x; });
+const pendentesInativos = naLista.filter(function(x) { return x.inativo; });
+const avisoPend = document.getElementById('alloc-aviso-inativos');
+if (avisoPend) {
+avisoPend.style.display = pendentesInativos.length ? 'block' : 'none';
+avisoPend.innerHTML = pendentesInativos.length ? ('<strong>Atenção:</strong> ' + pendentesInativos.length + ' colaborador(es) inativo(s) ainda com ativos em posse: ' + pendentesInativos.map(function(x) { return x.employee.name + ' (' + x.pendentes.length + ')'; }).join(', ') + '. Registre a devolução, realoque os ativos ou assine um termo de devolução para regularizar.') : '';
+}
 tbody.innerHTML = allocations.map(function(al) {
 const emp = allEmployees.find(function(e) { return e.id == al.employee_id; });
-return '<tr><td><strong>' + (emp ? emp.name : 'N/A') + '</strong></td><td>' + (emp ? emp.depto : 'N/A') + '</td><td class="uid-cell">' + al.asset_uid + '</td><td>' + new Date(al.date).toLocaleDateString('pt-BR') + '</td><td><span class="badge badge-assigned">Alocado</span></td><td>' + (isAdminUser() ? '<button class="btn btn-warning-outline btn-sm" onclick="desalocarAtivo(\'' + al.id + '\')">Desalocar</button>' : '<span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span>') + '</td></tr>';
+const inativo = emp && emp.status === 'inactive';
+const termo = al.termo_id ? termos.find(function(t) { return t.id === al.termo_id; }) : null;
+const termoBadge = termo ? ' <span class="badge badge-' + (termo.status === 'assinado' ? 'available' : 'maintenance') + '" title="Termo de responsabilidade">📄 Termo ' + termoStatusLabel(termo.status) + '</span>' : '';
+const inativoBadge = inativo ? ' <span class="badge badge-inactive" title="Colaborador inativo com ativo em posse">Inativo</span>' : '';
+let acoes = '<span style="color: var(--text-muted); font-size: 11px;">Somente leitura</span>';
+if (isAdminUser()) {
+acoes = '<button class="btn btn-warning-outline btn-sm" onclick="desalocarAtivo(\'' + al.id + '\')">Desalocar</button>';
+if (inativo) acoes += ' <button class="btn btn-outline btn-sm" onclick="abrirModalRealocar(\'' + al.id + '\')">Realocar</button>';
+if (!termo) acoes += ' <button class="btn btn-outline btn-sm" onclick="abrirTermoDeAlocacao(\'' + al.id + '\')">📄 Gerar termo</button>';
+}
+return '<tr' + (inativo ? ' style="background: rgba(245, 158, 11, 0.08);"' : '') + '><td><strong>' + (emp ? emp.name : 'N/A') + '</strong>' + inativoBadge + '</td><td>' + (emp ? emp.depto : 'N/A') + '</td><td class="uid-cell">' + al.asset_uid + termoBadge + '</td><td>' + new Date(al.date).toLocaleDateString('pt-BR') + '</td><td><span class="badge badge-assigned">Alocado</span></td><td>' + acoes + '</td></tr>';
 }).join('') || '<tr><td colspan="6" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhuma alocação ativa</td></tr>';
 const tbodyInativas = document.getElementById('alloc-inactive-table-body');
 if (tbodyInativas) {
@@ -3770,17 +3962,517 @@ return '<tr><td><strong>' + (emp ? emp.name : 'N/A') + '</strong></td><td>' + (e
 }).join('') || '<tr><td colspan="5" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhuma alocação inativa</td></tr>';
 }
 }
+/* ---------- TERMOS DE RESPONSABILIDADE (issue #46) ---------- */
+let termoDraft = null;
+let termoParaEnviar = null;
+let _sincTermosEmAndamento = false;
+function termoStatusLabel(st) {
+return { rascunho: 'Pendente de envio', enviado: 'Enviado', assinado: 'Assinado', expirado: 'Expirado', cancelado: 'Cancelado' }[st] || st;
+}
+function escHtml(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function termoTemplateVigente() {
+let tpls = getData(SK.termoTemplates);
+let vigente = tpls.find(function(t) { return t.ativo; });
+if (!vigente) {
+vigente = { id: 'v1', versao: window.TermosDomain.TEMPLATE_PADRAO.versao, conteudo: window.TermosDomain.TEMPLATE_PADRAO.conteudo, ativo: true, criado_em: new Date().toISOString() };
+tpls.push(vigente);
+saveData(SK.termoTemplates, tpls);
+}
+return vigente;
+}
+function abrirModalModeloTermo() {
+if (bloquearSeNaoAdmin()) return;
+const v = termoTemplateVigente();
+document.getElementById('termo-modelo-versao').textContent = v.versao;
+document.getElementById('termo-modelo-texto').value = v.conteudo;
+document.getElementById('modal-termo-modelo').classList.add('active');
+}
+function salvarModeloTermo() {
+if (bloquearSeNaoAdmin()) return;
+const texto = document.getElementById('termo-modelo-texto').value.trim();
+if (!texto) { showToast('O texto do modelo não pode ficar vazio.'); return; }
+const tpls = getData(SK.termoTemplates);
+const atual = termoTemplateVigente();
+if (texto === atual.conteudo) { fecharModal('modal-termo-modelo'); return; }
+tpls.forEach(function(t) { t.ativo = false; });
+const versao = tpls.reduce(function(m, t) { return Math.max(m, t.versao || 0); }, 0) + 1;
+tpls.push({ id: 'v' + versao, versao: versao, conteudo: texto, ativo: true, criado_em: new Date().toISOString(), criado_por: currentUser.name });
+saveData(SK.termoTemplates, tpls);
+addLog('Modelo de Termo Alterado', 'Nova versão (v' + versao + ') do modelo de termo de responsabilidade', 'alteracao');
+showToast('Modelo salvo como versão ' + versao + '. Termos já emitidos não são alterados.');
+fecharModal('modal-termo-modelo');
+}
+function termoRelogioExpirado(t) { return t.expira_em && window.TermosDomain.estaExpirado(t.expira_em); }
+function renderTermos() {
+const isAdmin = isAdminUser();
+document.getElementById('btn-novo-termo').style.display = isAdmin ? '' : 'none';
+document.getElementById('btn-modelo-termo').style.display = isAdmin ? '' : 'none';
+const busca = (document.getElementById('termos-busca').value || '').toLowerCase();
+const filtro = document.getElementById('termos-filtro-status').value;
+let termos = getData(SK.termos).slice().sort(function(a, b) { return new Date(b.criado_em) - new Date(a.criado_em); });
+if (filtro !== 'todos') termos = termos.filter(function(t) { return t.status === filtro; });
+if (busca) termos = termos.filter(function(t) { return (t.colaborador_nome || '').toLowerCase().indexOf(busca) !== -1; });
+document.getElementById('termos-count-info').innerHTML = '<strong>' + termos.length + '</strong> termos';
+const badge = { rascunho: 'maintenance', enviado: 'assigned', assinado: 'available', expirado: 'inactive', cancelado: 'discarded' };
+document.getElementById('termos-table-body').innerHTML = termos.map(function(t) {
+let acoes = '<button class="btn btn-outline btn-sm" onclick="baixarPdfTermo(\'' + t.id + '\')">PDF</button>';
+if (isAdmin) {
+if (t.status === 'rascunho' || t.status === 'enviado' || t.status === 'expirado') acoes += ' <button class="btn btn-primary btn-sm" onclick="abrirEnvioTermo(\'' + t.id + '\')">' + (t.status === 'rascunho' ? 'Enviar' : 'Reenviar') + '</button>';
+if (t.status === 'rascunho' || t.status === 'enviado' || t.status === 'expirado') acoes += ' <button class="btn btn-danger-outline btn-sm" onclick="cancelarTermo(\'' + t.id + '\')">Cancelar</button>';
+}
+const exp = t.status === 'enviado' && t.expira_em ? '<div style="font-size: 10px; color: var(--text-muted);">válido até ' + new Date(t.expira_em).toLocaleDateString('pt-BR') + '</div>' : '';
+return '<tr><td class="uid-cell">' + escHtml(t.id) + '<div style="font-size: 10px; color: var(--text-muted);">modelo v' + escHtml(t.template_versao) + '</div></td><td><strong>' + escHtml(t.colaborador_nome) + '</strong></td><td>' + new Date(t.criado_em).toLocaleDateString('pt-BR') + '</td><td>' + (t.itens || []).length + '</td><td><span class="badge badge-' + (badge[t.status] || 'inactive') + '">' + termoStatusLabel(t.status) + '</span>' + exp + '</td><td>' + acoes + '</td></tr>';
+}).join('') || '<tr><td colspan="6" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhum termo encontrado</td></tr>';
+sincronizarTermos();
+}
+// Aplica assinatura / expiração registradas no servidor sobre os termos locais.
+async function sincronizarTermos() {
+if (_sincTermosEmAndamento || !isAdminUser()) return;
+const enviados = getData(SK.termos).filter(function(t) { return t.status === 'enviado'; });
+if (!enviados.length || !window.VP || !VP.termoAssinatura || !VP.ready) return;
+_sincTermosEmAndamento = true;
+try {
+const linhas = await VP.termoAssinatura.buscar(enviados.map(function(t) { return t.id; }));
+let alterou = false;
+const termos = getData(SK.termos);
+let est = estadoMovimentacao();
+enviados.forEach(function(te) {
+const t = termos.find(function(x) { return x.id === te.id; });
+if (!t || t.status !== 'enviado') return;
+const mais = linhas.filter(function(l) { return l.termo_id === t.id; }).sort(function(a, b) { return new Date(b.criado_em) - new Date(a.criado_em); });
+const assinada = mais.find(function(l) { return l.status === 'assinado'; });
+if (assinada) {
+t.status = 'assinado'; t.assinado_em = assinada.assinado_em; t.assinante_nome = assinada.assinante_nome;
+est.allocations.forEach(function(al) { if (al.termo_id === t.id) al.termo_status = 'assinado'; });
+addLog('Termo Assinado', 'Termo ' + t.id + ' assinado por ' + assinada.assinante_nome, 'alteracao');
+alterou = true;
+} else if (termoRelogioExpirado(t)) {
+est = reverterAlocacoesDoTermo(est, t, 'Termo ' + t.id + ' expirou sem assinatura; alocação revertida.');
+t.status = 'expirado';
+addLog('Termo Expirado', 'Termo ' + t.id + ' expirou sem assinatura; alocações revertidas', 'alteracao');
+alterou = true;
+}
+});
+if (alterou) {
+aplicarMovimentacao(est, [{ chave: SK.termos, valor: termos }]);
+renderTermos();
+if (document.getElementById('page-alocacoes').classList.contains('active')) renderAlocacoes();
+}
+} catch (e) { console.warn('Falha ao sincronizar termos:', e); }
+finally { _sincTermosEmAndamento = false; }
+}
+// Devolve (sem avaria) todas as alocações ativas vinculadas ao termo — encadeado em memória, gravado depois de uma vez.
+function reverterAlocacoesDoTermo(est, termo, observacao) {
+// Alocações que já existiam antes do termo (vinculação retroativa) continuam com o colaborador: só desvincula.
+let atual = { assets: est.assets, history: est.history, employees: est.employees, allocations: est.allocations.map(function(al) {
+if (al.termo_id === termo.id && al.termo_retroativo) { const c = Object.assign({}, al); delete c.termo_id; delete c.termo_status; delete c.termo_retroativo; return c; }
+return al;
+}) };
+atual.allocations.filter(function(al) { return al.termo_id === termo.id && al.status === 'active'; }).forEach(function(al) {
+const r = window.MovDomain.devolver(atual, { alocacaoId: al.id, estado: 'integro', observacao: observacao, termoId: termo.id, responsavel: responsavelAtual() });
+atual = { assets: r.assets, allocations: r.allocations, history: r.history, employees: atual.employees };
+});
+return atual;
+}
+function abrirModalNovoTermo(preset) {
+if (bloquearSeNaoAdmin()) return;
+termoDraft = { itens: [], imagens: [] };
+const ativos = getData(SK.employees).filter(function(e) { return e.status === 'active'; });
+document.getElementById('termo-colab').innerHTML = '<option value="">Selecione...</option>' + ativos.map(function(e) { return '<option value="' + escHtml(e.id) + '">' + escHtml(e.name) + (e.depto ? ' - ' + escHtml(e.depto) : '') + '</option>'; }).join('');
+document.getElementById('termo-colab').value = preset && preset.colabId ? String(preset.colabId) : '';
+document.getElementById('termo-doc').value = '';
+document.getElementById('termo-tel').value = '';
+document.getElementById('termo-busca-ativo').value = '';
+document.getElementById('termo-erro').style.display = 'none';
+if (preset && preset.uids) preset.uids.forEach(function(uid) { adicionarItemTermo(uid, true); });
+atualizarColaboradorTermo();
+renderItensTermo();
+renderImagensTermo();
+document.getElementById('modal-termo').classList.add('active');
+}
+function abrirTermoDeAlocacao(allocId) {
+if (bloquearSeNaoAdmin()) return;
+const al = getData(SK.allocations).find(function(a) { return a.id === allocId; });
+if (!al) return;
+const emp = getData(SK.employees).find(function(e) { return String(e.id) === String(al.employee_id); });
+if (!emp || emp.status !== 'active') { showToast('Termos só podem ser gerados para colaboradores ativos.'); return; }
+const uids = getData(SK.allocations).filter(function(a) { return a.status === 'active' && String(a.employee_id) === String(al.employee_id) && !a.termo_id; }).map(function(a) { return a.asset_uid; });
+showPage('termos', document.getElementById('nav-termos'));
+abrirModalNovoTermo({ colabId: al.employee_id, uids: uids.slice(0, window.TermosDomain.LIMITE_ITENS) });
+}
+function empDoTermo() {
+const id = document.getElementById('termo-colab').value;
+return getData(SK.employees).find(function(e) { return String(e.id) === id; }) || null;
+}
+function atualizarColaboradorTermo() {
+const emp = empDoTermo();
+const box = document.getElementById('termo-colab-dados');
+if (!emp) { box.style.display = 'none'; renderSeletorAtivosTermo(); return; }
+box.style.display = 'block';
+box.innerHTML = '<strong>' + escHtml(emp.name) + '</strong> · ' + escHtml(emp.cargo || '—') + ' · ' + escHtml(emp.depto || '—') + ' · ' + (emp.email ? escHtml(emp.email) : '<span style="color:#b45309;">sem e-mail cadastrado</span>');
+renderSeletorAtivosTermo();
+}
+// Disponíveis (sem alocação/termo em aberto) + ativos já em posse do colaborador sem termo (vinculação retroativa).
+function ativosSelecionaveisTermo() {
+const assets = getData(SK.assets);
+const allocations = getData(SK.allocations);
+const termos = getData(SK.termos);
+const livres = window.TermosDomain.ativosDisponiveisParaTermo(assets, allocations, termos);
+const emp = empDoTermo();
+let proprios = [];
+if (emp) {
+const uids = allocations.filter(function(a) { return a.status === 'active' && !a.termo_id && String(a.employee_id) === String(emp.id); }).map(function(a) { return a.asset_uid; });
+proprios = assets.filter(function(a) { return uids.indexOf(a.uid) !== -1; });
+}
+return livres.concat(proprios);
+}
+function renderSeletorAtivosTermo() {
+const box = document.getElementById('termo-ativos-disponiveis');
+if (!termoDraft) { box.innerHTML = ''; return; }
+const busca = (document.getElementById('termo-busca-ativo').value || '').toLowerCase();
+const escolhidos = termoDraft.itens.map(function(i) { return i.asset_uid; });
+const lista = ativosSelecionaveisTermo().filter(function(a) { return escolhidos.indexOf(a.uid) === -1 && (!busca || (a.uid + ' ' + a.brand + ' ' + a.model).toLowerCase().indexOf(busca) !== -1); });
+box.innerHTML = lista.map(function(a) {
+return '<div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; border-bottom: 1px solid var(--border-subtle, #e5e7eb); font-size: 13px;"><span>' + escHtml(a.uid) + ' — ' + escHtml(a.brand) + ' ' + escHtml(a.model) + '</span><button type="button" class="btn btn-outline btn-sm" onclick="adicionarItemTermo(\'' + escHtml(a.uid) + '\')">Adicionar</button></div>';
+}).join('') || '<div style="padding: 10px; color: var(--text-muted); font-size: 12px;">Nenhum ativo disponível encontrado.</div>';
+document.getElementById('termo-contador').textContent = '(' + termoDraft.itens.length + '/' + window.TermosDomain.LIMITE_ITENS + ')';
+}
+function adicionarItemTermo(uid, silencioso) {
+if (!termoDraft) return;
+if (termoDraft.itens.length >= window.TermosDomain.LIMITE_ITENS) { mostrarErroTermo('Um termo aceita no máximo ' + window.TermosDomain.LIMITE_ITENS + ' equipamentos.'); return; }
+if (termoDraft.itens.some(function(i) { return i.asset_uid === uid; })) return;
+const asset = getData(SK.assets).find(function(a) { return a.uid === uid; });
+if (!asset) return;
+termoDraft.itens.push({ asset_uid: uid, descricao: (asset.brand + ' ' + asset.model).trim(), estado: 'novo', observacao: '', imagens: [] });
+if (!silencioso) { mostrarErroTermo(''); renderItensTermo(); renderSeletorAtivosTermo(); }
+}
+function removerItemTermo(uid) {
+termoDraft.itens = termoDraft.itens.filter(function(i) { return i.asset_uid !== uid; });
+renderItensTermo(); renderSeletorAtivosTermo();
+}
+function mostrarErroTermo(msg) {
+const el = document.getElementById('termo-erro');
+el.textContent = msg; el.style.display = msg ? 'block' : 'none';
+}
+function renderItensTermo() {
+const box = document.getElementById('termo-itens');
+if (!termoDraft || !termoDraft.itens.length) { box.innerHTML = '<div style="color: var(--text-muted); font-size: 12px;">Nenhum equipamento adicionado.</div>'; document.getElementById('termo-contador').textContent = '(0/' + window.TermosDomain.LIMITE_ITENS + ')'; return; }
+box.innerHTML = termoDraft.itens.map(function(i) {
+const estados = window.TermosDomain.ESTADOS_ITEM.map(function(e) { return '<option value="' + e + '"' + (i.estado === e ? ' selected' : '') + '>' + e.charAt(0).toUpperCase() + e.slice(1) + '</option>'; }).join('');
+const imgs = (i.imagens || []).map(function(src, n) { return '<img src="' + src + '" alt="Foto de ' + escHtml(i.asset_uid) + '" style="width: 44px; height: 44px; object-fit: cover; border-radius: 6px;" title="clique para remover" onclick="removerImagemItemTermo(\'' + escHtml(i.asset_uid) + '\',' + n + ')">'; }).join('');
+return '<div style="border: 1px solid var(--border-subtle, #d1d5db); border-radius: 8px; padding: 10px; margin-bottom: 8px;"><div style="display: flex; justify-content: space-between; font-size: 13px;"><strong>' + escHtml(i.asset_uid) + ' — ' + escHtml(i.descricao) + '</strong><button type="button" class="btn btn-danger-outline btn-sm" onclick="removerItemTermo(\'' + escHtml(i.asset_uid) + '\')">Remover</button></div><div class="form-grid" style="margin-top: 8px;"><div class="form-field"><label>Estado na entrega</label><select onchange="atualizarCampoItemTermo(\'' + escHtml(i.asset_uid) + '\',\'estado\',this.value)">' + estados + '</select></div><div class="form-field"><label>Observações</label><input type="text" value="' + escHtml(i.observacao) + '" oninput="atualizarCampoItemTermo(\'' + escHtml(i.asset_uid) + '\',\'observacao\',this.value)"></div></div><div style="margin-top: 6px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;"><input type="file" accept="image/jpeg,image/png,image/webp" multiple onchange="adicionarImagensItemTermo(\'' + escHtml(i.asset_uid) + '\', this)" aria-label="Fotos do equipamento ' + escHtml(i.asset_uid) + '">' + imgs + '</div></div>';
+}).join('');
+document.getElementById('termo-contador').textContent = '(' + termoDraft.itens.length + '/' + window.TermosDomain.LIMITE_ITENS + ')';
+}
+function atualizarCampoItemTermo(uid, campo, valor) {
+const item = termoDraft.itens.find(function(i) { return i.asset_uid === uid; });
+if (item) item[campo] = valor;
+}
+function totalImagensTermo() {
+return termoDraft.imagens.length + termoDraft.itens.reduce(function(n, i) { return n + (i.imagens || []).length; }, 0);
+}
+// Reduz a imagem (máx. 1280px, JPEG) para caber no armazenamento do app e no PDF.
+function reduzirImagemTermo(file) {
+return new Promise(function(resolve, reject) {
+const reader = new FileReader();
+reader.onerror = reject;
+reader.onload = function(e) {
+const img = new Image();
+img.onerror = reject;
+img.onload = function() {
+const max = 1280;
+const escala = Math.min(1, max / Math.max(img.width, img.height));
+const c = document.createElement('canvas');
+c.width = Math.round(img.width * escala); c.height = Math.round(img.height * escala);
+const ctx = c.getContext('2d');
+ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+ctx.drawImage(img, 0, 0, c.width, c.height);
+resolve(c.toDataURL('image/jpeg', 0.75));
+};
+img.src = e.target.result;
+};
+reader.readAsDataURL(file);
+});
+}
+async function coletarImagensTermo(input, destino) {
+const arquivos = Array.from(input.files || []);
+for (const f of arquivos) {
+const v = window.TermosDomain.validarImagem(f, totalImagensTermo());
+if (!v.ok) { mostrarErroTermo(f.name + ': ' + v.erro); continue; }
+try { destino.push(await reduzirImagemTermo(f)); } catch (e) { mostrarErroTermo('Não foi possível ler a imagem ' + f.name + '.'); }
+}
+input.value = '';
+}
+async function adicionarImagensTermo(input) { await coletarImagensTermo(input, termoDraft.imagens); renderImagensTermo(); }
+async function adicionarImagensItemTermo(uid, input) {
+const item = termoDraft.itens.find(function(i) { return i.asset_uid === uid; });
+if (!item) return;
+await coletarImagensTermo(input, item.imagens);
+renderItensTermo();
+}
+function removerImagemItemTermo(uid, n) {
+const item = termoDraft.itens.find(function(i) { return i.asset_uid === uid; });
+if (item) { item.imagens.splice(n, 1); renderItensTermo(); }
+}
+function removerImagemTermo(n) { termoDraft.imagens.splice(n, 1); renderImagensTermo(); }
+function renderImagensTermo() {
+const box = document.getElementById('termo-imagens-preview');
+if (!termoDraft || !termoDraft.imagens.length) { box.style.display = 'none'; box.innerHTML = ''; return; }
+box.style.display = 'flex';
+box.innerHTML = termoDraft.imagens.map(function(src, n) { return '<img src="' + src + '" alt="Imagem do termo" title="clique para remover" onclick="removerImagemTermo(' + n + ')" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; cursor: pointer;">'; }).join('');
+}
+function termoTextoRenderizado(t, tpl) {
+const desc = {};
+(t.itens || []).forEach(function(i) { desc[i.asset_uid] = i.descricao; });
+return window.TermosDomain.renderizarTemplate(tpl.conteudo, {
+colaborador_nome: t.colaborador_nome, colaborador_documento: t.colaborador_documento || '________________',
+colaborador_cargo: t.colaborador_cargo || '', colaborador_departamento: t.colaborador_departamento || '',
+data: new Date(t.criado_em).toLocaleDateString('pt-BR'),
+equipamentos: window.TermosDomain.listaEquipamentosTexto(t.itens, desc)
+}).replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+}
+function salvarNovoTermo() {
+if (bloquearSeNaoAdmin()) return;
+mostrarErroTermo('');
+const emp = empDoTermo();
+if (!emp) { mostrarErroTermo('Selecione um colaborador ativo.'); return; }
+const v = window.TermosDomain.validarItens(termoDraft.itens);
+if (!v.ok) { mostrarErroTermo(v.erro); return; }
+const permitidos = ativosSelecionaveisTermo().map(function(a) { return a.uid; });
+const indisponivel = termoDraft.itens.find(function(i) { return permitidos.indexOf(i.asset_uid) === -1; });
+if (indisponivel) { mostrarErroTermo('O ativo ' + indisponivel.asset_uid + ' não está mais disponível. Atualize a seleção.'); return; }
+const tpl = termoTemplateVigente();
+const termos = getData(SK.termos);
+const agora = new Date();
+const sufixo = Array.from(crypto.getRandomValues(new Uint8Array(4))).map(function(b) { return b.toString(16).padStart(2, '0'); }).join('').toUpperCase();
+const id = 'T' + agora.getFullYear().toString().slice(2) + String(agora.getMonth() + 1).padStart(2, '0') + String(agora.getDate()).padStart(2, '0') + '-' + sufixo; // aleatório: sem colisão entre administradores simultâneos
+const termo = {
+id: id, status: 'rascunho', colaborador_id: emp.id, colaborador_nome: emp.name, colaborador_email: emp.email || '',
+colaborador_cargo: emp.cargo || '', colaborador_departamento: emp.depto || '',
+colaborador_documento: document.getElementById('termo-doc').value.trim(), colaborador_telefone: document.getElementById('termo-tel').value.trim(),
+itens: termoDraft.itens.map(function(i) { return { asset_uid: i.asset_uid, descricao: i.descricao, estado: i.estado, observacao: i.observacao.trim(), imagens: i.imagens.slice() }; }),
+imagens: termoDraft.imagens.slice(), template_versao: tpl.versao, criado_por: currentUser.name, criado_em: agora.toISOString()
+};
+termo.texto = termoTextoRenderizado(termo, tpl);
+// Termo + alocação + histórico numa transação só (tudo ou nada).
+try {
+let est = estadoMovimentacao();
+termo.itens.forEach(function(item) {
+const jaEmPosse = est.allocations.find(function(al) { return al.status === 'active' && !al.termo_id && al.asset_uid === item.asset_uid && String(al.employee_id) === String(emp.id); });
+if (jaEmPosse) {
+est.allocations = est.allocations.map(function(al) { return al === jaEmPosse ? Object.assign({}, al, { termo_id: id, termo_status: 'pendente', termo_retroativo: true }) : al; });
+} else {
+const r = window.MovDomain.alocar(est, { assetUid: item.asset_uid, employeeId: emp.id, estado: item.estado, observacao: item.observacao, fotos: item.imagens, termoId: id, responsavel: responsavelAtual() });
+r.allocations = r.allocations.map(function(al) { return al.id === r.alocacao.id ? Object.assign({}, al, { termo_status: 'pendente' }) : al; });
+est = { assets: r.assets, allocations: r.allocations, history: r.history, employees: est.employees };
+}
+});
+aplicarMovimentacao(est, [{ chave: SK.termos, valor: termos.concat([termo]) }]);
+} catch (e) { mostrarErroTermo(e.message || 'Não foi possível salvar o termo.'); return; }
+addLog('Termo Criado', 'Termo ' + id + ' criado para ' + emp.name + ' com ' + termo.itens.length + ' equipamento(s)', 'cadastro');
+showToast('Termo ' + id + ' salvo. Agora envie para assinatura.');
+fecharModal('modal-termo');
+termoDraft = null;
+renderTermos();
+abrirEnvioTermo(id);
+}
+function abrirEnvioTermo(id) {
+if (bloquearSeNaoAdmin()) return;
+const t = getData(SK.termos).find(function(x) { return x.id === id; });
+if (!t) return;
+if (!window.TermosDomain.podeTransicionar(t.status, 'enviado')) { showToast('Este termo não pode ser enviado (status: ' + termoStatusLabel(t.status) + ').'); return; }
+termoParaEnviar = id;
+document.getElementById('termo-envio-sub').textContent = 'Termo ' + t.id + ' — ' + t.colaborador_nome;
+document.getElementById('termo-envio-canal').value = 'WHATSAPP';
+atualizarCamposEnvioTermo();
+document.getElementById('modal-termo-envio').classList.add('active');
+}
+function atualizarCamposEnvioTermo() {
+const t = getData(SK.termos).find(function(x) { return x.id === termoParaEnviar; });
+if (!t) return;
+const canal = document.getElementById('termo-envio-canal').value;
+const dest = document.getElementById('termo-envio-destino');
+const aviso = document.getElementById('termo-envio-aviso');
+document.getElementById('termo-envio-destino-label').textContent = canal === 'EMAIL' ? 'E-mail do colaborador' : 'Telefone / WhatsApp do colaborador';
+dest.value = canal === 'EMAIL' ? (t.colaborador_email || '') : (t.colaborador_telefone || '');
+aviso.style.display = dest.value ? 'none' : 'block';
+aviso.textContent = dest.value ? '' : (canal === 'EMAIL' ? 'O colaborador não tem e-mail cadastrado. Informe um para enviar.' : 'O colaborador não tem telefone cadastrado. Informe um para enviar.');
+}
+async function confirmarEnvioTermo() {
+if (bloquearSeNaoAdmin()) return;
+const termos = getData(SK.termos);
+const t = termos.find(function(x) { return x.id === termoParaEnviar; });
+if (!t) return;
+if (!window.TermosDomain.podeTransicionar(t.status, 'enviado')) { showToast('Este termo não pode ser enviado.'); return; }
+if (!window.VP || !VP.termoAssinatura || !VP.ready) { showToast('Assinatura digital indisponível: abra o Asset Manager pelo vpsistema.com para sincronizar com o servidor.'); return; }
+const canal = document.getElementById('termo-envio-canal').value;
+const destino = document.getElementById('termo-envio-destino').value.trim();
+const dias = Math.max(1, Math.min(30, parseInt(document.getElementById('termo-envio-dias').value, 10) || window.TermosDomain.VALIDADE_PADRAO_DIAS));
+if (!destino) { showToast('Informe o ' + (canal === 'EMAIL' ? 'e-mail' : 'telefone') + ' do colaborador.'); return; }
+const token = window.TermosDomain.gerarToken();
+const hash = await window.TermosDomain.hashToken(token);
+const expiraEm = window.TermosDomain.calcularExpiracao(new Date(), dias);
+const conteudo = { titulo: 'Termo de Responsabilidade ' + t.id, texto: t.texto, colaborador_nome: t.colaborador_nome, itens: t.itens, imagens: t.imagens || [], template_versao: t.template_versao };
+try {
+await VP.termoAssinatura.cancelarPendentes(t.id); // invalida links anteriores (reenvio)
+await VP.termoAssinatura.criar({ termo_id: t.id, token_hash: hash, canal: canal, expira_em: expiraEm, conteudo: conteudo });
+} catch (e) { showToast('Não foi possível gerar o link de assinatura. Verifique a conexão e se a migration de termos foi aplicada.'); console.warn(e); return; }
+const link = location.origin + '/assinar/' + token;
+const mensagem = window.TermosDomain.mensagemEnvio(t.colaborador_nome, link, expiraEm);
+const termosAtual = getData(SK.termos);
+const alvo = termosAtual.find(function(x) { return x.id === t.id; });
+alvo.status = 'enviado'; alvo.canal = canal; alvo.expira_em = expiraEm; alvo.enviado_em = new Date().toISOString();
+if (canal === 'EMAIL') alvo.colaborador_email = destino; else alvo.colaborador_telefone = destino;
+alvo.envios = (alvo.envios || []).concat([{ em: alvo.enviado_em, canal: canal, destino: destino, por: currentUser.name }]);
+saveData(SK.termos, termosAtual);
+addLog(alvo.envios.length > 1 ? 'Termo Reenviado' : 'Termo Enviado', 'Termo ' + t.id + ' enviado por ' + canal + ' para ' + t.colaborador_nome, 'alteracao');
+if (canal === 'EMAIL') {
+queueEmail(destino, 'Termo de Responsabilidade — assinatura digital', mensagem, { tipo: 'termo', termo_id: t.id });
+window.open('mailto:' + encodeURIComponent(destino) + '?subject=' + encodeURIComponent('Termo de Responsabilidade — assinatura digital') + '&body=' + encodeURIComponent(mensagem), '_blank');
+} else {
+const wa = window.TermosDomain.linkWhatsapp(destino, mensagem);
+if (wa) window.open(wa, '_blank', 'noopener');
+}
+try { if (navigator.clipboard) navigator.clipboard.writeText(link); } catch (e) {}
+showToast('Link gerado (copiado para a área de transferência). Válido por ' + dias + ' dia(s).');
+fecharModal('modal-termo-envio');
+termoParaEnviar = null;
+renderTermos();
+}
+async function cancelarTermo(id) {
+if (bloquearSeNaoAdmin()) return;
+const termos = getData(SK.termos);
+const t = termos.find(function(x) { return x.id === id; });
+if (!t || !window.TermosDomain.podeTransicionar(t.status, 'cancelado')) { showToast('Este termo não pode ser cancelado.'); return; }
+if (!confirm('Cancelar o termo ' + id + '? As alocações feitas por ele serão revertidas e os ativos voltarão a ficar disponíveis.')) return;
+try {
+if (window.VP && VP.termoAssinatura && VP.ready) await VP.termoAssinatura.cancelarPendentes(id);
+const est = reverterAlocacoesDoTermo(estadoMovimentacao(), t, 'Termo ' + id + ' cancelado; alocação revertida.');
+t.status = 'cancelado'; t.cancelado_em = new Date().toISOString(); t.cancelado_por = currentUser.name;
+aplicarMovimentacao(est, [{ chave: SK.termos, valor: termos }]);
+} catch (e) { showToast(e.message || 'Não foi possível cancelar o termo.'); return; }
+addLog('Termo Cancelado', 'Termo ' + id + ' cancelado; alocações revertidas', 'alteracao');
+showToast('Termo cancelado e alocações revertidas.');
+renderTermos();
+}
+// PDF do termo (com evidências da assinatura quando assinado).
+async function baixarPdfTermo(id) {
+const t = getData(SK.termos).find(function(x) { return x.id === id; });
+if (!t) return;
+if (!window.jspdf) { showToast('Biblioteca de PDF indisponível.'); return; }
+let ev = null;
+if (t.status === 'assinado' && window.VP && VP.termoAssinatura && VP.ready) {
+try { const l = await VP.termoAssinatura.buscar([id], true); ev = l.find(function(x) { return x.status === 'assinado'; }) || null; } catch (e) { console.warn(e); }
+}
+const doc = new window.jspdf.jsPDF();
+let y = 20;
+const largura = 180;
+const quebra = function(h) { if (y + h > 280) { doc.addPage(); y = 20; } };
+const texto = function(txt, tam, negrito) {
+doc.setFontSize(tam); doc.setFont('helvetica', negrito ? 'bold' : 'normal');
+doc.splitTextToSize(String(txt || ''), largura).forEach(function(l) { quebra(tam * 0.5); doc.text(l, 15, y); y += tam * 0.5; });
+y += 2;
+};
+const imagem = function(src, w) { try { quebra(w + 4); doc.addImage(src, 'JPEG', 15, y, w, w); } catch (e) {} };
+texto('Termo de Responsabilidade ' + t.id, 15, true);
+texto('Status: ' + termoStatusLabel(t.status) + ' · modelo v' + t.template_versao + ' · emitido em ' + new Date(t.criado_em).toLocaleString('pt-BR'), 9);
+y += 4;
+texto(t.texto, 10);
+y += 4;
+texto('Equipamentos', 12, true);
+t.itens.forEach(function(i) {
+texto(i.asset_uid + ' — ' + i.descricao + ' | Estado: ' + i.estado + (i.observacao ? ' | ' + i.observacao : ''), 10);
+let x = 15;
+(i.imagens || []).forEach(function(src) { quebra(32); try { doc.addImage(src, 'JPEG', x, y, 30, 30); } catch (e) {} x += 33; if (x > 170) { x = 15; y += 33; } });
+if ((i.imagens || []).length) y += 34;
+});
+if ((t.imagens || []).length) {
+texto('Imagens do termo', 12, true);
+let x = 15;
+t.imagens.forEach(function(src) { quebra(42); try { doc.addImage(src, 'JPEG', x, y, 40, 40); } catch (e) {} x += 43; if (x > 160) { x = 15; y += 43; } });
+y += 44;
+}
+y += 6;
+texto('Assinatura', 12, true);
+if (t.status === 'assinado') {
+texto('Assinado digitalmente por ' + (t.assinante_nome || t.colaborador_nome) + ' em ' + new Date(t.assinado_em).toLocaleString('pt-BR') + '.', 10);
+if (ev) {
+if (ev.assinatura_img) { try { quebra(30); doc.addImage(ev.assinatura_img, 'PNG', 15, y, 70, 22); y += 26; } catch (e) {} }
+texto('IP: ' + (ev.ip || '—') + ' | Navegador: ' + (ev.user_agent || '—'), 8);
+texto('Hash do documento (SHA-256): ' + (ev.documento_hash || '—'), 8);
+}
+} else {
+texto('Pendente de assinatura.', 10);
+}
+doc.save('Termo-' + t.id + '.pdf');
+}
+// ---- Serviço único de movimentação (issue #47): movimento + histórico gravados juntos (tudo ou nada) ----
+function estadoMovimentacao() {
+return { assets: getData(SK.assets), allocations: getData(SK.allocations), history: getData(SK.assetHistory), employees: getData(SK.employees) };
+}
+// Atômico no estado local (que alimenta toda a interface). A replicação para o Supabase é
+// write-through assíncrona, como no resto do app: se falhar, avisamos em vez de fingir sucesso.
+function aplicarMovimentacao(r, extras) {
+window.MovDomain.aplicarAtomicamente(
+{ get: function(k) { return getData(k); }, set: function(k, v) { saveData(k, v); } },
+[{ chave: SK.assets, valor: r.assets }, { chave: SK.allocations, valor: r.allocations }, { chave: SK.assetHistory, valor: r.history }].concat(extras || [])
+);
+if (window.VP && VP.enabled && VP.ready && VP.whenSaved) {
+VP.whenSaved().then(function() { if (VP._saveErr) showToast('Movimentação salva neste navegador, mas a sincronização com o servidor falhou. Confira o selo de sincronização antes de continuar.'); });
+}
+}
+let alocParaRealocar = null;
+function abrirModalRealocar(allocId) {
+if (bloquearSeNaoAdmin()) return;
+const al = getData(SK.allocations).find(function(a) { return a.id === allocId; });
+if (!al) return;
+alocParaRealocar = allocId;
+const asset = getData(SK.assets).find(function(a) { return a.uid === al.asset_uid; });
+document.getElementById('realocar-ativo').value = al.asset_uid + (asset ? ' - ' + asset.brand + ' ' + asset.model : '');
+const ativos = getData(SK.employees).filter(function(e) { return e.status === 'active' && String(e.id) !== String(al.employee_id); });
+document.getElementById('realocar-novo-colab').innerHTML = '<option value="">Selecione...</option>' + ativos.map(function(e) { return '<option value="' + escHtml(e.id) + '">' + escHtml(e.name) + ' - ' + escHtml(e.depto) + '</option>'; }).join('');
+document.getElementById('modal-realocar').classList.add('active');
+}
+function confirmarRealocacao() {
+if (bloquearSeNaoAdmin()) return;
+const novo = document.getElementById('realocar-novo-colab').value;
+if (!novo) { showToast('Selecione o novo colaborador.'); return; }
+try {
+aplicarMovimentacao(window.MovDomain.realocar(estadoMovimentacao(), { alocacaoId: alocParaRealocar, novoEmployeeId: novo, responsavel: responsavelAtual() }));
+} catch (e) { showToast(e.message || 'Não foi possível realocar o ativo.'); return; }
+addLog('Ativo Realocado', 'Ativo da alocação ' + alocParaRealocar + ' realocado para o colaborador ID ' + novo, 'alteracao');
+showToast('Ativo realocado com sucesso!');
+fecharModal('modal-realocar');
+alocParaRealocar = null;
+renderAlocacoes();
+}
+function responsavelAtual() {
+return currentUser ? { id: currentUser.employee_id || currentUser.username, name: currentUser.name, role: currentUser.role } : null;
+}
+// Colaborador inativado (no portal) com ativos em posse: garante o registro INATIVACAO no histórico.
+function sincronizarInativacoesPendentes() {
+if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'tecnico')) return;
+const est = estadoMovimentacao();
+const pend = window.MovDomain.inativacoesPendentesDeRegistro(est.employees, est.allocations, est.history);
+if (!pend.length) return;
+try {
+let history = est.history;
+pend.forEach(function(p) {
+history = window.MovDomain.registrarInativacao({ assets: est.assets, history: history }, { employee: p.employee, alocacao: p.alocacao, responsavel: responsavelAtual() }).history;
+});
+saveData(SK.assetHistory, history);
+pend.forEach(function(p) { addLog('Inativação com Ativos', 'Colaborador ' + p.employee.name + ' inativo com o ativo ' + p.alocacao.asset_uid + ' ainda em posse (registrado no histórico).', 'inativacao'); });
+} catch (e) { console.warn('Falha ao registrar inativações pendentes:', e); }
+}
 function alocarAtivo() {
 if (bloquearSeNaoAdmin()) return;
 const empId = document.getElementById('alloc-emp').value;
 const assetUid = document.getElementById('alloc-asset').value;
 if (!empId || !assetUid) { showToast('Selecione colaborador e ativo'); return; }
-let assets = getData(SK.assets);
-const asset = assets.find(function(a) { return a.uid === assetUid; });
-if (asset) { asset.status = 'assigned'; saveData(SK.assets, assets); }
-const allocations = getData(SK.allocations);
-allocations.push({ id: 'al' + Date.now(), employee_id: empId, asset_uid: assetUid, date: new Date().toISOString(), status: 'active' });
-saveData(SK.allocations, allocations);
+try {
+const r = window.MovDomain.alocar(estadoMovimentacao(), { assetUid: assetUid, employeeId: empId, responsavel: responsavelAtual() });
+aplicarMovimentacao(r);
+} catch (e) { showToast(e.message || 'Não foi possível alocar o ativo.'); return; }
 addLog('Ativo Alocado', 'Ativo ' + assetUid + ' foi alocado para colaborador ID ' + empId, 'cadastro');
 showToast('Alocação realizada com sucesso!');
 renderAlocacoes();
@@ -3803,42 +4495,15 @@ if (bloquearSeNaoAdmin()) return;
 if (!allocParaDesalocar) return;
 const condicao = document.getElementById('devolucao-condicao').value;
 const obs = document.getElementById('devolucao-obs').value.trim();
-const allocations = getData(SK.allocations);
-const alloc = allocations.find(function(a) { return a.id === allocParaDesalocar; });
-if (alloc) {
-alloc.status = 'inactive';
-saveData(SK.allocations, allocations);
-let assets = getData(SK.assets);
-const asset = assets.find(function(a) { return a.uid === alloc.asset_uid; });
-if (asset) {
-asset.status = (condicao === 'avariado') ? 'maintenance' : 'available';
-if (obs) asset.observacao = obs;
-saveData(SK.assets, assets);
-const historico = getData(SK.assetHistory);
-const employees = getData(SK.employees);
-const emp = employees.find(function(e) { return e.id == alloc.employee_id; });
-historico.push({
-id: 'H' + Date.now(),
-asset_uid: asset.uid,
-asset_desc: asset.brand + ' ' + asset.model,
-usuario_anterior: emp ? emp.name : 'Desconhecido',
-condicao: condicao,
-tipo: 'desalocacao',
-parecer: 'Equipamento devolvido e desalocado. Condição: ' + (condicao === 'avariado' ? 'Avariado' : 'Íntegro') + '. ' + (obs ? 'Obs: ' + obs : ''),
-foto: null,
-autor: currentUser.name,
-autor_role: currentUser.role,
-origem: 'manual',
-created_at: new Date().toISOString()
-});
-saveData(SK.assetHistory, historico);
-addLog('Ativo Desalocado', 'Ativo ' + alloc.asset_uid + ' foi desalocado. Condição: ' + condicao, 'alteracao');
+try {
+aplicarMovimentacao(window.MovDomain.devolver(estadoMovimentacao(), { alocacaoId: allocParaDesalocar, estado: condicao, observacao: obs, responsavel: responsavelAtual() }));
+} catch (e) { showToast(e.message || 'Não foi possível registrar a devolução.'); return; }
+const alloc = getData(SK.allocations).find(function(a) { return a.id === allocParaDesalocar; });
+addLog('Ativo Desalocado', 'Ativo ' + (alloc ? alloc.asset_uid : '') + ' foi desalocado. Condição: ' + condicao, 'alteracao');
 showToast('Devolução registrada com sucesso!');
-}
 fecharModal('modal-devolucao');
 allocParaDesalocar = null;
 renderAlocacoes();
-}
 }
 function mostrarQR(uid) {
 document.getElementById('modal-qr-uid').textContent = uid;
@@ -4660,7 +5325,7 @@ function popularSelectsHistorico() {
 const assets = getData(SK.assets);
 const selectAtivo = document.getElementById('hist-ativo');
 const valorAtualAtivo = selectAtivo.value;
-selectAtivo.innerHTML = '<option value="">Selecione...</option>' + assets.map(function(a) { return '<option value="' + a.uid + '">' + a.uid + ' - ' + a.brand + ' ' + a.model + '</option>'; }).join('');
+montarOpcoesAtivoHistorico(assets);
 if (valorAtualAtivo) selectAtivo.value = valorAtualAtivo;
 const selectFiltro = document.getElementById('hist-filtro-ativo');
 const valorAtualFiltro = selectFiltro.value;
@@ -4668,6 +5333,61 @@ selectFiltro.innerHTML = '<option value="todos">Todos</option>' + assets.map(fun
 if (valorAtualFiltro) selectFiltro.value = valorAtualFiltro;
 
 popularDatalistColaboradores();
+}
+
+// Colaboradores mencionados nos campos do formulário de histórico (anterior e/ou novo).
+function colaboradoresSelecionadosHistorico() {
+const anteriorEl = document.getElementById('hist-usuario-anterior');
+const novoEl = document.getElementById('hist-usuario-novo');
+const nomes = [];
+const anterior = anteriorEl ? (anteriorEl.disabled ? (anteriorEl.dataset.nomeReal || '') : anteriorEl.value) : '';
+if (anterior.trim()) nomes.push(anterior.trim());
+if (novoEl && novoEl.value.trim()) nomes.push(novoEl.value.trim());
+const employees = getData(SK.employees);
+const encontrados = [];
+nomes.forEach(function(nome) {
+const emp = employees.find(function(e) { return nomeNormalizado(e.name) === nomeNormalizado(nome); });
+if (emp && encontrados.indexOf(emp) === -1) encontrados.push(emp);
+});
+return encontrados;
+}
+// Monta o select "Ativo": ativos alocados ao colaborador informado primeiro, depois todos os demais.
+function montarOpcoesAtivoHistorico(assets) {
+const selectAtivo = document.getElementById('hist-ativo');
+const dica = document.getElementById('hist-ativo-dica');
+const opt = function(a) { return '<option value="' + a.uid + '">' + a.uid + ' - ' + a.brand + ' ' + a.model + '</option>'; };
+const colabs = colaboradoresSelecionadosHistorico();
+let html = '<option value="">Selecione...</option>';
+if (colabs.length) {
+const ativas = getData(SK.allocations).filter(function(al) { return al.status === 'active'; });
+const jaListados = {};
+let totalVinculados = 0;
+colabs.forEach(function(emp) {
+const doColab = assets.filter(function(a) { return ativas.some(function(al) { return al.employee_id == emp.id && al.asset_uid === a.uid; }); });
+if (doColab.length) {
+doColab.forEach(function(a) { jaListados[a.uid] = true; });
+totalVinculados += doColab.length;
+html += '<optgroup label="Alocados a ' + emp.name + '">' + doColab.map(opt).join('') + '</optgroup>';
+}
+});
+const demais = assets.filter(function(a) { return !jaListados[a.uid]; });
+if (totalVinculados) html += '<optgroup label="Demais ativos">' + demais.map(opt).join('') + '</optgroup>';
+else html += demais.map(opt).join('');
+if (dica) {
+dica.style.display = 'block';
+dica.textContent = totalVinculados ? (totalVinculados + ' ativo(s) alocado(s) a ' + colabs.map(function(e) { return e.name; }).join(', ') + ' listado(s) primeiro. Você ainda pode escolher qualquer outro ativo.') : 'Nenhum ativo alocado ao colaborador informado. Selecione manualmente.';
+}
+} else {
+html += assets.map(opt).join('');
+if (dica) { dica.style.display = 'none'; dica.textContent = ''; }
+}
+selectAtivo.innerHTML = html;
+}
+function atualizarAtivosPorColaboradorHistorico() {
+const selectAtivo = document.getElementById('hist-ativo');
+const valorAtual = selectAtivo.value;
+montarOpcoesAtivoHistorico(getData(SK.assets));
+selectAtivo.value = valorAtual;
 }
 
 function popularDatalistColaboradores() {
@@ -4798,6 +5518,7 @@ const allocations = getData(SK.allocations);
 const tickets = JSON.parse(localStorage.getItem(SK.tickets) || '[]');
 const auto = [];
 allocations.forEach(function(al) {
+if (al.historico_registrado) return; // já possui registro explícito (serviço de movimentação)
 const asset = assets.find(function(a) { return a.uid === al.asset_uid; });
 const emp = employees.find(function(e) { return e.id == al.employee_id; });
 const nomeColab = emp ? emp.name : 'Colaborador removido';
@@ -4924,11 +5645,14 @@ document.getElementById('hist-count-info').innerHTML = '<strong>' + historico.le
 const container = document.getElementById('historico-list');
 const isAdmin = currentUser && currentUser.role === 'admin';
 if (historico.length === 0) { container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Nenhum registro de histórico encontrado</div>'; return; }
-const tipoLabels = { alocacao: 'Alocação', desalocacao: 'Desalocação', ocorrencia: 'Ocorrência (Chamado)', parecer: 'Parecer Técnico', importado: 'Importado (ClickUp)', outro: 'Outro' };
+const tipoLabels = { alocacao: 'Alocação', desalocacao: 'Desalocação', status: 'Alteração de Status', inativacao: 'Inativação de Colaborador com Ativos', ocorrencia: 'Ocorrência (Chamado)', parecer: 'Parecer Técnico', importado: 'Importado (ClickUp)', outro: 'Outro' };
 container.innerHTML = historico.map(function(h) {
 const condicaoBadge = h.condicao === 'avariado' ? '<span class="badge badge-discarded">Avariado</span>' : '<span class="badge badge-available">Íntegro</span>';
 const isSistema = h.origem === 'sistema';
 const origemBadge = isSistema ? '<span class="badge badge-inactive" style="margin-left: 6px;">Gerado pelo Sistema</span>' : '<span class="badge badge-assigned" style="margin-left: 6px;">Manual</span>';
+const termoHist = h.termo_id ? (getData(SK.termos).find(function(t) { return t.id === h.termo_id; })) : null;
+const termoBadgeHist = h.termo_id ? ' <span class="badge badge-' + (termoHist && termoHist.status === 'assinado' ? 'available' : 'maintenance') + '" style="margin-left: 6px;" title="Termo de origem">📄 Termo ' + h.termo_id + (termoHist ? ' — ' + termoStatusLabel(termoHist.status) : '') + '</span>' : '';
+const origemBadgeFinal = origemBadge + termoBadgeHist;
 let acoes = '';
 if (isAdmin && !isSistema) {
 acoes = '<div class="btn-group" style="margin-top: 12px; justify-content: flex-start;"><button class="btn btn-outline btn-sm" onclick="editarHistorico(\'' + h.id + '\')"><span aria-hidden="true">✏️</span> Editar Parecer</button> <button class="btn btn-danger-outline btn-sm" onclick="excluirHistorico(\'' + h.id + '\')"><span aria-hidden="true">🗑️</span> Excluir</button></div>';
@@ -4938,7 +5662,7 @@ const fotoHtml = fotosArr.length ? '<div style="display: flex; flex-wrap: wrap; 
 return '<div style="width: 100px; height: 100px; border-radius: 8px; overflow: hidden; cursor: zoom-in;" role="button" tabindex="0" aria-label="Ampliar foto do equipamento" onclick="abrirFotoHistoricoLightbox(this)" onkeydown="onCardKeydown(event)"><img src="' + f + '" alt="Foto do equipamento" style="width: 100%; height: 100%; object-fit: cover; display: block;"></div>';
 }).join('') + '</div>' : '';
 const usuarioAnteriorHtml = '<span style="background: rgba(245, 197, 24, 0.15); color: var(--text-primary); padding: 2px 8px; border-radius: 6px; font-weight: 700; border: 1px solid rgba(245, 197, 24, 0.45);">' + h.usuario_anterior + '</span>';
-return '<div class="ticket-card" style="cursor: default;"><div class="ticket-header"><div><div class="ticket-id">' + h.asset_uid + (h.asset_desc ? ' — ' + h.asset_desc : '') + '</div><div class="ticket-subject" style="font-size: 13px;">' + tipoLabels[h.tipo] + origemBadge + '</div></div>' + condicaoBadge + '</div><div style="font-size: 13px; line-height: 1.5; margin: 8px 0; color: var(--text-primary); white-space: pre-wrap;">' + h.parecer + '</div><div class="ticket-meta"><div class="ticket-meta-item">👤 Usuário anterior: ' + usuarioAnteriorHtml + (h.usuario_novo ? ' → Novo usuário: ' + h.usuario_novo : '') + '</div><div class="ticket-meta-item">✍️ Registrado por: ' + h.autor + (h.autor_role === 'sistema' ? '' : ' (' + roleLabel(h.autor_role) + ')') + '</div><div class="ticket-meta-item">📅 ' + new Date(h.created_at).toLocaleString('pt-BR') + '</div></div>' + fotoHtml + acoes + '</div>';
+return '<div class="ticket-card" style="cursor: default;"><div class="ticket-header"><div><div class="ticket-id">' + h.asset_uid + (h.asset_desc ? ' — ' + h.asset_desc : '') + '</div><div class="ticket-subject" style="font-size: 13px;">' + tipoLabels[h.tipo] + origemBadgeFinal + '</div></div>' + condicaoBadge + '</div><div style="font-size: 13px; line-height: 1.5; margin: 8px 0; color: var(--text-primary); white-space: pre-wrap;">' + h.parecer + '</div><div class="ticket-meta"><div class="ticket-meta-item">👤 Usuário anterior: ' + usuarioAnteriorHtml + (h.usuario_novo ? ' → Novo usuário: ' + h.usuario_novo : '') + '</div><div class="ticket-meta-item">✍️ Registrado por: ' + h.autor + (h.autor_role === 'sistema' ? '' : ' (' + roleLabel(h.autor_role) + ')') + '</div><div class="ticket-meta-item">📅 ' + new Date(h.created_at).toLocaleString('pt-BR') + '</div></div>' + fotoHtml + acoes + '</div>';
 }).join('');
 }
 function abrirFotoHistoricoLightbox(el) {
@@ -4986,7 +5710,7 @@ historico = historico.filter(function(h) {
 return h.asset_uid.toLowerCase().includes(search) || (h.asset_desc || '').toLowerCase().includes(search) || (h.usuario_anterior || '').toLowerCase().includes(search) || h.parecer.toLowerCase().includes(search);
 });
 }
-const tipoLabels = { alocacao: 'Alocação', desalocacao: 'Desalocação', ocorrencia: 'Ocorrência', parecer: 'Parecer', importado: 'Importado', outro: 'Outro' };
+const tipoLabels = { alocacao: 'Alocação', desalocacao: 'Desalocação', status: 'Alteração de Status', inativacao: 'Inativação', ocorrencia: 'Ocorrência', parecer: 'Parecer', importado: 'Importado', outro: 'Outro' };
 doc.setFillColor(10, 10, 10); doc.rect(0, 0, 210, 40, 'F');
 doc.setFillColor(255, 206, 5); doc.rect(0, 40, 210, 3, 'F');
 doc.setTextColor(255, 206, 5); doc.setFont('helvetica', 'bold'); doc.setFontSize(22);
