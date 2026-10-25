@@ -4,7 +4,7 @@
 > Cadastro, alocação, histórico técnico, estoque, suporte, checklists e auditoria de equipamentos em um único lugar.
 
 🌐 **Produção:** `[preencher com a URL final]`
-🚀 **Deploy:** Hostinger Node.js / Static
+🚀 **Deploy:** Hostinger (site estático, publicado via GitHub Actions)
 🗄️ **Backend:** Supabase
 
 ---
@@ -32,12 +32,17 @@ O **Asset Manager** centraliza esse controle e oferece:
 
 | Camada | Tecnologia |
 | :---: | --- |
-| Frontend | React 18 + Vite + React Router |
-| Estilo | Tailwind CSS v4 + CSS custom properties |
+| Frontend | HTML + JavaScript (vanilla), sem framework ou bundler |
+| Lógica de domínio | ES Modules puros em `public/js/domain/` (ex.: UID, SLA), testados com `node --test` |
+| Estilo | CSS customizado + Google Fonts (Poppins) |
 | Banco | Supabase (PostgreSQL + Auth + RLS) |
-| Edge Functions | Supabase Edge Functions (Deno) |
-| Deploy | Hostinger Node.js / Static |
-| Ícones | Lucide React |
+| Edge Functions | Supabase Edge Functions (Deno) — uso previsto, ainda não implementado no repositório |
+| Deploy | Hostinger (hospedagem compartilhada, site estático publicado via GitHub Actions) |
+| Bibliotecas client-side | Chart.js, jsPDF + autotable e QRCode.js, carregadas via `<script>` em `public/index.html` |
+
+> `server.js` (Express) existe apenas para rodar o site localmente em
+> desenvolvimento — a produção não roda Node/Passenger, é servida como
+> arquivos estáticos (ver "Deploy na Hostinger").
 
 ---
 
@@ -86,11 +91,17 @@ Copie `.env.example` para `.env` e preencha:
 
 ```bash
 PORT=3000
-SUPABASE_URL=https://SEU-PROJETO.supabase.co
-SUPABASE_ANON_KEY=SUA-CHAVE-ANON-PUBLICA
+SUPABASE_URL=https://seu-projeto.supabase.co
+SUPABASE_KEY=sua-chave-anon-ou-service-role
 ```
 
-> **Importante:** a chave `anon` é pública, mas o acesso deve ser protegido por RLS. Nunca exponha a chave `service_role` no frontend.
+> **Importante:** como o site é estático, o browser não recebe variáveis de
+> ambiente do `.env` — a URL e a chave `anon` do Supabase usadas pelo
+> frontend estão fixas diretamente em `public/vp-integration.js`. O `.env`
+> local controla apenas a porta do servidor de desenvolvimento (`server.js`).
+> A chave `anon` é pública por natureza, mas o acesso aos dados deve
+> continuar protegido por RLS. Nunca exponha a chave `service_role` no
+> frontend.
 
 ### Tabelas principais
 
@@ -239,12 +250,21 @@ Exportação em CSV e fila de e-mails integrada às Edge Functions do Supabase.
 
 ```txt
 asset-manager/
-├── public/             # Frontend da aplicação (arquivos servidos pelo server.js)
-├── .env.example        # Modelo de variáveis de ambiente (Supabase, porta, etc.)
+├── .claude/             # Configuração do Claude Code (skills do fluxo de especificação, launch.json)
+├── .github/workflows/   # CI/CD — deploy estático automático para a Hostinger
+├── public/              # Frontend estático (HTML + JS vanilla), servido pelo server.js em dev
+│   └── js/domain/        # Lógica de domínio pura (UID, SLA), testada em tests/domain/
+├── supabase/            # Migrations versionadas do schema do banco
+├── tests/               # Testes automatizados (node --test)
+├── reports/             # Relatórios de revisão (arquitetura, banco, design, handoff)
+├── specs/               # Artefatos do fluxo de desenvolvimento orientado por especificação
+├── CLAUDE.md            # Constituição do projeto (regras para o fluxo de especificação)
+├── .env.example         # Modelo de variáveis de ambiente (porta do servidor local)
 ├── .gitignore
-├── package.json        # Dependências e scripts
-├── package-lock.json   # Lock de versões
-├── server.js           # Servidor Node.js que serve o frontend
+├── deploy.sh            # Script de deploy via cron/pull (ver observação em "Deploy na Hostinger")
+├── package.json         # Dependências e scripts do servidor de desenvolvimento local
+├── package-lock.json    # Lock de versões
+├── server.js            # Servidor Node.js — apenas para desenvolvimento local
 └── README.md
 ```
 
@@ -273,15 +293,23 @@ Acesse o endereço exibido no terminal (ex.: `http://localhost:3000`).
 
 ## Deploy na Hostinger
 
-### Modo Node.js
+O mecanismo ativo é o **deploy estático automático** via
+`.github/workflows/deploy-hostinger.yml`: a cada push em `main`, o workflow
+publica o conteúdo de `public/` em `public_html/` via SSH/SCP. `server.js`
+**não roda em produção** — ele existe só para desenvolvimento local (ver
+"Como Executar Localmente"). Os secrets necessários ficam em Settings →
+Secrets and variables → Actions do repositório
+(`HOSTINGER_SSH_HOST`, `HOSTINGER_SSH_PORT`, `HOSTINGER_SSH_USER`,
+`HOSTINGER_SSH_PASSWORD`, `HOSTINGER_REMOTE_PATH`); sem eles, o workflow roda
+como CI mas pula o deploy.
 
-1. Envie os arquivos do repositório ao servidor (FTP/Git do hPanel)
-2. Instale as dependências: `npm install`
-3. Crie o `.env` a partir do `.env.example` com as credenciais do Supabase
-4. Configure o aplicativo Node.js no hPanel apontando para `server.js`
-5. Ative o SSL/HTTPS no domínio
+> Também existe um `deploy.sh` no repositório, pensado para um modelo
+> alternativo (cron fazendo `git pull` + `npm ci` direto no servidor). Ele não
+> é acionado pelo workflow do GitHub Actions — confirme com quem administra a
+> hospedagem qual dos dois mecanismos está de fato ativo antes de assumir um
+> ou outro.
 
-### Modo Static
+### Deploy manual (alternativa)
 
 1. Envie o conteúdo da pasta `public/` para `public_html/`
 2. Ative o SSL/HTTPS no domínio
