@@ -37,14 +37,12 @@ aberto.
 - [FR06]: O e-mail de alerta fica registrado na Fila de E-mails (mesma tela
   de auditoria onde já aparecem os convites de acesso enviados), com
   data/hora, destinatário(s) e o conteúdo da mensagem.
-- [FR07]: O destinatário do alerta é composto pelos e-mails dos
-  colaboradores vinculados a contas de Administrador ou Técnico que
-  tiverem e-mail cadastrado. Contas sem colaborador vinculado (ex.: uma
-  conta de administrador criada sem vínculo com um colaborador) não
-  recebem o alerta.
-- [FR08]: Se, no momento do cruzamento de nível, nenhuma conta de
-  Administrador ou Técnico tiver e-mail cadastrado, nenhum e-mail é
-  enviado — mas a notificação interna (sino) continua funcionando
+- [FR07]: O destinatário do alerta é um endereço de e-mail fixo da equipe de
+  TI, definido uma única vez no sistema — não depende de nenhuma conta de
+  usuário ter e-mail cadastrado, e não existe tela para alterá-lo (ver
+  Decisão de Clarificação 3, que substitui a Decisão 1 original).
+- [FR08]: Se esse endereço fixo não estiver definido (campo vazio), nenhum
+  e-mail é enviado — mas a notificação interna (sino) continua funcionando
   normalmente de qualquer forma.
 
 ## Regras de Negócio
@@ -65,9 +63,9 @@ aberto.
 ## Perfis de Acesso Afetados
 
 - **Administrador** e **Técnico**: são quem gerencia o módulo de Estoque
-  hoje (cadastro, uso, edição e exclusão de suprimentos) e são os
-  destinatários previstos deste alerta — desde que a conta esteja vinculada
-  a um colaborador com e-mail cadastrado (ver FR07/FR08).
+  hoje (cadastro, uso, edição e exclusão de suprimentos); o alerta vai para
+  um e-mail fixo de TI (ver FR07/FR08), não para o e-mail individual de
+  cada conta.
 - **Usuário**: não é afetado — não tem acesso ao módulo de Estoque.
 
 ## Fora do Escopo (Out of Scope)
@@ -102,9 +100,9 @@ aberto.
 - Dado um item esgotado que é reabastecido para um nível acima de "Baixo",
   quando ele volta a cair para "Baixo" novamente depois, então um novo
   e-mail de alerta é enviado normalmente.
-- Dado um item que cruza para "Baixo" e nenhuma conta de Administrador ou
-  Técnico tem e-mail cadastrado, quando o cruzamento é detectado, então
-  nenhum e-mail é enviado, mas a notificação interna aparece normalmente.
+- Dado um item que cruza para "Baixo" e o e-mail fixo de TI não está
+  definido, quando o cruzamento é detectado, então nenhum e-mail é
+  enviado, mas a notificação interna aparece normalmente.
 - Dado um item que permanece em "Baixo" por vários dias sem nenhuma mudança
   de quantidade, quando o sistema reverifica os níveis periodicamente,
   então nenhum e-mail adicional é enviado (só a notificação interna
@@ -131,3 +129,19 @@ aberto.
    - C) Outro intervalo
    - **Decisão:** A — o e-mail é mais intrusivo que a notificação interna;
      envia só quando o nível piora, sem lembretes repetidos (FR05).
+
+3. **(Levantado no `/plan`, corrige a Decisão 1) A investigação mais a
+   fundo de como contas de Administrador/Técnico são criadas
+   (`adicionarUsuario()`) mostrou que elas nunca têm colaborador vinculado
+   nem e-mail próprio — só contas de perfil Usuário têm isso. Ou seja, a
+   Decisão 1 ("colaborador vinculado") nunca encontraria destinatário na
+   prática. Como resolver?**
+   - A) E-mail fixo de TI, sem tela de configuração
+   - B) Adicionar campo de e-mail às contas Admin/Técnico (expande escopo)
+   - C) Manter como decidido, aceitando que hoje não envia a ninguém
+   - D) Outro mecanismo
+   - **Decisão:** A — um endereço fixo definido uma única vez no sistema,
+     sem depender de nenhuma conta de usuário ter e-mail cadastrado e sem
+     tela de configuração (consistente com "Fora do Escopo", que já
+     descartava uma tela de configuração de destinatários). **Esta decisão
+     substitui a Decisão 1** (FR07/FR08 foram atualizados).
