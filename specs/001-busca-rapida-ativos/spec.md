@@ -36,9 +36,8 @@ segundos.
 - [FR07]: Limpar o campo de busca volta a exibir a lista completa de ativos
   (respeitando os demais filtros já aplicados na tela, como tipo ou status,
   quando existirem).
-- [FR08]: A busca funciona em conjunto com os filtros já existentes na tela
-  de Ativos (ex.: filtro por tipo ou status) — ambos se combinam, não se
-  substituem.
+- [FR08]: A busca funciona em conjunto com o filtro de status já existente
+  na tela de Ativos — ambos se combinam, não se substituem.
 
 ## Regras de Negócio
 
@@ -55,9 +54,12 @@ segundos.
 
 - **Administrador** e **Técnico**: têm acesso à tela de Ativos e, portanto, à
   busca rápida, exatamente como já têm acesso à listagem completa hoje.
-- **Usuário**: não é afetado — não tem acesso à tela de Ativos (apenas a
-  "Meus Dispositivos"), então esta funcionalidade não se aplica a esse
-  perfil.
+- **Usuário**: também acessa a tela de Ativos, mas em uma visão restrita aos
+  equipamentos atualmente sob sua tutela (não é a mesma coisa que a tela
+  "Meus Dispositivos", que é uma página separada). A busca rápida e a coluna
+  de responsável atual aparecem igualmente nessa visão restrita — o Usuário
+  só vê os ativos que já teria acesso de qualquer forma, então não há
+  exposição de dado novo.
 
 ## Fora do Escopo (Out of Scope)
 
@@ -121,3 +123,14 @@ segundos.
    - B) Limitar e indicar que há mais
    - **Decisão:** A — sem limite; todos os resultados correspondentes são
      exibidos.
+
+5. **(Levantado no `/analyze`, a partir do `research.md`) A navegação
+   "Ativos" fica sempre visível no menu, inclusive para o perfil Usuário,
+   que vê uma versão restrita aos próprios equipamentos
+   (`ativosSobTutelaDoUsuarioAtual`). A busca e a coluna de responsável
+   atual devem aparecer também nessa visão restrita?**
+   - A) Sim, mostrar para todos os perfis que acessam a tela
+   - B) Não, restringir a Admin/Técnico (exigiria lógica condicional extra)
+   - **Decisão:** A — mostrar para todos os perfis que já acessam a tela de
+     Ativos, já que o Usuário não passa a ver nenhum ativo que não visse
+     antes.

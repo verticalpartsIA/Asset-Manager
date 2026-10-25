@@ -96,11 +96,18 @@ carregados no cliente.
   tabela e, para cada linha, calcular o responsável via
   `window.AssetHolderDomain.resolveCurrentHolder(a.uid, allocations, employees)`
   (carregando `allocations`/`employees` **uma vez** antes do `.map()`, não a
-  cada linha), exibindo o nome ou "Disponível" quando `null`.
+  cada linha), exibindo o nome ou "Disponível" quando `null`. Mostrar a
+  coluna igualmente na visão restrita do perfil Usuário (`userScoped`) —
+  ver Decisão de Clarificação 5 do `spec.md`: não há branch por papel aqui.
+  Atualizar também os dois `colspan="8"` hardcoded (`public/index.html`,
+  mensagens de "nenhum colaborador vinculado" e "nenhum ativo encontrado")
+  para `colspan="9"`, já que a tabela passa a ter 9 colunas.
   **Depende de:** T009.
   **Arquivo:** `public/index.html`
-  **Pronto quando:** cada linha da tabela de Ativos (visão Admin/Técnico)
-  mostra o responsável atual ou "Disponível" (FR05 da spec).
+  **Pronto quando:** cada linha da tabela de Ativos (Admin/Técnico e visão
+  restrita do Usuário) mostra o responsável atual ou "Disponível" (FR05 da
+  spec), e as duas mensagens de linha vazia continuam alinhadas com a nova
+  contagem de colunas.
 
 - [ ] **T011** — Confirmar/ajustar a mensagem de lista vazia já existente
   (`'Nenhum ativo encontrado'`) para cobrir o caso de busca sem resultado
@@ -122,10 +129,13 @@ carregados no cliente.
   **Pronto quando:** todos os 5 cenários se comportam exatamente como
   descrito no `spec.md`.
 
-- [ ] **T013** — Confirmar que o perfil Usuário continua sem acesso à busca
-  (tela de Ativos não é exibida para esse perfil) e que o escopo
+- [ ] **T013** — Confirmar, logado como Usuário, que a tela de Ativos
+  (visão restrita aos equipamentos sob sua tutela) exibe a busca e a coluna
+  de responsável normalmente, que o escopo
   `ativosSobTutelaDoUsuarioAtual()` não foi alterado por engano pelas
-  mudanças em `renderAtivos()`.
-  **Depende de:** T009.
-  **Pronto quando:** logar como Usuário não expõe o novo campo de busca em
-  nenhuma tela, e "Meus Dispositivos" continua funcionando como antes.
+  mudanças em `renderAtivos()`, e que a página "Meus Dispositivos" (tela
+  separada, fora do escopo desta feature) continua funcionando como antes.
+  **Depende de:** T009, T010.
+  **Pronto quando:** logar como Usuário mostra o campo de busca e a coluna
+  de responsável na tela de Ativos, filtrando corretamente apenas os
+  equipamentos sob sua tutela, sem regressão em "Meus Dispositivos".
