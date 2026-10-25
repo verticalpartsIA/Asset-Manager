@@ -6,7 +6,7 @@ carregados no cliente.
 
 ## Fase 2 — Domínio
 
-- [ ] **T001** — Criar `public/js/domain/assetSearch.js` com as funções
+- [x] **T001** — Criar `public/js/domain/assetSearch.js` com as funções
   puras `normalizarTermoBusca`, `ativoCorrespondeABusca` e
   `filtrarAtivosPorBusca` (ver `plan.md`, seção 1), seguindo o padrão de
   `public/js/domain/uid.js` (ES module + `window.AssetSearchDomain` ao
@@ -16,7 +16,7 @@ carregados no cliente.
   `localStorage`/DOM/Supabase, e expõe `window.AssetSearchDomain` com as
   mesmas três funções.
 
-- [ ] **T002** — Criar `public/js/domain/assetHolder.js` com a função pura
+- [x] **T002** — Criar `public/js/domain/assetHolder.js` com a função pura
   `resolveCurrentHolder` (ver `plan.md`, seção 2 e `data-model.md`, regra
   "responsável atual"), seguindo o mesmo padrão (`window.AssetHolderDomain`
   ao final).
@@ -28,7 +28,7 @@ carregados no cliente.
 
 ## Fase 3 — Testes de Domínio
 
-- [ ] **T003** — Criar `tests/domain/assetSearch.test.mjs`, importando de
+- [x] **T003** — Criar `tests/domain/assetSearch.test.mjs`, importando de
   `../../public/js/domain/assetSearch.js` (não via `window`), cobrindo:
   termo vazio retorna tudo; match por substring em `uid`; match em
   `serial`; match em `imei`; case-insensitive; nenhum campo bate → item
@@ -39,7 +39,7 @@ carregados no cliente.
   **Pronto quando:** `node --test tests/domain/assetSearch.test.mjs` passa
   sem falhas.
 
-- [ ] **T004** — Criar `tests/domain/assetHolder.test.mjs`, importando
+- [x] **T004** — Criar `tests/domain/assetHolder.test.mjs`, importando
   `resolveCurrentHolder` de `../../public/js/domain/assetHolder.js`,
   cobrindo: nenhuma alocação ativa para o `asset_uid` → `null`; alocação
   ativa mas sem `employee` correspondente → `null`; alocação ativa com
@@ -50,14 +50,14 @@ carregados no cliente.
   **Pronto quando:** `node --test tests/domain/assetHolder.test.mjs` passa
   sem falhas.
 
-- [ ] **T005** — Rodar `npm test` (suíte completa) e confirmar que nenhum
+- [x] **T005** — Rodar `npm test` (suíte completa) e confirmar que nenhum
   teste existente quebrou com os dois módulos novos.
   **Depende de:** T003, T004.
   **Pronto quando:** `npm test` termina sem falhas.
 
 ## Fase 4 — Interface
 
-- [ ] **T006** — Carregar os dois módulos novos em `public/index.html`,
+- [x] **T006** — Carregar os dois módulos novos em `public/index.html`,
   junto aos `<script type="module">` de `uid.js`/`sla.js` (linhas 22-24).
   **Depende de:** T001, T002 (os arquivos precisam existir).
   **Arquivo:** `public/index.html`
@@ -65,7 +65,7 @@ carregados no cliente.
   presentes e `window.AssetSearchDomain`/`window.AssetHolderDomain` ficam
   disponíveis ao carregar a página (checar no console do navegador).
 
-- [ ] **T007** — Adicionar o campo de busca (`input#ativos-busca`) na barra
+- [x] **T007** — Adicionar o campo de busca (`input#ativos-busca`) na barra
   de filtros da tela de Ativos (`.table-header-bar`, ao lado dos botões de
   status), com placeholder "Buscar por UID, serial ou IMEI..." e
   `aria-label` equivalente.
@@ -74,7 +74,7 @@ carregados no cliente.
   **Pronto quando:** o campo aparece visualmente na tela de Ativos, acima
   da tabela, sem quebrar o layout dos botões de status existentes.
 
-- [ ] **T008** — Adicionar a variável de módulo `ativoBusca = ''` (ao lado
+- [x] **T008** — Adicionar a variável de módulo `ativoBusca = ''` (ao lado
   de `ativoFiltro`) e a função `buscarAtivos(termo)` (ao lado de
   `filtrarAtivos`), chamada pelo `oninput` do campo criado em T007.
   **Depende de:** T007.
@@ -82,7 +82,7 @@ carregados no cliente.
   **Pronto quando:** digitar no campo de busca chama `buscarAtivos` e
   atualiza `ativoBusca` a cada tecla.
 
-- [ ] **T009** — Em `renderAtivos()`, aplicar
+- [x] **T009** — Em `renderAtivos()`, aplicar
   `window.AssetSearchDomain.filtrarAtivosPorBusca(filtered, ativoBusca, item => item.asset)`
   depois do filtro de status existente e antes de montar `tbody.innerHTML`.
   **Depende de:** T008.
@@ -92,7 +92,7 @@ carregados no cliente.
   spec) e respeitando o escopo por perfil (`ativosSobTutelaDoUsuarioAtual`
   continua intacto para o perfil Usuário).
 
-- [ ] **T010** — Adicionar a coluna "Responsável Atual" no cabeçalho da
+- [x] **T010** — Adicionar a coluna "Responsável Atual" no cabeçalho da
   tabela e, para cada linha, calcular o responsável via
   `window.AssetHolderDomain.resolveCurrentHolder(a.uid, allocations, employees)`
   (carregando `allocations`/`employees` **uma vez** antes do `.map()`, não a
@@ -109,7 +109,7 @@ carregados no cliente.
   spec), e as duas mensagens de linha vazia continuam alinhadas com a nova
   contagem de colunas.
 
-- [ ] **T011** — Confirmar/ajustar a mensagem de lista vazia já existente
+- [x] **T011** — Confirmar/ajustar a mensagem de lista vazia já existente
   (`'Nenhum ativo encontrado'`) para cobrir o caso de busca sem resultado
   (FR06 da spec), limpar o campo de busca restaurando a lista completa
   (FR07) respeitando os demais filtros ativos.
@@ -121,7 +121,7 @@ carregados no cliente.
 
 ## Fase 5 — Validação
 
-- [ ] **T012** — Validar manualmente, como Administrador e como Técnico, os
+- [x] **T012** — Validar manualmente, como Administrador e como Técnico, os
   5 cenários de aceitação do `spec.md` (busca por trecho de UID; busca por
   serial; busca sem correspondência; busca combinada com filtro de status;
   limpar a busca restaura a lista).
@@ -129,7 +129,7 @@ carregados no cliente.
   **Pronto quando:** todos os 5 cenários se comportam exatamente como
   descrito no `spec.md`.
 
-- [ ] **T013** — Confirmar, logado como Usuário, que a tela de Ativos
+- [x] **T013** — Confirmar, logado como Usuário, que a tela de Ativos
   (visão restrita aos equipamentos sob sua tutela) exibe a busca e a coluna
   de responsável normalmente, que o escopo
   `ativosSobTutelaDoUsuarioAtual()` não foi alterado por engano pelas

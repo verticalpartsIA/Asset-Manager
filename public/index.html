@@ -22,6 +22,10 @@
 <script type="module" src="./js/domain/uid.js"></script>
 <!-- Classificação de SLA (issue #13), testada em tests/domain/sla.test.mjs -->
 <script type="module" src="./js/domain/sla.js"></script>
+<!-- Busca Rápida de Ativos (specs/001-busca-rapida-ativos), testada em tests/domain/assetSearch.test.mjs -->
+<script type="module" src="./js/domain/assetSearch.js"></script>
+<!-- Resolução do responsável atual de um ativo (specs/001-busca-rapida-ativos), testada em tests/domain/assetHolder.test.mjs -->
+<script type="module" src="./js/domain/assetHolder.js"></script>
 <style id="vp-a11y">
   /* #23 — color-scheme acompanha o tema do app (controles/scrollbars nativos) */
   :root[data-theme="dark"]  { color-scheme: dark; }
@@ -86,7 +90,8 @@ color: var(--gold-primary);
 [data-theme="dark"] .table-card thead, [data-theme="dark"] thead { background: var(--black-tertiary); }
 [data-theme="dark"] .filter-field input, [data-theme="dark"] .filter-field select,
 [data-theme="dark"] .form-field input, [data-theme="dark"] .form-field select,
-[data-theme="dark"] .form-field textarea, [data-theme="dark"] .login-form input {
+[data-theme="dark"] .form-field textarea, [data-theme="dark"] .login-form input,
+[data-theme="dark"] .input-search {
 background: var(--black-tertiary); color: var(--text-primary); border-color: var(--border-gold);
 }
 [data-theme="dark"] .filter-field label,
@@ -514,6 +519,23 @@ transition: all 0.2s;
 }
 .form-field textarea { resize: vertical; min-height: 80px; }
 .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+outline: none;
+border-color: var(--gold-primary);
+box-shadow: 0 0 0 3px var(--gold-glow);
+}
+.input-search {
+background: #ffffff;
+border: 1px solid #d1d5db;
+border-radius: 8px;
+padding: 9px 14px;
+color: var(--text-primary);
+font-family: 'Poppins', 'Inter', system-ui, -apple-system, sans-serif;
+font-size: 13.5px;
+min-width: 220px;
+flex: 1 1 220px;
+transition: all 0.2s;
+}
+.input-search:focus {
 outline: none;
 border-color: var(--gold-primary);
 box-shadow: 0 0 0 3px var(--gold-glow);
@@ -1107,6 +1129,7 @@ Atualizar
 <div class="table-card">
 <div class="table-header-bar">
 <div class="table-title">Todos os Ativos</div>
+<input type="search" id="ativos-busca" class="input-search" placeholder="Buscar por UID, serial ou IMEI..." aria-label="Buscar ativos por UID, serial ou IMEI" oninput="buscarAtivos(this.value)">
 <div class="btn-group">
 <button class="btn btn-outline btn-sm" onclick="filtrarAtivos(&#39;todos&#39;)">Todos</button>
 <button class="btn btn-outline btn-sm" onclick="filtrarAtivos(&#39;available&#39;)">Disponíveis</button>
@@ -1117,7 +1140,7 @@ Atualizar
 </div>
 </div>
 <table>
-<thead><tr><th>UID</th><th>Tipo</th><th>Descrição</th><th>Serial</th><th>Info Extra</th><th>Status</th><th>Observação</th><th>Ações</th></tr></thead>
+<thead><tr><th>UID</th><th>Tipo</th><th>Descrição</th><th>Serial</th><th>Info Extra</th><th>Status</th><th>Responsável Atual</th><th>Observação</th><th>Ações</th></tr></thead>
 <tbody id="ativos-table-body"></tbody>
 </table>
 </div>
@@ -3110,6 +3133,7 @@ options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins:
 });
 }
 let ativoFiltro = 'todos';
+let ativoBusca = '';
 function alocacaoAtivaDoUsuarioAtual(al) {
 return !!(currentUser && currentUser.employee_id && al && String(al.employee_id) === String(currentUser.employee_id) && al.status === 'active');
 }
@@ -3132,11 +3156,14 @@ const userScoped = currentUser && currentUser.role === 'user';
 const scopedItems = userScoped ? ativosSobTutelaDoUsuarioAtual() : getData(SK.assets).map(function(asset) { return { asset: asset, allocation: null }; });
 let filtered = scopedItems;
 if (ativoFiltro !== 'todos') filtered = scopedItems.filter(function(item) { return item.asset.status === ativoFiltro; });
+filtered = window.AssetSearchDomain.filtrarAtivosPorBusca(filtered, ativoBusca, function(item) { return item.asset; });
 const tbody = document.getElementById('ativos-table-body');
 if (userScoped && (!currentUser || !currentUser.employee_id)) {
-tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhum colaborador vinculado a este usuário. Entre novamente pelo vpsistema.com ou contate o administrador.</td></tr>';
+tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhum colaborador vinculado a este usuário. Entre novamente pelo vpsistema.com ou contate o administrador.</td></tr>';
 return;
 }
+const allocationsAtuais = getData(SK.allocations);
+const employeesAtuais = getData(SK.employees);
 tbody.innerHTML = filtered.map(function(item) {
 const a = item.asset;
 const al = item.allocation;
@@ -3148,15 +3175,18 @@ infoExtra = '<span style="font-size: 11px;">Tel: ' + (a.telefone || '—') + '<b
 } else if (a.type === 'NB') {
 infoExtra = '<span style="font-size: 11px; font-family: monospace;">ST: ' + (a.serviceTag || '—') + '</span>';
 }
+const holder = window.AssetHolderDomain.resolveCurrentHolder(a.uid, allocationsAtuais, employeesAtuais);
+const responsavelAtual = holder ? holder.employeeName : 'Disponível';
 let actions = '<button class="btn btn-outline btn-sm" onclick="mostrarDetalhesAtivo(\'' + a.uid + '\')">Detalhes</button> <button class="btn btn-outline btn-sm" onclick="mostrarQR(\'' + a.uid + '\')">QR</button>';
 if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-outline btn-sm" onclick="abrirModalEditarAtivo(\'' + a.id + '\')"><span aria-hidden="true">✏️</span> Editar</button>'; }
 if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-status btn-sm" onclick="abrirModalStatus(\'' + a.id + '\')"><span aria-hidden="true">⚙️</span> Status</button>'; }
 if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-discarded btn-sm" onclick="abrirModalDescartar(\'' + a.id + '\')">🗑️ Descartar</button>'; }
 if (isAdminUser() && (a.status === 'inactive' || a.status === 'discarded')) { actions += ' <button class="btn btn-danger-outline btn-sm" onclick="abrirModalExcluirAtivo(\'' + a.id + '\')"><span aria-hidden="true">❌</span> Excluir Definitivamente</button>'; }
-return '<tr><td class="uid-cell">' + a.uid + '</td><td>' + typeLabel(a.type) + '</td><td>' + a.brand + ' ' + a.model + '</td><td style="font-family: monospace; font-size: 12px;">' + a.serial + '</td><td>' + infoExtra + '</td><td><span class="badge badge-' + a.status + '">' + STATUS_LABELS[a.status] + '</span></td><td style="font-size: 11px; color: var(--text-secondary);">' + observacao + '</td><td><div class="btn-group">' + actions + '</div></td></tr>';
-}).join('') || '<tr><td colspan="8" style="text-align:center; padding:30px; color: var(--text-muted);">' + (userScoped ? 'Nenhum equipamento está atualmente sob sua tutela.' : 'Nenhum ativo encontrado') + '</td></tr>';
+return '<tr><td class="uid-cell">' + a.uid + '</td><td>' + typeLabel(a.type) + '</td><td>' + a.brand + ' ' + a.model + '</td><td style="font-family: monospace; font-size: 12px;">' + a.serial + '</td><td>' + infoExtra + '</td><td><span class="badge badge-' + a.status + '">' + STATUS_LABELS[a.status] + '</span></td><td style="font-size: 11px; color: var(--text-secondary);">' + responsavelAtual + '</td><td style="font-size: 11px; color: var(--text-secondary);">' + observacao + '</td><td><div class="btn-group">' + actions + '</div></td></tr>';
+}).join('') || '<tr><td colspan="9" style="text-align:center; padding:30px; color: var(--text-muted);">' + (userScoped ? 'Nenhum equipamento está atualmente sob sua tutela.' : (ativoBusca ? 'Nenhum ativo encontrado para a busca atual.' : 'Nenhum ativo encontrado')) + '</td></tr>';
 }
 function filtrarAtivos(filtro) { ativoFiltro = filtro; renderAtivos(); }
+function buscarAtivos(termo) { ativoBusca = termo; renderAtivos(); }
 function mostrarDetalhesAtivo(uid) {
 if (!usuarioPodeVerAtivo(uid)) {
 showToast('Você só pode visualizar detalhes dos ativos atualmente sob sua tutela.');
