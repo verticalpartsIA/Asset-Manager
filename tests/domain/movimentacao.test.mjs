@@ -52,16 +52,32 @@ test('devolução libera o ativo e registra DEVOLUCAO; avariado vai para manuten
   const e = estadoBase();
   const ok = devolver(e, { alocacaoId: 'al1', responsavel: resp });
   assert.equal(ok.assets.find(a => a.uid === 'NB-2').status, 'available');
-  assert.equal(ok.history[0].tipo_movimentacao, 'DEVOLUCAO');
+  // al1 é uma alocação legada (sem historico_registrado) — devolver() precisa
+  // materializar o evento de ALOCACAO original antes do de DEVOLUCAO, senão
+  // ele some do histórico assim que o flag abaixo for marcado (achado da
+  // revisão do PR #48).
+  assert.deepEqual(ok.history.map(h => h.tipo_movimentacao), ['ALOCACAO', 'DEVOLUCAO']);
+  assert.equal(ok.history[0].created_at, e.allocations[0].date);
   assert.equal(ok.allocations[0].status, 'inactive');
+  assert.equal(ok.allocations[0].historico_registrado, true);
   const avar = devolver(e, { alocacaoId: 'al1', estado: 'avariado', responsavel: resp });
   assert.equal(avar.assets.find(a => a.uid === 'NB-2').status, 'maintenance');
 });
 
+test('devolução de alocação já registrada (não-legada) não duplica o evento de ALOCACAO', () => {
+  const e = estadoBase();
+  e.allocations[0].historico_registrado = true; // já passou pelo serviço de movimentação
+  const r = devolver(e, { alocacaoId: 'al1', responsavel: resp });
+  assert.deepEqual(r.history.map(h => h.tipo_movimentacao), ['DEVOLUCAO']);
+});
+
 test('realocação gera DEVOLUCAO + ALOCACAO e o inativo sai da lista', () => {
   const e = estadoBase();
+  // al1 é legada: a 1ª ALOCACAO abaixo é o backfill do evento original (ver
+  // teste de devolução); a realocação em si continua gerando exatamente
+  // DEVOLUCAO + ALOCACAO.
   const r = realocar(e, { alocacaoId: 'al1', novoEmployeeId: 3, responsavel: resp });
-  assert.deepEqual(r.history.map(h => h.tipo_movimentacao), ['DEVOLUCAO', 'ALOCACAO']);
+  assert.deepEqual(r.history.map(h => h.tipo_movimentacao), ['ALOCACAO', 'DEVOLUCAO', 'ALOCACAO']);
   assert.equal(r.assets.find(a => a.uid === 'NB-2').status, 'assigned');
   const lista = colaboradoresNaListaDeAlocacao(e.employees, r.allocations);
   assert.equal(lista.some(l => l.employee.id === 2), false);

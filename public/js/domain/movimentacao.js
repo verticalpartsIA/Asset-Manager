@@ -162,11 +162,25 @@ export function devolver(estado, p) {
   const employee = estado.employees.find(function (e) { return String(e.id) === String(alloc.employee_id); });
   const history = clonar(estado.history);
   const estadoAtivo = p.estado || 'integro';
+  // Alocação legada (anterior a este serviço): nunca teve um evento real de
+  // ALOCACAO no histórico — só era coberta pelo gerador automático
+  // (gerarHistoricoAutomatico), que para de cobri-la assim que
+  // historico_registrado vira true, logo abaixo. Materializa o evento aqui
+  // antes de marcar o flag, para não perder o registro da alocação original
+  // (achado da revisão do PR #48).
+  const eraLegado = !alloc.historico_registrado;
   alloc.status = 'inactive';
   alloc.devolvido_em = p.agora || new Date().toISOString();
   alloc.historico_registrado = true;
   asset.status = estadoAtivo === 'avariado' ? 'maintenance' : 'available';
   if (p.observacao) asset.observacao = p.observacao;
+  if (eraLegado) {
+    history.push(criarRegistroHistorico({
+      tipoMovimentacao: TIPO_MOVIMENTACAO.ALOCACAO, asset: asset, employee: employee,
+      estado: 'integro', termoId: null, responsavel: null, observacao: null,
+      fotos: null, agora: alloc.date, alocacaoId: alloc.id
+    }));
+  }
   history.push(criarRegistroHistorico({
     tipoMovimentacao: TIPO_MOVIMENTACAO.DEVOLUCAO, asset: asset, employee: employee,
     estado: estadoAtivo, termoId: p.termoId, responsavel: p.responsavel, observacao: p.observacao,
