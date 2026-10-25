@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Assinatura de Termo de Responsabilidade — VerticalParts</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root { --bg:#f5f5f7; --card:#fff; --text:#111; --muted:#666; --gold:#f5c518; --border:#d9d9de; --err:#dc2626; --ok:#059669; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0e0e10; --card:#1a1a1d; --text:#f2f2f2; --muted:#a0a0a8; --border:#33333a; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Poppins, system-ui, sans-serif; background:var(--bg); color:var(--text); }
+  main { max-width: 760px; margin: 0 auto; padding: 16px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px; }
+  h1 { font-size:20px; margin:0 0 4px; } h2 { font-size:15px; margin:0 0 10px; }
+  .muted { color:var(--muted); font-size:13px; }
+  .termo-texto { white-space:pre-wrap; line-height:1.55; font-size:14px; }
+  .item { border-top:1px solid var(--border); padding:10px 0; font-size:14px; }
+  .item:first-child { border-top:none; }
+  .imgs { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .imgs img { width:96px; height:96px; object-fit:cover; border-radius:8px; border:1px solid var(--border); }
+  label { display:block; font-size:13px; font-weight:600; margin:12px 0 6px; }
+  input[type=text] { width:100%; padding:12px; border:1px solid var(--border); border-radius:8px; font-size:16px; background:var(--card); color:var(--text); }
+  canvas { width:100%; height:160px; border:1.5px dashed var(--border); border-radius:8px; background:#fff; touch-action:none; }
+  button { padding:13px 18px; border-radius:8px; border:none; font-size:15px; font-weight:700; cursor:pointer; }
+  .btn-primary { background:var(--gold); color:#000; width:100%; margin-top:16px; }
+  .btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+  .btn-link { background:none; color:var(--muted); text-decoration:underline; padding:6px 0; font-size:13px; font-weight:400; }
+  .msg { padding:14px; border-radius:8px; font-size:14px; }
+  .msg.err { background:rgba(220,38,38,.1); color:var(--err); border:1px solid var(--err); }
+  .msg.ok { background:rgba(5,150,105,.1); color:var(--ok); border:1px solid var(--ok); }
+  .check { display:flex; gap:10px; align-items:flex-start; font-size:14px; margin-top:14px; }
+  .check input { margin-top:3px; width:18px; height:18px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="card"><h1>Termo de Responsabilidade</h1><div class="muted">VerticalParts — assinatura digital</div></div>
+  <div id="estado"><div class="card muted">Carregando termo…</div></div>
+</main>
+<script>
+(function () {
+  var client = window.supabase.createClient('https://ubdkoqxfwcraftesgmbw.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZGtvcXhmd2NyYWZ0ZXNnbWJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjUwMjcsImV4cCI6MjA5MDY0MTAyN30.s1A15nFQVne94gbz0511L2IYvHdTcgYeL0H8YU80iI8', { auth: { persistSession: false, autoRefreshToken: false } });
+  function rpc(nome, args) { return client.schema('asset_manager').rpc(nome, args); }
+  var estado = document.getElementById('estado');
+  var token = (location.pathname.match(/\/assinar\/([A-Za-z0-9]+)/) || [])[1] || new URLSearchParams(location.search).get('t') || '';
+
+  function el(tag, attrs, children) {
+    var e = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) { if (k === 'text') e.textContent = attrs[k]; else e.setAttribute(k, attrs[k]); });
+    (children || []).forEach(function (c) { e.appendChild(c); });
+    return e;
+  }
+  function aviso(classe, texto) { estado.replaceChildren(el('div', { class: 'card' }, [el('div', { class: 'msg ' + classe, role: 'alert', text: texto })])); }
+  var MENSAGENS = {
+    invalido: 'Link inválido. Confira se o endereço está completo ou solicite um novo link.',
+    expirado: 'Este link expirou. Solicite o reenvio do termo ao setor de TI.',
+    cancelado: 'Este termo foi cancelado. Entre em contato com o setor de TI.',
+    bloqueado: 'Muitas tentativas inválidas. Tente novamente em alguns minutos.',
+    assinado: 'Este termo já foi assinado. Nenhuma ação adicional é necessária.'
+  };
+
+  function renderTermo(c) {
+    var nodes = [];
+    nodes.push(el('div', { class: 'card' }, [el('h2', { text: c.titulo || 'Termo' }), el('div', { class: 'termo-texto', text: c.texto || '' })]));
+    var itens = el('div', { class: 'card' }, [el('h2', { text: 'Equipamentos (' + (c.itens || []).length + ')' })]);
+    (c.itens || []).forEach(function (i) {
+      var d = el('div', { class: 'item' }, [el('strong', { text: i.asset_uid + (i.descricao ? ' — ' + i.descricao : '') }), el('div', { class: 'muted', text: 'Estado: ' + i.estado + (i.observacao ? ' · ' + i.observacao : '') })]);
+      if (i.imagens && i.imagens.length) {
+        var box = el('div', { class: 'imgs' });
+        i.imagens.forEach(function (src) { if (/^data:image\/(jpeg|png|webp);base64,/.test(src)) box.appendChild(el('img', { src: src, alt: 'Foto do equipamento ' + i.asset_uid })); });
+        d.appendChild(box);
+      }
+      itens.appendChild(d);
+    });
+    if (c.imagens && c.imagens.length) {
+      var box2 = el('div', { class: 'imgs' });
+      c.imagens.forEach(function (src) { if (/^data:image\/(jpeg|png|webp);base64,/.test(src)) box2.appendChild(el('img', { src: src, alt: 'Foto do termo' })); });
+      itens.appendChild(box2);
+    }
+    nodes.push(itens);
+
+    var form = el('div', { class: 'card' });
+    form.appendChild(el('h2', { text: 'Assinatura' }));
+    form.appendChild(el('div', { class: 'muted', text: 'Colaborador: ' + (c.colaborador_nome || '') }));
+    form.appendChild(el('label', { for: 'nome', text: 'Digite seu nome completo' }));
+    var nome = el('input', { type: 'text', id: 'nome', autocomplete: 'name' });
+    form.appendChild(nome);
+    form.appendChild(el('label', { text: 'Desenhe sua assinatura (opcional)' }));
+    var canvas = el('canvas', { id: 'sig', width: '600', height: '160', 'aria-label': 'Área de assinatura' });
+    form.appendChild(canvas);
+    var limpar = el('button', { type: 'button', class: 'btn-link', text: 'Limpar assinatura' });
+    form.appendChild(limpar);
+    var chk = el('input', { type: 'checkbox', id: 'aceite' });
+    form.appendChild(el('label', { class: 'check', for: 'aceite' }, [chk, el('span', { text: 'Li e concordo com o termo acima e confirmo o recebimento dos equipamentos nas condições descritas.' })]));
+    var btn = el('button', { type: 'button', class: 'btn-primary', text: 'Assinar termo' });
+    btn.disabled = true;
+    form.appendChild(btn);
+    var erro = el('div', { class: 'msg err', role: 'alert', style: 'display:none;margin-top:12px' });
+    form.appendChild(erro);
+    nodes.push(form);
+    estado.replaceChildren.apply(estado, nodes);
+
+    // desenho (mouse + toque)
+    var ctx = canvas.getContext('2d'), desenhando = false, desenhou = false;
+    ctx.lineWidth = 2.2; ctx.lineCap = 'round'; ctx.strokeStyle = '#000';
+    function pos(ev) { var r = canvas.getBoundingClientRect(); return { x: (ev.clientX - r.left) * canvas.width / r.width, y: (ev.clientY - r.top) * canvas.height / r.height }; }
+    canvas.addEventListener('pointerdown', function (ev) { desenhando = true; var p = pos(ev); ctx.beginPath(); ctx.moveTo(p.x, p.y); canvas.setPointerCapture(ev.pointerId); });
+    canvas.addEventListener('pointermove', function (ev) { if (!desenhando) return; var p = pos(ev); ctx.lineTo(p.x, p.y); ctx.stroke(); desenhou = true; });
+    ['pointerup', 'pointercancel'].forEach(function (n) { canvas.addEventListener(n, function () { desenhando = false; }); });
+    limpar.addEventListener('click', function () { ctx.clearRect(0, 0, canvas.width, canvas.height); desenhou = false; });
+
+    function validar() { btn.disabled = !(nome.value.trim().length >= 3 && chk.checked); }
+    nome.addEventListener('input', validar); chk.addEventListener('change', validar);
+
+    btn.addEventListener('click', async function () {
+      btn.disabled = true; btn.textContent = 'Enviando…'; erro.style.display = 'none';
+      var r = await rpc('termo_publico_assinar', {
+        p_token: token, p_nome: nome.value.trim(),
+        p_assinatura: desenhou ? canvas.toDataURL('image/png') : '', p_user_agent: navigator.userAgent
+      });
+      if (r.error || !r.data) { erro.textContent = 'Não foi possível registrar a assinatura. Tente novamente.'; erro.style.display = 'block'; btn.textContent = 'Assinar termo'; validar(); return; }
+      if (r.data.situacao === 'assinado') {
+        estado.replaceChildren(el('div', { class: 'card' }, [el('div', { class: 'msg ok', role: 'status', text: 'Termo assinado com sucesso em ' + new Date(r.data.assinado_em || Date.now()).toLocaleString('pt-BR') + '. Obrigado!' })]));
+      } else if (MENSAGENS[r.data.situacao]) { aviso('err', MENSAGENS[r.data.situacao]); }
+      else { erro.textContent = 'Informe seu nome completo.'; erro.style.display = 'block'; btn.textContent = 'Assinar termo'; validar(); }
+    });
+  }
+
+  (async function () {
+    if (!token) return aviso('err', MENSAGENS.invalido);
+    var r = await rpc('termo_publico_obter', { p_token: token });
+    if (r.error || !r.data) return aviso('err', 'Não foi possível carregar o termo agora. Tente novamente em instantes.');
+    if (r.data.situacao === 'valido') return renderTermo(r.data.conteudo);
+    aviso(r.data.situacao === 'assinado' ? 'ok' : 'err', MENSAGENS[r.data.situacao] || MENSAGENS.invalido);
+  })();
+})();
+</script>
+</body>
+</html>
