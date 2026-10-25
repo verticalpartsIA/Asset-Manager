@@ -29,13 +29,23 @@ aberto.
   é gerada a notificação interna de estoque baixo/esgotado (cadastro de novo
   item, uso/baixa de quantidade, e verificação periódica de níveis), sem
   exigir nenhuma ação manual de quem usa o sistema.
-- [FR05]: O sistema não envia um novo e-mail repetido para o mesmo item no
-  mesmo nível dentro de um curto intervalo de tempo, para não gerar spam
-  quando os níveis são reverificados várias vezes seguidas sem mudança real
-  de quantidade.
+- [FR05]: O sistema envia o e-mail **apenas uma vez por cruzamento de
+  nível** — não reenvia lembretes repetidos para o mesmo item enquanto ele
+  permanecer no mesmo nível crítico sem mudança de quantidade (diferente da
+  notificação interna, que já reenvia um lembrete a cada 6h; o e-mail é mais
+  intrusivo e não deve repetir dessa forma).
 - [FR06]: O e-mail de alerta fica registrado na Fila de E-mails (mesma tela
   de auditoria onde já aparecem os convites de acesso enviados), com
-  data/hora, destinatário e o conteúdo da mensagem.
+  data/hora, destinatário(s) e o conteúdo da mensagem.
+- [FR07]: O destinatário do alerta é composto pelos e-mails dos
+  colaboradores vinculados a contas de Administrador ou Técnico que
+  tiverem e-mail cadastrado. Contas sem colaborador vinculado (ex.: uma
+  conta de administrador criada sem vínculo com um colaborador) não
+  recebem o alerta.
+- [FR08]: Se, no momento do cruzamento de nível, nenhuma conta de
+  Administrador ou Técnico tiver e-mail cadastrado, nenhum e-mail é
+  enviado — mas a notificação interna (sino) continua funcionando
+  normalmente de qualquer forma.
 
 ## Regras de Negócio
 
@@ -56,7 +66,8 @@ aberto.
 
 - **Administrador** e **Técnico**: são quem gerencia o módulo de Estoque
   hoje (cadastro, uso, edição e exclusão de suprimentos) e são os
-  destinatários previstos deste alerta.
+  destinatários previstos deste alerta — desde que a conta esteja vinculada
+  a um colaborador com e-mail cadastrado (ver FR07/FR08).
 - **Usuário**: não é afetado — não tem acesso ao módulo de Estoque.
 
 ## Fora do Escopo (Out of Scope)
@@ -91,3 +102,32 @@ aberto.
 - Dado um item esgotado que é reabastecido para um nível acima de "Baixo",
   quando ele volta a cair para "Baixo" novamente depois, então um novo
   e-mail de alerta é enviado normalmente.
+- Dado um item que cruza para "Baixo" e nenhuma conta de Administrador ou
+  Técnico tem e-mail cadastrado, quando o cruzamento é detectado, então
+  nenhum e-mail é enviado, mas a notificação interna aparece normalmente.
+- Dado um item que permanece em "Baixo" por vários dias sem nenhuma mudança
+  de quantidade, quando o sistema reverifica os níveis periodicamente,
+  então nenhum e-mail adicional é enviado (só a notificação interna
+  continua reaparecendo a cada 6h, como já acontece hoje).
+
+## Decisões de Clarificação
+
+1. **Contas de Administrador/Técnico nem sempre têm e-mail cadastrado (só
+   quando vinculadas a um colaborador com e-mail — ex.: o admin padrão
+   "supporte" não tem). Para quem o alerta deve ir?**
+   - A) Colaboradores vinculados com e-mail
+   - B) E-mail fixo de TI
+   - C) Outro mecanismo
+   - **Decisão:** A — envia para o e-mail de cada colaborador vinculado a
+     uma conta Admin/Técnico que tiver e-mail cadastrado. Contas sem
+     colaborador vinculado não recebem (FR07/FR08).
+
+2. **A notificação interna já existente reenvia um lembrete a cada 6h
+   enquanto o item continuar "Baixo"/"Esgotado". O alerta por e-mail deve
+   repetir do mesmo jeito, ou só ser enviado uma vez por cruzamento de
+   nível?**
+   - A) Só uma vez por cruzamento
+   - B) Mesmo comportamento do interno (a cada 6h)
+   - C) Outro intervalo
+   - **Decisão:** A — o e-mail é mais intrusivo que a notificação interna;
+     envia só quando o nível piora, sem lembretes repetidos (FR05).
