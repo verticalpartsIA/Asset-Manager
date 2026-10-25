@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   alocar, devolver, realocar, validarAlocacao, colaboradoresNaListaDeAlocacao,
-  inativacoesPendentesDeRegistro, registrarInativacao, aplicarAtomicamente, criarRegistroHistorico
+  inativacoesPendentesDeRegistro, registrarInativacao, aplicarAtomicamente, criarRegistroHistorico,
+  revalidarAlocacoesTermo
 } from '../../public/js/domain/movimentacao.js';
 
 const resp = { id: 'u1', name: 'Admin', role: 'admin' };
@@ -136,4 +137,47 @@ test('aplicarAtomicamente reverte tudo se uma gravação falhar', () => {
 test('registro de histórico exige tipo válido e ativo', () => {
   assert.throws(() => criarRegistroHistorico({ tipoMovimentacao: 'X', asset: {} }), /inválido/);
   assert.throws(() => criarRegistroHistorico({ tipoMovimentacao: 'ALOCACAO' }), /sem ativo/);
+});
+
+test('revalidarAlocacoesTermo: item já vinculado e ativo (reenvio de termo ainda enviado) não é tocado', () => {
+  const e = estadoBase();
+  e.allocations.push({ id: 'alT', employee_id: 1, asset_uid: 'NB-1', status: 'active', termo_id: 'T1', historico_registrado: true });
+  e.assets.find(a => a.uid === 'NB-1').status = 'assigned';
+  const termo = { id: 'T1', colaborador_id: 1, itens: [{ asset_uid: 'NB-1', estado: 'bom' }] };
+  const r = revalidarAlocacoesTermo(e, termo, resp);
+  assert.deepEqual(r.allocations, e.allocations);
+  assert.equal(r.history.length, 0);
+});
+
+test('revalidarAlocacoesTermo: alocação do termo foi revertida na expiração (ativo voltou a available) e é recriada', () => {
+  const e = estadoBase();
+  const termo = { id: 'T1', colaborador_id: 1, itens: [{ asset_uid: 'NB-1', estado: 'bom', observacao: '' }] };
+  const r = revalidarAlocacoesTermo(e, termo, resp);
+  const nova = r.allocations.find(a => a.asset_uid === 'NB-1' && a.status === 'active');
+  assert.ok(nova, 'deveria recriar a alocação');
+  assert.equal(nova.termo_id, 'T1');
+  assert.equal(nova.termo_status, 'pendente');
+  assert.equal(r.assets.find(a => a.uid === 'NB-1').status, 'assigned');
+  assert.equal(r.history.length, 1);
+  assert.equal(r.history[0].tipo_movimentacao, 'ALOCACAO');
+});
+
+test('revalidarAlocacoesTermo: ativo foi realocado a outra pessoa desde a expiração — recusa reenvio', () => {
+  const e = estadoBase();
+  e.allocations.push({ id: 'alOutro', employee_id: 3, asset_uid: 'NB-1', status: 'active', historico_registrado: true });
+  e.assets.find(a => a.uid === 'NB-1').status = 'assigned';
+  const termo = { id: 'T1', colaborador_id: 1, itens: [{ asset_uid: 'NB-1', estado: 'bom' }] };
+  assert.throws(() => revalidarAlocacoesTermo(e, termo, resp), /não está mais disponível/);
+});
+
+test('revalidarAlocacoesTermo: vinculação retroativa desfeita na expiração é relinkada ao termo', () => {
+  const e = estadoBase();
+  // al1 já está com o colaborador 2 (sem termo) — simula posse retroativa cujo vínculo foi removido na expiração.
+  const termo = { id: 'T1', colaborador_id: 2, itens: [{ asset_uid: 'NB-2', estado: 'bom' }] };
+  const r = revalidarAlocacoesTermo(e, termo, resp);
+  const al = r.allocations.find(a => a.id === 'al1');
+  assert.equal(al.termo_id, 'T1');
+  assert.equal(al.termo_status, 'pendente');
+  assert.equal(al.termo_retroativo, true);
+  assert.equal(r.history.length, 0);
 });

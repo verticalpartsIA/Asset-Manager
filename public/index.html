@@ -4352,6 +4352,10 @@ const canal = document.getElementById('termo-envio-canal').value;
 const destino = document.getElementById('termo-envio-destino').value.trim();
 const dias = Math.max(1, Math.min(30, parseInt(document.getElementById('termo-envio-dias').value, 10) || window.TermosDomain.VALIDADE_PADRAO_DIAS));
 if (!destino) { showToast('Informe o ' + (canal === 'EMAIL' ? 'e-mail' : 'telefone') + ' do colaborador.'); return; }
+let est;
+try {
+est = window.MovDomain.revalidarAlocacoesTermo(estadoMovimentacao(), t, responsavelAtual());
+} catch (e) { showToast(e.message || 'Não foi possível revalidar as alocações deste termo.'); return; }
 const token = window.TermosDomain.gerarToken();
 const hash = await window.TermosDomain.hashToken(token);
 const expiraEm = window.TermosDomain.calcularExpiracao(new Date(), dias);
@@ -4367,7 +4371,7 @@ const alvo = termosAtual.find(function(x) { return x.id === t.id; });
 alvo.status = 'enviado'; alvo.canal = canal; alvo.expira_em = expiraEm; alvo.enviado_em = new Date().toISOString();
 if (canal === 'EMAIL') alvo.colaborador_email = destino; else alvo.colaborador_telefone = destino;
 alvo.envios = (alvo.envios || []).concat([{ em: alvo.enviado_em, canal: canal, destino: destino, por: currentUser.name }]);
-saveData(SK.termos, termosAtual);
+aplicarMovimentacao(est, [{ chave: SK.termos, valor: termosAtual }]);
 addLog(alvo.envios.length > 1 ? 'Termo Reenviado' : 'Termo Enviado', 'Termo ' + t.id + ' enviado por ' + canal + ' para ' + t.colaborador_nome, 'alteracao');
 if (canal === 'EMAIL') {
 queueEmail(destino, 'Termo de Responsabilidade — assinatura digital', mensagem, { tipo: 'termo', termo_id: t.id });

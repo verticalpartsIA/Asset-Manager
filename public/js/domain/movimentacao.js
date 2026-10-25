@@ -239,12 +239,61 @@ export function inativacoesPendentesDeRegistro(employees, allocations, history) 
   return pendentes;
 }
 
+/**
+ * Garante, antes de (re)enviar um termo para assinatura, que suas alocações
+ * existem e refletem a posse atual. Alocações de um termo revertidas na
+ * expiração não são recriadas sozinhas ao reenviar — o colaborador podia
+ * assinar por um equipamento já realocado para outra pessoa ou simplesmente
+ * sem nenhuma alocação ativa (achado da revisão do PR #48). Item já vinculado
+ * ao termo (reenvio de um termo ainda 'enviado') não é tocado; item cujo
+ * ativo segue em posse do mesmo colaborador sem termo é relinkado (caso
+ * retroativo); caso contrário o ativo precisa estar 'available' para ser
+ * realocado — senão a operação falha e o termo não deve ser reenviado.
+ * `termo` = { id, colaborador_id, itens: [{ asset_uid, estado, observacao, imagens }] }.
+ */
+export function revalidarAlocacoesTermo(estado, termo, responsavel) {
+  let atual = estado;
+  (termo.itens || []).forEach(function (item) {
+    const vinculada = atual.allocations.find(function (al) {
+      return al.termo_id === termo.id && al.asset_uid === item.asset_uid && al.status === 'active';
+    });
+    if (vinculada) return;
+    const asset = atual.assets.find(function (a) { return a.uid === item.asset_uid; });
+    if (!asset) throw new Error('Ativo ' + item.asset_uid + ' não encontrado.');
+    const jaEmPosse = atual.allocations.find(function (al) {
+      return al.status === 'active' && !al.termo_id && al.asset_uid === item.asset_uid && String(al.employee_id) === String(termo.colaborador_id);
+    });
+    if (jaEmPosse) {
+      atual = {
+        assets: atual.assets, history: atual.history, employees: atual.employees,
+        allocations: atual.allocations.map(function (al) {
+          return al === jaEmPosse ? Object.assign({}, al, { termo_id: termo.id, termo_status: 'pendente', termo_retroativo: true }) : al;
+        })
+      };
+      return;
+    }
+    if (asset.status !== 'available') {
+      throw new Error('O ativo ' + item.asset_uid + ' não está mais disponível (foi realocado desde a expiração do termo). Cancele este termo e crie um novo.');
+    }
+    const r = alocar(atual, {
+      assetUid: item.asset_uid, employeeId: termo.colaborador_id, estado: item.estado,
+      observacao: item.observacao, fotos: item.imagens, termoId: termo.id, responsavel: responsavel
+    });
+    r.allocations = r.allocations.map(function (al) {
+      return al.id === r.alocacao.id ? Object.assign({}, al, { termo_status: 'pendente' }) : al;
+    });
+    atual = { assets: r.assets, allocations: r.allocations, history: r.history, employees: atual.employees };
+  });
+  return atual;
+}
+
 if (typeof window !== 'undefined') {
   window.MovDomain = {
     TIPO_MOVIMENTACAO: TIPO_MOVIMENTACAO, alocacoesAtivasDe: alocacoesAtivasDe,
     colaboradoresNaListaDeAlocacao: colaboradoresNaListaDeAlocacao, validarAlocacao: validarAlocacao,
     criarRegistroHistorico: criarRegistroHistorico, aplicarAtomicamente: aplicarAtomicamente,
     alocar: alocar, devolver: devolver, realocar: realocar,
-    inativacoesPendentesDeRegistro: inativacoesPendentesDeRegistro, registrarInativacao: registrarInativacao
+    inativacoesPendentesDeRegistro: inativacoesPendentesDeRegistro, registrarInativacao: registrarInativacao,
+    revalidarAlocacoesTermo: revalidarAlocacoesTermo
   };
 }
