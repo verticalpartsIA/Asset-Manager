@@ -29,11 +29,12 @@ busca por UID/serial/IMEI.
   segue as mesmas regras já estabelecidas para a busca existente:
   correspondência parcial, em qualquer posição do texto, sem diferenciar
   maiúsculas de minúsculas, a partir do 1º caractere digitado.
-- [FR04]: Ativos sem responsável atual (status "Disponível") não têm nome
-  nem departamento para comparar — continuam aparecendo normalmente nos
-  resultados quando o termo bate em UID/serial/IMEI, mas nunca aparecem só
-  por causa de um termo de busca de responsável/departamento (já que não
-  há responsável).
+- [FR04]: Qualquer ativo sem responsável atual — não só os "Disponível",
+  mas também, por exemplo, os em "Manutenção" ou "Inativo" sem nenhuma
+  alocação ativa — não tem nome nem departamento para comparar. Esses
+  ativos continuam aparecendo normalmente nos resultados quando o termo
+  bate em UID/serial/IMEI, mas nunca aparecem só por causa de um termo de
+  busca de responsável/departamento.
 - [FR05]: A busca por departamento considera sempre o departamento atual
   do colaborador responsável, não um histórico de departamentos em que ele
   já trabalhou.
@@ -81,10 +82,26 @@ busca por UID/serial/IMEI.
 - Dado um ou mais ativos alocados para colaboradores do departamento
   "Financeiro", quando o usuário busca por "financeiro", então todos esses
   ativos aparecem no resultado.
-- Dado um ativo com status "Disponível" (sem responsável), quando o
-  usuário busca por um nome de colaborador ou por um departamento, então
-  esse ativo não aparece nos resultados dessa busca específica (mas
-  continua aparecendo numa busca por um UID/serial/IMEI válido).
+- Dado um ativo sem responsável atual (seja "Disponível", "Manutenção" ou
+  "Inativo" sem alocação ativa), quando o usuário busca por um nome de
+  colaborador ou por um departamento, então esse ativo não aparece nos
+  resultados dessa busca específica (mas continua aparecendo numa busca
+  por um UID/serial/IMEI válido).
+
+## Decisões de Clarificação
+
+1. **(Revisão de precisão, sem impacto de negócio)** O FR04 e o cenário de
+   aceitação correspondente mencionavam apenas ativos "Disponível" como
+   exemplo de "sem responsável atual", mas qualquer ativo sem alocação
+   ativa (também "Manutenção" e "Inativo", por exemplo) se enquadra na
+   mesma regra. Generalizado o texto para cobrir todos os casos, sem
+   mudar o comportamento pretendido.
+
+Nenhuma outra ambiguidade de negócio foi encontrada: a spec já se apoia
+inteiramente nas decisões já tomadas na feature 001 (Busca Rápida de
+Ativos) — mesmo campo de busca, mesmas regras de correspondência parcial,
+mesmo conceito de "responsável atual" (alocação ativa) — e não introduz
+nenhum conceito novo que exija uma escolha de negócio adicional.
 - Dado um ativo que já foi devolvido por um colaborador e realocado para
   outro, quando o usuário busca pelo nome do colaborador **anterior**,
   então o ativo não aparece nos resultados.
