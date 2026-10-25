@@ -47,10 +47,13 @@ busca por UID/serial/IMEI.
 - Um ativo que já foi devolvido por um colaborador e realocado para outro
   só aparece numa busca pelo nome/departamento do responsável **atual**,
   nunca pelo nome/departamento de um responsável anterior.
-- Esta busca não expõe nenhum dado que a tela de Ativos já não exiba: nome
-  do responsável e departamento já são informações visíveis na tela (nome
-  na coluna "Responsável Atual"); a busca só passa a permitir filtrar por
-  esses campos, não adiciona nenhuma informação nova à tela.
+- O nome do responsável já é visível na tela de Ativos (coluna "Responsável
+  Atual"); o departamento, hoje, só é visível em outras telas (ex.:
+  Relatórios). Esta feature passa a permitir **filtrar** por departamento
+  na tela de Ativos sem exibi-lo ali — funciona como um filtro "silencioso"
+  (decisão tomada no `/analyze`; ver Decisão de Clarificação 2). Quem
+  precisar ver o departamento de um responsável continua consultando a
+  tela de Relatórios.
 
 ## Perfis de Acesso Afetados
 
@@ -97,11 +100,22 @@ busca por UID/serial/IMEI.
    mesma regra. Generalizado o texto para cobrir todos os casos, sem
    mudar o comportamento pretendido.
 
-Nenhuma outra ambiguidade de negócio foi encontrada: a spec já se apoia
-inteiramente nas decisões já tomadas na feature 001 (Busca Rápida de
-Ativos) — mesmo campo de busca, mesmas regras de correspondência parcial,
-mesmo conceito de "responsável atual" (alocação ativa) — e não introduz
-nenhum conceito novo que exija uma escolha de negócio adicional.
+Nenhuma outra ambiguidade de negócio foi encontrada no `/clarify`: a spec
+já se apoia inteiramente nas decisões já tomadas na feature 001 (Busca
+Rápida de Ativos) — mesmo campo de busca, mesmas regras de correspondência
+parcial, mesmo conceito de "responsável atual" (alocação ativa) — e não
+introduz nenhum conceito novo que exija uma escolha de negócio adicional.
+
+2. **(Levantado no `/analyze`)** A tela de Ativos não exibe o departamento
+   do responsável hoje (só o nome, na coluna "Responsável Atual") —
+   departamento só é visível em outras telas, como Relatórios. Com a busca
+   passando a filtrar por departamento, a tela deveria passar a exibi-lo
+   também (ex.: junto ao nome), ou continuar como um filtro "silencioso"?
+   - A) Só filtro silencioso, sem mudar a coluna
+   - B) Mostrar o departamento junto ao nome na coluna
+   - **Decisão:** A — mantém a tela como está, consistente com "Fora do
+     Escopo" já descartar um filtro dedicado de departamento; quem quiser
+     ver o departamento consulta a tela de Relatórios.
 - Dado um ativo que já foi devolvido por um colaborador e realocado para
   outro, quando o usuário busca pelo nome do colaborador **anterior**,
   então o ativo não aparece nos resultados.
