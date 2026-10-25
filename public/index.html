@@ -3988,7 +3988,7 @@ if(!model || !specifics || !qtd) { showToast('Preencha todos os campos'); return
 }
 const supplies = getData(SK.supplies);
 const novoItem = {
-id: 'SUP-' + Date.now(),
+id: 'SUP-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
 type: tipo,
 model: model,
 specifics: specifics,
