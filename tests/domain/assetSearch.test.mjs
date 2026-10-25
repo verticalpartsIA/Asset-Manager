@@ -70,3 +70,44 @@ test('filtrarAtivosPorBusca sem getAsset trata os itens como o próprio ativo', 
   assert.equal(resultado.length, 1);
   assert.equal(resultado[0].uid, 'VP-NB-2026-001');
 });
+
+test('ativoCorrespondeABusca encontra por nome do responsável (holder)', () => {
+  const asset = { uid: 'VP-NB-2026-001', serial: 'SN-1', imei: null };
+  const holder = { employeeName: 'Fernanda Freires', employeeDepartment: 'FINANCEIRO' };
+  assert.equal(ativoCorrespondeABusca(asset, 'fernanda', holder), true);
+});
+
+test('ativoCorrespondeABusca encontra por departamento do responsável (holder)', () => {
+  const asset = { uid: 'VP-NB-2026-001', serial: 'SN-1', imei: null };
+  const holder = { employeeName: 'Fernanda Freires', employeeDepartment: 'FINANCEIRO' };
+  assert.equal(ativoCorrespondeABusca(asset, 'financeiro', holder), true);
+});
+
+test('ativoCorrespondeABusca com holder null não gera falso positivo nem erro', () => {
+  const asset = { uid: 'VP-NB-2026-001', serial: 'SN-1', imei: null };
+  assert.equal(ativoCorrespondeABusca(asset, 'financeiro', null), false);
+  assert.equal(ativoCorrespondeABusca(asset, 'fernanda', undefined), false);
+});
+
+test('filtrarAtivosPorBusca filtra usando o extrator getHolder (nome e departamento)', () => {
+  const items = [
+    { asset: { uid: 'VP-NB-2026-001' }, holder: { employeeName: 'Fernanda Freires', employeeDepartment: 'FINANCEIRO' } },
+    { asset: { uid: 'VP-CL-2026-002' }, holder: { employeeName: 'Giovanna Maeno', employeeDepartment: 'TI' } },
+    { asset: { uid: 'VP-NB-2026-003' }, holder: null }
+  ];
+  const porNome = filtrarAtivosPorBusca(items, 'giovanna', (i) => i.asset, (i) => i.holder);
+  assert.equal(porNome.length, 1);
+  assert.equal(porNome[0].asset.uid, 'VP-CL-2026-002');
+
+  const porDepartamento = filtrarAtivosPorBusca(items, 'financeiro', (i) => i.asset, (i) => i.holder);
+  assert.equal(porDepartamento.length, 1);
+  assert.equal(porDepartamento[0].asset.uid, 'VP-NB-2026-001');
+});
+
+test('filtrarAtivosPorBusca sem getHolder ignora nome/departamento (retrocompatível)', () => {
+  const items = [
+    { asset: { uid: 'VP-NB-2026-001' }, holder: { employeeName: 'Fernanda Freires', employeeDepartment: 'FINANCEIRO' } }
+  ];
+  const resultado = filtrarAtivosPorBusca(items, 'fernanda', (i) => i.asset);
+  assert.equal(resultado.length, 0);
+});

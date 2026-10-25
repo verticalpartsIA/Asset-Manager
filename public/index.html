@@ -26,6 +26,8 @@
 <script type="module" src="./js/domain/assetSearch.js"></script>
 <!-- Resolução do responsável atual de um ativo (specs/001-busca-rapida-ativos), testada em tests/domain/assetHolder.test.mjs -->
 <script type="module" src="./js/domain/assetHolder.js"></script>
+<!-- Alertas de Estoque Baixo por E-mail (specs/002-alertas-estoque-baixo-email), testada em tests/domain/stockAlert.test.mjs -->
+<script type="module" src="./js/domain/stockAlert.js"></script>
 <style id="vp-a11y">
   /* #23 — color-scheme acompanha o tema do app (controles/scrollbars nativos) */
   :root[data-theme="dark"]  { color-scheme: dark; }
@@ -2153,6 +2155,10 @@ const USUARIOS_PADRAO = [
 { username: 'giovanna.maeno', password: 'G1ov@nna!Maeno', role: 'user', name: 'Giovanna Maeno' },
 { username: 'tecnico.suporte', password: 'Tec@2024!VP', role: 'tecnico', name: 'Técnico de Suporte' }
 ];
+// specs/002-alertas-estoque-baixo-email — destinatário fixo do alerta de
+// estoque baixo/esgotado por e-mail. Vazio por padrão: preencher com o
+// e-mail da equipe de TI antes de usar em produção (ver verificarEstoqueBaixoItem).
+const ESTOQUE_ALERTA_EMAIL_TI = '';
 const ROUTE_TO_PAGE = {
 '/': 'dashboard',
 '/dashboard': 'dashboard',
@@ -3154,16 +3160,23 @@ return ativosSobTutelaDoUsuarioAtual().some(function(item) { return item.asset.u
 function renderAtivos() {
 const userScoped = currentUser && currentUser.role === 'user';
 const scopedItems = userScoped ? ativosSobTutelaDoUsuarioAtual() : getData(SK.assets).map(function(asset) { return { asset: asset, allocation: null }; });
+const allocationsAtuais = getData(SK.allocations);
+const employeesAtuais = getData(SK.employees);
+scopedItems.forEach(function(item) {
+item.holder = window.AssetHolderDomain.resolveCurrentHolder(item.asset.uid, allocationsAtuais, employeesAtuais);
+});
 let filtered = scopedItems;
 if (ativoFiltro !== 'todos') filtered = scopedItems.filter(function(item) { return item.asset.status === ativoFiltro; });
-filtered = window.AssetSearchDomain.filtrarAtivosPorBusca(filtered, ativoBusca, function(item) { return item.asset; });
+filtered = window.AssetSearchDomain.filtrarAtivosPorBusca(
+filtered, ativoBusca,
+function(item) { return item.asset; },
+function(item) { return item.holder; }
+);
 const tbody = document.getElementById('ativos-table-body');
 if (userScoped && (!currentUser || !currentUser.employee_id)) {
 tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhum colaborador vinculado a este usuário. Entre novamente pelo vpsistema.com ou contate o administrador.</td></tr>';
 return;
 }
-const allocationsAtuais = getData(SK.allocations);
-const employeesAtuais = getData(SK.employees);
 tbody.innerHTML = filtered.map(function(item) {
 const a = item.asset;
 const al = item.allocation;
@@ -3172,10 +3185,10 @@ const observacao = userScoped ? ('Desde ' + (al && al.date ? new Date(al.date).t
 let infoExtra = '—';
 if (a.type === 'CL') {
 infoExtra = '<span style="font-size: 11px;">Tel: ' + (a.telefone || '—') + '<br>IMEI: ' + (a.imei || a.serial || '—') + '</span>';
-} else if (a.type === 'NB') {
+} else if (a.type === 'NB' || a.type === 'DK') {
 infoExtra = '<span style="font-size: 11px; font-family: monospace;">ST: ' + (a.serviceTag || '—') + '</span>';
 }
-const holder = window.AssetHolderDomain.resolveCurrentHolder(a.uid, allocationsAtuais, employeesAtuais);
+const holder = item.holder;
 const responsavelAtual = holder ? holder.employeeName : 'Disponível';
 let actions = '<button class="btn btn-outline btn-sm" onclick="mostrarDetalhesAtivo(\'' + a.uid + '\')">Detalhes</button> <button class="btn btn-outline btn-sm" onclick="mostrarQR(\'' + a.uid + '\')">QR</button>';
 if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-outline btn-sm" onclick="abrirModalEditarAtivo(\'' + a.id + '\')"><span aria-hidden="true">✏️</span> Editar</button>'; }
@@ -3206,7 +3219,7 @@ html += '<div class="form-field"><label>Sistema</label><div style="padding: 10px
 html += '<div class="form-field"><label>Versão</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.versao || '—') + '</div></div>';
 html += '<div class="form-field"><label>Atualizado</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.atualizado || '—') + '</div></div>';
 html += '<div class="form-field"><label>Intune</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.intune || '—') + '</div></div>';
-} else if(a.type === 'NB') {
+} else if(a.type === 'NB' || a.type === 'DK') {
 html += '<div class="form-field"><label>Service Tag</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.serviceTag || '—') + '</div></div>';
 html += '<div class="form-field"><label>Sistema Operacional</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.so || '—') + '</div></div>';
 html += '<div class="form-field"><label>Windows Update</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.winupdate || '—') + '</div></div>';
@@ -3342,7 +3355,7 @@ html = `
 <div class="form-field"><label>Atualizado?</label><select id="${prefix}atualizado"><option value="Sim"${sel('atualizado','Sim')}>Sim</option><option value="Não"${sel('atualizado','Não')}>Não</option></select></div>
 <div class="form-field"><label>Ingressou no Intune?</label><select id="${prefix}intune"><option value="Sim"${sel('intune','Sim')}>Sim</option><option value="Não"${sel('intune','Não')}>Não</option></select></div>
 `;
-} else if (tipo === 'NB') {
+} else if (tipo === 'NB' || tipo === 'DK') {
 html = `
 <div class="form-field"><label>Service Tag</label><input type="text" id="${prefix}servicetag" placeholder="Service Tag Dell/HP" value="${v('serviceTag')}"></div>
 <div class="form-field"><label>Sistema Operacional</label><input type="text" id="${prefix}so" placeholder="Ex: Windows 11 Pro" value="${v('so')}"></div>
@@ -3403,7 +3416,7 @@ newAsset.sistema = document.getElementById('cad-sistema')?.value || '';
 newAsset.versao = document.getElementById('cad-versao')?.value || '';
 newAsset.atualizado = document.getElementById('cad-atualizado')?.value || '';
 newAsset.intune = document.getElementById('cad-intune')?.value || '';
-} else if(tipo === 'NB') {
+} else if(tipo === 'NB' || tipo === 'DK') {
 newAsset.serviceTag = document.getElementById('cad-servicetag')?.value || '';
 newAsset.so = document.getElementById('cad-so')?.value || '';
 newAsset.winupdate = document.getElementById('cad-winupdate')?.value || '';
@@ -3475,7 +3488,7 @@ a.sistema = document.getElementById('edit-sistema')?.value || '';
 a.versao = document.getElementById('edit-versao')?.value || '';
 a.atualizado = document.getElementById('edit-atualizado')?.value || '';
 a.intune = document.getElementById('edit-intune')?.value || '';
-} else if (a.type === 'NB') {
+} else if (a.type === 'NB' || a.type === 'DK') {
 a.serviceTag = document.getElementById('edit-servicetag')?.value || '';
 a.so = document.getElementById('edit-so')?.value || '';
 a.winupdate = document.getElementById('edit-winupdate')?.value || '';
@@ -3975,7 +3988,7 @@ if(!model || !specifics || !qtd) { showToast('Preencha todos os campos'); return
 }
 const supplies = getData(SK.supplies);
 const novoItem = {
-id: 'SUP-' + Date.now(),
+id: 'SUP-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
 type: tipo,
 model: model,
 specifics: specifics,
@@ -3987,7 +4000,7 @@ created_at: new Date().toISOString()
 supplies.push(novoItem);
 saveData(SK.supplies, supplies);
 addLog('Suprimento Cadastrado', (tipo === 'pelicula' ? 'Película' : 'Tinta') + ' ' + model + ' (' + specifics + ') adicionada ao estoque. Qtd: ' + qtd, 'cadastro');
-verificarEstoqueBaixoItem(novoItem);
+verificarEstoqueBaixoItem(novoItem, null);
 showToast('Suprimento adicionado ao estoque!');
 if(tipo === 'pelicula') {
 document.getElementById('est-pelicula-modelo').value = '';
@@ -4072,6 +4085,7 @@ const supplies = getData(SK.supplies);
 const s = supplies.find(function(x) { return x.id === suprimentoParaEditar; });
 if (!s) return;
 const resumoAntes = s.model + ' (' + s.specifics + '), Qtd: ' + s.quantity;
+const statusAnterior = s.status;
 s.model = model;
 s.specifics = specifics;
 s.quantity = qtd;
@@ -4079,7 +4093,7 @@ if (s.type === 'tinta') { s.level = document.getElementById('edit-suprimento-niv
 s.status = recalcularStatusSuprimento(qtd, s.type);
 saveData(SK.supplies, supplies);
 addLog('Suprimento Editado', (s.type === 'pelicula' ? 'Película' : 'Tinta') + ' atualizada. Antes: ' + resumoAntes + ' | Agora: ' + model + ' (' + specifics + '), Qtd: ' + qtd, 'alteracao');
-verificarEstoqueBaixoItem(s);
+verificarEstoqueBaixoItem(s, statusAnterior);
 showToast('Item de estoque atualizado com sucesso!');
 fecharModal('modal-editar-suprimento');
 suprimentoParaEditar = null;
@@ -4109,12 +4123,13 @@ const supplies = getData(SK.supplies);
 const s = supplies.find(function(x) { return x.id === suprimentoParaUsar; });
 if (!s) return;
 if (qtdUsada > s.quantity) { showToast('Quantidade utilizada maior que o disponível em estoque (' + s.quantity + ')'); return; }
+const statusAnterior = s.status;
 s.quantity -= qtdUsada;
 s.status = recalcularStatusSuprimento(s.quantity, s.type);
 saveData(SK.supplies, supplies);
 const nome = (s.type === 'pelicula' ? 'Película' : 'Tinta') + ' ' + s.model + ' (' + s.specifics + ')';
 addLog('Suprimento Utilizado', qtdUsada + ' unidade(s) de ' + nome + ' foram utilizadas' + (obs ? '. Observação: ' + obs : '') + '. Restam ' + s.quantity + ' em estoque.', 'alteracao');
-verificarEstoqueBaixoItem(s);
+verificarEstoqueBaixoItem(s, statusAnterior);
 showToast(qtdUsada + ' unidade(s) de ' + nome + ' registrada(s) como usada(s)!');
 fecharModal('modal-usar-suprimento');
 suprimentoParaUsar = null;
@@ -5793,13 +5808,17 @@ pushNotification({ dedupKey: 'stock-baixo-' + s.id, dedupMinutes: 360, type: 'es
 }
 });
 }
-function verificarEstoqueBaixoItem(item) {
+function verificarEstoqueBaixoItem(item, statusAnterior) {
 if (!item) return;
 const nome = (item.type === 'pelicula' ? 'Película' : 'Tinta') + ' ' + item.model + ' (' + item.specifics + ')';
 if (item.status === 'Esgotado') {
 pushNotification({ dedupKey: 'stock-esgotado-' + item.id, dedupMinutes: 360, type: 'estoque', level: 'danger', title: 'Estoque esgotado', message: nome + ' está esgotada no estoque.', page: 'estoque' });
 } else if (item.status === 'Baixo') {
 pushNotification({ dedupKey: 'stock-baixo-' + item.id, dedupMinutes: 360, type: 'estoque', level: 'warning', title: 'Estoque baixo', message: nome + ' com apenas ' + item.quantity + ' unidade(s) restante(s).', page: 'estoque' });
+}
+if (ESTOQUE_ALERTA_EMAIL_TI && window.StockAlertDomain.cruzouNivelCritico(statusAnterior, item.status)) {
+const alerta = window.StockAlertDomain.montarAlertaEstoqueEmail(item);
+queueEmail(ESTOQUE_ALERTA_EMAIL_TI, alerta.subject, alerta.body, { tipo: 'alerta-estoque', itemId: item.id, nivel: item.status });
 }
 }
 

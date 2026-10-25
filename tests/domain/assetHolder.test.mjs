@@ -14,12 +14,13 @@ test('resolveCurrentHolder retorna null quando a alocação ativa não tem colab
   assert.equal(resolveCurrentHolder('VP-NB-2026-001', allocations, employees), null);
 });
 
-test('resolveCurrentHolder retorna o colaborador quando há alocação ativa correspondente', () => {
+test('resolveCurrentHolder retorna o colaborador (com departamento) quando há alocação ativa correspondente', () => {
   const allocations = [{ asset_uid: 'VP-NB-2026-001', employee_id: 1, status: 'active' }];
-  const employees = [{ id: 1, name: 'Fernanda Freires' }];
+  const employees = [{ id: 1, name: 'Fernanda Freires', depto: 'FINANCEIRO' }];
   assert.deepEqual(resolveCurrentHolder('VP-NB-2026-001', allocations, employees), {
     employeeId: 1,
-    employeeName: 'Fernanda Freires'
+    employeeName: 'Fernanda Freires',
+    employeeDepartment: 'FINANCEIRO'
   });
 });
 
@@ -29,21 +30,23 @@ test('resolveCurrentHolder usa apenas a alocação ativa quando há uma inativa 
     { asset_uid: 'VP-NB-2026-001', employee_id: 2, status: 'active' }
   ];
   const employees = [
-    { id: 1, name: 'Fernanda Freires' },
-    { id: 2, name: 'Giovanna Maeno' }
+    { id: 1, name: 'Fernanda Freires', depto: 'FINANCEIRO' },
+    { id: 2, name: 'Giovanna Maeno', depto: 'TI' }
   ];
   assert.deepEqual(resolveCurrentHolder('VP-NB-2026-001', allocations, employees), {
     employeeId: 2,
-    employeeName: 'Giovanna Maeno'
+    employeeName: 'Giovanna Maeno',
+    employeeDepartment: 'TI'
   });
 });
 
 test('resolveCurrentHolder compara employee_id/id com tolerância a tipo (string vs number)', () => {
   const allocations = [{ asset_uid: 'VP-NB-2026-001', employee_id: '1', status: 'active' }];
-  const employees = [{ id: 1, name: 'Fernanda Freires' }];
+  const employees = [{ id: 1, name: 'Fernanda Freires', depto: 'FINANCEIRO' }];
   assert.deepEqual(resolveCurrentHolder('VP-NB-2026-001', allocations, employees), {
     employeeId: 1,
-    employeeName: 'Fernanda Freires'
+    employeeName: 'Fernanda Freires',
+    employeeDepartment: 'FINANCEIRO'
   });
 });
 
