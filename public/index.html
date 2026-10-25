@@ -3160,16 +3160,23 @@ return ativosSobTutelaDoUsuarioAtual().some(function(item) { return item.asset.u
 function renderAtivos() {
 const userScoped = currentUser && currentUser.role === 'user';
 const scopedItems = userScoped ? ativosSobTutelaDoUsuarioAtual() : getData(SK.assets).map(function(asset) { return { asset: asset, allocation: null }; });
+const allocationsAtuais = getData(SK.allocations);
+const employeesAtuais = getData(SK.employees);
+scopedItems.forEach(function(item) {
+item.holder = window.AssetHolderDomain.resolveCurrentHolder(item.asset.uid, allocationsAtuais, employeesAtuais);
+});
 let filtered = scopedItems;
 if (ativoFiltro !== 'todos') filtered = scopedItems.filter(function(item) { return item.asset.status === ativoFiltro; });
-filtered = window.AssetSearchDomain.filtrarAtivosPorBusca(filtered, ativoBusca, function(item) { return item.asset; });
+filtered = window.AssetSearchDomain.filtrarAtivosPorBusca(
+filtered, ativoBusca,
+function(item) { return item.asset; },
+function(item) { return item.holder; }
+);
 const tbody = document.getElementById('ativos-table-body');
 if (userScoped && (!currentUser || !currentUser.employee_id)) {
 tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:30px; color: var(--text-muted);">Nenhum colaborador vinculado a este usuário. Entre novamente pelo vpsistema.com ou contate o administrador.</td></tr>';
 return;
 }
-const allocationsAtuais = getData(SK.allocations);
-const employeesAtuais = getData(SK.employees);
 tbody.innerHTML = filtered.map(function(item) {
 const a = item.asset;
 const al = item.allocation;
@@ -3181,7 +3188,7 @@ infoExtra = '<span style="font-size: 11px;">Tel: ' + (a.telefone || '—') + '<b
 } else if (a.type === 'NB') {
 infoExtra = '<span style="font-size: 11px; font-family: monospace;">ST: ' + (a.serviceTag || '—') + '</span>';
 }
-const holder = window.AssetHolderDomain.resolveCurrentHolder(a.uid, allocationsAtuais, employeesAtuais);
+const holder = item.holder;
 const responsavelAtual = holder ? holder.employeeName : 'Disponível';
 let actions = '<button class="btn btn-outline btn-sm" onclick="mostrarDetalhesAtivo(\'' + a.uid + '\')">Detalhes</button> <button class="btn btn-outline btn-sm" onclick="mostrarQR(\'' + a.uid + '\')">QR</button>';
 if (isAdminUser() && a.status !== 'discarded') { actions += ' <button class="btn btn-outline btn-sm" onclick="abrirModalEditarAtivo(\'' + a.id + '\')"><span aria-hidden="true">✏️</span> Editar</button>'; }
