@@ -1,0 +1,93 @@
+# Especificação: Alertas de Estoque Baixo por E-mail
+
+## Contexto e Objetivo
+
+O sistema já avisa dentro do próprio Asset Manager quando um item de
+estoque (película de celular ou tinta de impressora) atinge o nível "Baixo"
+ou "Esgotado" — mas esse aviso só aparece como notificação interna, visível
+apenas para quem está com a sessão aberta e confere o sino de notificações
+no momento certo. Quem cuida da reposição desses suprimentos muitas vezes
+só percebe a falta quando já é tarde, porque não está olhando o sistema o
+dia inteiro.
+
+Esta funcionalidade adiciona o envio de um e-mail automático sempre que um
+item de estoque entra em nível "Baixo" ou "Esgotado", para que os
+responsáveis pela reposição sejam avisados mesmo sem estar com o sistema
+aberto.
+
+## Requisitos Funcionais (FR)
+
+- [FR01]: Sempre que um item de estoque (película ou tinta) muda de status
+  para "Baixo", o sistema envia um e-mail de alerta.
+- [FR02]: Sempre que um item de estoque muda de status para "Esgotado", o
+  sistema envia um e-mail de alerta — mesmo que já tenha enviado um alerta
+  de "Baixo" para esse mesmo item anteriormente.
+- [FR03]: O e-mail identifica claramente o item (tipo — película ou tinta,
+  modelo, e a especificação: material da película ou cor/tipo da tinta), a
+  quantidade atual e o nível atingido ("Baixo" ou "Esgotado").
+- [FR04]: O alerta por e-mail é avaliado nos mesmos momentos em que hoje já
+  é gerada a notificação interna de estoque baixo/esgotado (cadastro de novo
+  item, uso/baixa de quantidade, e verificação periódica de níveis), sem
+  exigir nenhuma ação manual de quem usa o sistema.
+- [FR05]: O sistema não envia um novo e-mail repetido para o mesmo item no
+  mesmo nível dentro de um curto intervalo de tempo, para não gerar spam
+  quando os níveis são reverificados várias vezes seguidas sem mudança real
+  de quantidade.
+- [FR06]: O e-mail de alerta fica registrado na Fila de E-mails (mesma tela
+  de auditoria onde já aparecem os convites de acesso enviados), com
+  data/hora, destinatário e o conteúdo da mensagem.
+
+## Regras de Negócio
+
+- Um e-mail só é disparado quando o item efetivamente **cruza** para um
+  nível mais crítico do que estava antes (de "Disponível" para "Baixo", de
+  "Baixo" para "Esgotado", ou diretamente de "Disponível" para "Esgotado"
+  quando a baixa de quantidade é grande o suficiente).
+- Aumentar a quantidade de um item (reabastecimento) nunca dispara e-mail —
+  só a piora do nível dispara.
+- Depois que um item é reabastecido para "Disponível" e cai novamente para
+  "Baixo" ou "Esgotado" no futuro, isso conta como um novo cruzamento de
+  nível e gera um novo alerta por e-mail normalmente.
+- O conteúdo do e-mail segue o mesmo texto/tom já usado hoje nas
+  notificações internas de estoque (ex.: "Película Samsung Galaxy A54
+  (Fosca) com apenas 2 unidade(s) restante(s).").
+
+## Perfis de Acesso Afetados
+
+- **Administrador** e **Técnico**: são quem gerencia o módulo de Estoque
+  hoje (cadastro, uso, edição e exclusão de suprimentos) e são os
+  destinatários previstos deste alerta.
+- **Usuário**: não é afetado — não tem acesso ao módulo de Estoque.
+
+## Fora do Escopo (Out of Scope)
+
+- Tela de configuração de destinatários do e-mail de alerta (quem recebe
+  fica definido nesta primeira versão, não é configurável pela interface).
+- Envio real de e-mail via SMTP/provedor externo — o sistema hoje só
+  registra e-mails numa fila simulada (visível na tela de Log do Sistema);
+  esta funcionalidade usa esse mesmo mecanismo já existente, sem implementar
+  o envio real.
+- Alertas de estoque para qualquer tipo de item além de películas e tintas
+  (o sistema não tem outros tipos de suprimento hoje).
+- Alertas por outros canais além de e-mail (WhatsApp, notificação push no
+  navegador, Slack etc.) — a notificação interna por sino já existe e
+  continua como está; esta funcionalidade só adiciona o e-mail.
+
+## Cenários de Aceitação
+
+- Dado um item de estoque com quantidade acima do limite de "Baixo", quando
+  sua quantidade é reduzida (uso) até atingir o limite de "Baixo", então um
+  e-mail de alerta de estoque baixo é enviado e aparece registrado na Fila
+  de E-mails.
+- Dado um item já no nível "Baixo", quando sua quantidade chega a zero,
+  então um e-mail de alerta de "Esgotado" é enviado, mesmo já tendo sido
+  enviado um alerta de "Baixo" para esse item anteriormente.
+- Dado um item no nível "Disponível", quando ele é apenas visualizado na
+  tela de Estoque sem nenhuma mudança de quantidade, então nenhum e-mail é
+  enviado.
+- Dado um item no nível "Baixo" que acabou de gerar um alerta por e-mail,
+  quando o sistema reverifica os níveis de estoque pouco tempo depois sem
+  nenhuma mudança de quantidade, então nenhum e-mail duplicado é enviado.
+- Dado um item esgotado que é reabastecido para um nível acima de "Baixo",
+  quando ele volta a cair para "Baixo" novamente depois, então um novo
+  e-mail de alerta é enviado normalmente.
