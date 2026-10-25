@@ -3185,7 +3185,7 @@ const observacao = userScoped ? ('Desde ' + (al && al.date ? new Date(al.date).t
 let infoExtra = '—';
 if (a.type === 'CL') {
 infoExtra = '<span style="font-size: 11px;">Tel: ' + (a.telefone || '—') + '<br>IMEI: ' + (a.imei || a.serial || '—') + '</span>';
-} else if (a.type === 'NB') {
+} else if (a.type === 'NB' || a.type === 'DK') {
 infoExtra = '<span style="font-size: 11px; font-family: monospace;">ST: ' + (a.serviceTag || '—') + '</span>';
 }
 const holder = item.holder;
@@ -3219,7 +3219,7 @@ html += '<div class="form-field"><label>Sistema</label><div style="padding: 10px
 html += '<div class="form-field"><label>Versão</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.versao || '—') + '</div></div>';
 html += '<div class="form-field"><label>Atualizado</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.atualizado || '—') + '</div></div>';
 html += '<div class="form-field"><label>Intune</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.intune || '—') + '</div></div>';
-} else if(a.type === 'NB') {
+} else if(a.type === 'NB' || a.type === 'DK') {
 html += '<div class="form-field"><label>Service Tag</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.serviceTag || '—') + '</div></div>';
 html += '<div class="form-field"><label>Sistema Operacional</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.so || '—') + '</div></div>';
 html += '<div class="form-field"><label>Windows Update</label><div style="padding: 10px; background: var(--black-tertiary); border-radius: 8px;">' + (a.winupdate || '—') + '</div></div>';
@@ -3355,7 +3355,7 @@ html = `
 <div class="form-field"><label>Atualizado?</label><select id="${prefix}atualizado"><option value="Sim"${sel('atualizado','Sim')}>Sim</option><option value="Não"${sel('atualizado','Não')}>Não</option></select></div>
 <div class="form-field"><label>Ingressou no Intune?</label><select id="${prefix}intune"><option value="Sim"${sel('intune','Sim')}>Sim</option><option value="Não"${sel('intune','Não')}>Não</option></select></div>
 `;
-} else if (tipo === 'NB') {
+} else if (tipo === 'NB' || tipo === 'DK') {
 html = `
 <div class="form-field"><label>Service Tag</label><input type="text" id="${prefix}servicetag" placeholder="Service Tag Dell/HP" value="${v('serviceTag')}"></div>
 <div class="form-field"><label>Sistema Operacional</label><input type="text" id="${prefix}so" placeholder="Ex: Windows 11 Pro" value="${v('so')}"></div>
@@ -3416,7 +3416,7 @@ newAsset.sistema = document.getElementById('cad-sistema')?.value || '';
 newAsset.versao = document.getElementById('cad-versao')?.value || '';
 newAsset.atualizado = document.getElementById('cad-atualizado')?.value || '';
 newAsset.intune = document.getElementById('cad-intune')?.value || '';
-} else if(tipo === 'NB') {
+} else if(tipo === 'NB' || tipo === 'DK') {
 newAsset.serviceTag = document.getElementById('cad-servicetag')?.value || '';
 newAsset.so = document.getElementById('cad-so')?.value || '';
 newAsset.winupdate = document.getElementById('cad-winupdate')?.value || '';
@@ -3488,7 +3488,7 @@ a.sistema = document.getElementById('edit-sistema')?.value || '';
 a.versao = document.getElementById('edit-versao')?.value || '';
 a.atualizado = document.getElementById('edit-atualizado')?.value || '';
 a.intune = document.getElementById('edit-intune')?.value || '';
-} else if (a.type === 'NB') {
+} else if (a.type === 'NB' || a.type === 'DK') {
 a.serviceTag = document.getElementById('edit-servicetag')?.value || '';
 a.so = document.getElementById('edit-so')?.value || '';
 a.winupdate = document.getElementById('edit-winupdate')?.value || '';
