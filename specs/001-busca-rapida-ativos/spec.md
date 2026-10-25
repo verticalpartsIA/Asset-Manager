@@ -22,8 +22,10 @@ segundos.
 - [FR02]: Ao digitar no campo de busca, o sistema filtra a lista de ativos
   exibida em tempo real, sem exigir que o usuário pressione um botão ou
   tecla de confirmação.
-- [FR03]: A busca considera correspondência parcial (não precisa ser o
-  UID/serial/IMEI completo) e não diferencia maiúsculas de minúsculas.
+- [FR03]: A busca considera correspondência parcial — o termo digitado pode
+  aparecer em qualquer posição do UID, serial ou IMEI (não precisa ser
+  prefixo) — e não diferencia maiúsculas de minúsculas. A busca é acionada a
+  partir do 1º caractere digitado, sem limite mínimo de caracteres.
 - [FR04]: A busca compara o texto digitado com o UID do ativo, o número de
   série e o IMEI (quando aplicável ao tipo de ativo).
 - [FR05]: Cada resultado exibido mostra, no mínimo: UID, tipo do ativo,
@@ -46,10 +48,8 @@ segundos.
 - Ativos descartados continuam aparecendo nos resultados de busca (o
   histórico de um ativo descartado ainda pode ser consultado), salvo se um
   filtro de status ativo na tela os excluir explicitamente.
-- A busca não diferencia acentuação (ex.: buscar "notebook" ou "notebôok"
-  deve encontrar os mesmos resultados, já que UID/serial/IMEI normalmente
-  não têm acentos, mas o comportamento deve ser consistente caso o campo
-  pesquisado contenha caracteres acentuados no futuro).
+- Não há limite na quantidade de resultados exibidos: todos os ativos que
+  correspondem ao termo buscado são mostrados de uma vez.
 
 ## Perfis de Acesso Afetados
 
@@ -91,3 +91,33 @@ segundos.
 - Dado que o usuário limpa o campo de busca após ter digitado um termo,
   quando o campo fica vazio, então a lista volta a exibir todos os ativos
   permitidos pelos demais filtros ativos na tela.
+
+## Decisões de Clarificação
+
+1. **A busca deve filtrar a lista a partir de quantos caracteres digitados?**
+   - A) A partir de 1 caractere
+   - B) A partir de 2 caracteres
+   - C) Outro critério
+   - **Decisão:** A — a busca filtra a cada tecla digitada, desde o 1º
+     caractere.
+
+2. **Como deve funcionar a correspondência parcial do termo buscado?**
+   - A) Contém em qualquer posição (ex.: "057" encontra "VP-NB-2026-00057")
+   - B) Apenas no início (prefixo)
+   - **Decisão:** A — correspondência por substring, em qualquer posição do
+     UID, serial ou IMEI.
+
+3. **A spec continha uma regra especulativa sobre normalizar acentos para o
+   futuro, mas UID/serial/IMEI normalmente não têm acentos. O que fazer com
+   essa regra?**
+   - A) Remover a regra
+   - B) Manter como requisito explícito
+   - **Decisão:** A — regra removida da especificação; não é relevante hoje
+     e pode ser revisitada se um caso de uso real surgir.
+
+4. **Deve haver limite na quantidade de resultados exibidos quando muitos
+   ativos correspondem ao termo buscado?**
+   - A) Sem limite, mostra todos
+   - B) Limitar e indicar que há mais
+   - **Decisão:** A — sem limite; todos os resultados correspondentes são
+     exibidos.
